@@ -55,6 +55,10 @@ export class database {
                 throw err;                                  // server variable configures this)
             }
         });
+
+        setInterval(function () {
+            this.con.query('SELECT 1');
+        }, 5000);
     }
 
     
