@@ -1,5 +1,6 @@
 import mysql from 'mysql';
 // const mysql = mysql;
+declare const con: mysql.Connection;
 
 export class database {
 
@@ -33,7 +34,7 @@ export class database {
 
     handleDisconnect() {
         this.con = mysql.createConnection({
-            host: "us-cdbr-east-05.cleardb.net",
+            host: "localhost",
             user: "bf459e897fa39a",
             password: "88303776",
             database: "heroku_11100f74419df40"
@@ -55,10 +56,6 @@ export class database {
                 throw err;                                  // server variable configures this)
             }
         });
-
-        setInterval(function () {
-            this.con.query('SELECT 1');
-        }, 5000);
     }
 
     

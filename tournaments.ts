@@ -9,7 +9,12 @@ export class tournaments {
     // public connected: boolean = false;
     db = new database();
 
-    constructor () {}
+    constructor () {
+        // setInterval(function () {
+        //     this.db.query('SELECT 1');
+        // }, 5000);
+    }
+    
 
     getAll(callback:Function) {
         var data:any = [];
