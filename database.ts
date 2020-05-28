@@ -8,7 +8,7 @@ export class database {
 
     constructor() {
         this.con = mysql.createConnection({
-            host: "localhost",
+            host: "us-cdbr-east-05.cleardb.net",
             user: "bf459e897fa39a",
             password: "88303776",
             database: "heroku_11100f74419df40"
