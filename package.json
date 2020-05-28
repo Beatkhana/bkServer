@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "main": "dist/server.js",
   "license": "MIT",
   "scripts": {
     "postinstall": "npx tsc",
