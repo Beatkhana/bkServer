@@ -9,10 +9,14 @@ export class database {
 
     constructor() {
         this.con = mysql.createConnection({
-            host: "us-cdbr-east-05.cleardb.net",
-            user: "bf459e897fa39a",
-            password: "88303776",
-            database: "heroku_11100f74419df40"
+            // host: "us-cdbr-east-05.cleardb.net",
+            // user: "bf459e897fa39a",
+            // password: "88303776",
+            // database: "heroku_11100f74419df40"
+            host: "sql230.main-hosting.eu",
+            user: "u826845424",
+            password: "7*j1CMrF@Hk&",
+            database: "u826845424_beatKhanaTest"
         });
 
 

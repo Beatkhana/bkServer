@@ -3,6 +3,7 @@ import express from 'express';
 const router = require('./router')
 const app = express();
 const path = require('path');
+var compression = require('compression');
 
 
 app.use((req, res, next) => {
@@ -17,6 +18,7 @@ app.use((req, res, next) => {
     }
 });
 
+app.use(compression());
 app.use(express.json())
 app.use('/', router);
 

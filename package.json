@@ -9,16 +9,6 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "@types/express": "^4.17.6",
-    "@types/mysql": "^2.15.13",
-    "concurrently": "^5.2.0",
-    "express": "^4.17.1",
-    "mysql": "^2.18.1",
-    "pm2": "^4.4.0",
-    "ts-node": "^8.10.1",
-    "ts-node-dev": "^1.0.0-pre.44",
-    "tslint": "^6.1.2",
-    "typescript": "^3.9.3",
     "@angular/animations": "~9.1.9",
     "@angular/common": "~9.1.9",
     "@angular/compiler": "~9.1.9",
@@ -27,8 +17,19 @@
     "@angular/platform-browser": "~9.1.9",
     "@angular/platform-browser-dynamic": "~9.1.9",
     "@angular/router": "~9.1.9",
+    "@types/express": "^4.17.6",
+    "@types/mysql": "^2.15.13",
+    "compression": "^1.7.4",
+    "concurrently": "^5.2.0",
+    "express": "^4.17.1",
+    "mysql": "^2.18.1",
+    "pm2": "^4.4.0",
     "rxjs": "~6.5.4",
+    "ts-node": "^8.10.1",
+    "ts-node-dev": "^1.0.0-pre.44",
     "tslib": "^1.10.0",
+    "tslint": "^6.1.2",
+    "typescript": "^3.9.3",
     "zone.js": "~0.10.2"
   }
 }
