@@ -27,13 +27,15 @@ export class database {
             // return callback(result);
             if (!err) {
                 // res.send(rows);
-                this.con.end(function (err) {
-                    if (err) {
-                        return console.log('error:' + err.message);
-                    }
-                    console.log('Close the database connection.');
-                });
-                return callback(result);
+                if(this.con){
+                    this.con.end(function (err) {
+                        if (err) {
+                            return console.log('error:' + err.message);
+                        }
+                        console.log('Close the database connection.');
+                    });
+                    return callback(result);
+                }
             } else {
                 console.log(err);
             }
