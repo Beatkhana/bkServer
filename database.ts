@@ -15,16 +15,28 @@ export class database {
             database: "heroku_11100f74419df40"
         });
 
-        
-        this.connectDb();
-        this.connected = true;
+
+        // this.connectDb();
+        // this.connected = true;
     }
 
-    query(sql:string, callback:Function) {
-
+    query(sql: string, callback: Function) {
+        this.connectDb();
         this.con.query(sql, function (err, result, fields) {
-            if (err) console.log('error');
-            return callback(result);
+            // if (err) console.log('error');
+            // return callback(result);
+            if (!err) {
+                // res.send(rows);
+                this.con.end(function (err) {
+                    if (err) {
+                        return console.log('error:' + err.message);
+                    }
+                    console.log('Close the database connection.');
+                });
+                return callback(result);
+            } else {
+                console.log(err);
+            }
         });
     }
 

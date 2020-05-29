@@ -18,6 +18,7 @@ export class tournaments {
 
     getAll(callback:Function) {
         var data:any = [];
+        
         const result = this.db.query("SELECT * FROM tournaments",(result: any) => {
             return callback(result);
         });
