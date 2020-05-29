@@ -23,7 +23,7 @@ export class database {
     query(sql:string, callback:Function) {
 
         this.con.query(sql, function (err, result, fields) {
-            if (err) throw err;
+            if (err) console.log('error');
             return callback(result);
         });
     }
