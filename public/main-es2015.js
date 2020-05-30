@@ -37,6 +37,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
 /* harmony import */ var _tournaments_tournaments_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./tournaments/tournaments.component */ "./src/app/tournaments/tournaments.component.ts");
 /* harmony import */ var _tournament_tournament_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./tournament/tournament.component */ "./src/app/tournament/tournament.component.ts");
+/* harmony import */ var _archive_archive_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./archive/archive.component */ "./src/app/archive/archive.component.ts");
+
 
 
 
@@ -45,6 +47,7 @@ __webpack_require__.r(__webpack_exports__);
 
 const routes = [
     { path: '', component: _tournaments_tournaments_component__WEBPACK_IMPORTED_MODULE_2__["TournamentsComponent"] },
+    { path: 'archive', component: _archive_archive_component__WEBPACK_IMPORTED_MODULE_4__["ArchiveComponent"] },
     { path: 'tournament/:id', component: _tournament_tournament_component__WEBPACK_IMPORTED_MODULE_3__["TournamentComponent"] },
 ];
 class AppRoutingModule {
@@ -83,6 +86,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+const _c0 = function () { return { exact: true }; };
 class AppComponent {
     constructor(titleService, http, route) {
         this.titleService = titleService;
@@ -95,7 +99,7 @@ class AppComponent {
     }
 }
 AppComponent.ɵfac = function AppComponent_Factory(t) { return new (t || AppComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_platform_browser__WEBPACK_IMPORTED_MODULE_1__["Title"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_3__["ActivatedRoute"])); };
-AppComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: AppComponent, selectors: [["app-root"]], decls: 32, vars: 0, consts: [[1, "container"], [1, "banner"], ["routerLink", "/"], ["src", "/assets\\svg\\BeatKhana Logo Text RGB2.svg", "alt", "BeatKhana! Logo", "height", "50"], ["routerLink", "/", "routerLinkActive", "active", 1, "navLink", "btn-reload"], ["routerLink", "/archive", "routerLinkActive", "active", 1, "navLink", "btn-reload"], ["routerLink", "/rankings", "routerLinkActive", "active", 1, "navLink", "btn-reload"], ["routerLink", "/team", "routerLinkActive", "active", 1, "navLink", "btn-reload"], [2, "float", "right"], ["href", "", 1, "navLink", "noHover"], [1, "icon"], ["href", "", 1, "navLink"]], template: function AppComponent_Template(rf, ctx) { if (rf & 1) {
+AppComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: AppComponent, selectors: [["app-root"]], decls: 32, vars: 2, consts: [[1, "container"], [1, "banner"], ["routerLink", "/"], ["src", "/assets\\svg\\BeatKhana Logo Text RGB2.svg", "alt", "BeatKhana! Logo", "height", "50"], ["routerLink", "/", "routerLinkActive", "active", 1, "navLink", "btn-reload", 3, "routerLinkActiveOptions"], ["routerLink", "/archive", "routerLinkActive", "active", 1, "navLink", "btn-reload"], ["routerLink", "/rankings", "routerLinkActive", "active", 1, "navLink", "btn-reload"], ["routerLink", "/team", "routerLinkActive", "active", 1, "navLink", "btn-reload"], [2, "float", "right"], ["href", "", 1, "navLink", "noHover"], [1, "icon"], ["href", "https://discord.com/api/oauth2/authorize?client_id=670442368385810452&redirect_uri=http%3A%2F%2Flocalhost%3A4200%2Fapi%2FdiscordAuth&response_type=code&scope=identify", 1, "navLink"]], template: function AppComponent_Template(rf, ctx) { if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "header");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "nav");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "div", 0);
@@ -151,6 +155,9 @@ AppComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineCompo
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](31, "router-outlet");
+    } if (rf & 2) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](9);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("routerLinkActiveOptions", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction0"](1, _c0));
     } }, directives: [_angular_router__WEBPACK_IMPORTED_MODULE_3__["RouterLinkWithHref"], _angular_router__WEBPACK_IMPORTED_MODULE_3__["RouterLinkActive"], _angular_router__WEBPACK_IMPORTED_MODULE_3__["RouterOutlet"]], styles: ["\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiJzcmMvYXBwL2FwcC5jb21wb25lbnQuc2NzcyJ9 */"] });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](AppComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
@@ -181,6 +188,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _tournaments_tournaments_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./tournaments/tournaments.component */ "./src/app/tournaments/tournaments.component.ts");
 /* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/http.js");
 /* harmony import */ var _tournament_tournament_component__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./tournament/tournament.component */ "./src/app/tournament/tournament.component.ts");
+/* harmony import */ var _archive_archive_component__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./archive/archive.component */ "./src/app/archive/archive.component.ts");
+
 
 
 
@@ -199,7 +208,8 @@ AppModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineInjector
         ]] });
 (function () { (typeof ngJitMode === "undefined" || ngJitMode) && _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵsetNgModuleScope"](AppModule, { declarations: [_app_component__WEBPACK_IMPORTED_MODULE_3__["AppComponent"],
         _tournaments_tournaments_component__WEBPACK_IMPORTED_MODULE_4__["TournamentsComponent"],
-        _tournament_tournament_component__WEBPACK_IMPORTED_MODULE_6__["TournamentComponent"]], imports: [_angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
+        _tournament_tournament_component__WEBPACK_IMPORTED_MODULE_6__["TournamentComponent"],
+        _archive_archive_component__WEBPACK_IMPORTED_MODULE_7__["ArchiveComponent"]], imports: [_angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
         _app_routing_module__WEBPACK_IMPORTED_MODULE_2__["AppRoutingModule"],
         _angular_common_http__WEBPACK_IMPORTED_MODULE_5__["HttpClientModule"]] }); })();
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵsetClassMetadata"](AppModule, [{
@@ -208,7 +218,8 @@ AppModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineInjector
                 declarations: [
                     _app_component__WEBPACK_IMPORTED_MODULE_3__["AppComponent"],
                     _tournaments_tournaments_component__WEBPACK_IMPORTED_MODULE_4__["TournamentsComponent"],
-                    _tournament_tournament_component__WEBPACK_IMPORTED_MODULE_6__["TournamentComponent"]
+                    _tournament_tournament_component__WEBPACK_IMPORTED_MODULE_6__["TournamentComponent"],
+                    _archive_archive_component__WEBPACK_IMPORTED_MODULE_7__["ArchiveComponent"]
                 ],
                 imports: [
                     _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
@@ -217,6 +228,101 @@ AppModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineInjector
                 ],
                 providers: [],
                 bootstrap: [_app_component__WEBPACK_IMPORTED_MODULE_3__["AppComponent"]]
+            }]
+    }], null, null); })();
+
+
+/***/ }),
+
+/***/ "./src/app/archive/archive.component.ts":
+/*!**********************************************!*\
+  !*** ./src/app/archive/archive.component.ts ***!
+  \**********************************************/
+/*! exports provided: ArchiveComponent */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ArchiveComponent", function() { return ArchiveComponent; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+/* harmony import */ var _app_component__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../app.component */ "./src/app/app.component.ts");
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
+
+
+
+
+
+const _c0 = function (a1) { return ["/tournament", a1]; };
+function ArchiveComponent_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 2);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "a", 3);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](2, "img", 4);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipe"](3, "lowercase");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "h5", 5);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "p", 6);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](7);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](8, "br");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](10, "br");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](11);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](12, "br");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "a", 7);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](14, "Discord");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](15, "br");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} if (rf & 2) {
+    const tournament_r1 = ctx.$implicit;
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("title", tournament_r1.name)("routerLink", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](9, _c0, tournament_r1.id));
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate1"]("src", "\\", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipeBind1"](3, 7, tournament_r1.image), "", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵsanitizeUrl"]);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](3);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate1"](" ", tournament_r1.name, " ");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate1"](" Date: ", tournament_r1.date, " ");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate1"](" Time: ", tournament_r1.time, " ");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate1"](" Signup: ", tournament_r1.signup, " ");
+} }
+class ArchiveComponent extends _app_component__WEBPACK_IMPORTED_MODULE_1__["AppComponent"] {
+    constructor() {
+        super(...arguments);
+        this.title = "BeatKhana!";
+        this.url = '/api/tournament/archived';
+        this.tournaments = [];
+    }
+    ngOnInit() {
+        this.getTournaments()
+            .subscribe(data => this.tournaments = data);
+        this.setTitle(this.title);
+    }
+    getTournaments() {
+        return this.http.get(this.url);
+    }
+}
+ArchiveComponent.ɵfac = function ArchiveComponent_Factory(t) { return ɵArchiveComponent_BaseFactory(t || ArchiveComponent); };
+ArchiveComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: ArchiveComponent, selectors: [["app-archive"]], features: [_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵInheritDefinitionFeature"]], decls: 2, vars: 1, consts: [[1, "container", "grid"], ["class", "card", 4, "ngFor", "ngForOf"], [1, "card"], [1, "btn-reload", 3, "title", "routerLink"], [1, "card-img-top", 3, "src"], [1, "card-title"], [1, "card-text"], ["href", "<?= $tournament->signup ?>"]], template: function ArchiveComponent_Template(rf, ctx) { if (rf & 1) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, ArchiveComponent_div_1_Template, 16, 11, "div", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+    } if (rf & 2) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.tournaments);
+    } }, directives: [_angular_common__WEBPACK_IMPORTED_MODULE_2__["NgForOf"], _angular_router__WEBPACK_IMPORTED_MODULE_3__["RouterLinkWithHref"]], pipes: [_angular_common__WEBPACK_IMPORTED_MODULE_2__["LowerCasePipe"]], styles: ["\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiJzcmMvYXBwL2FyY2hpdmUvYXJjaGl2ZS5jb21wb25lbnQuc2NzcyJ9 */"] });
+const ɵArchiveComponent_BaseFactory = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetInheritedFactory"](ArchiveComponent);
+/*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](ArchiveComponent, [{
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
+        args: [{
+                selector: 'app-archive',
+                templateUrl: './archive.component.html',
+                styleUrls: ['./archive.component.scss']
             }]
     }], null, null); })();
 
@@ -454,6 +560,18 @@ class TournamentsComponent extends _app_component__WEBPACK_IMPORTED_MODULE_1__["
         this.getTournaments()
             .subscribe(data => this.tournaments = data);
         this.setTitle(this.title);
+        this.route.queryParams.subscribe(params => {
+            if (typeof params['code'] != 'undefined') {
+                // const fragment = new URLSearchParams(window.location.hash.slice(1));
+                // const accessToken = fragment.get("access_token");
+                // const tokenType = fragment.get("token_type");
+                // console.log(fragment);
+                // console.log(accessToken);
+                // console.log(tokenType);
+            }
+            // console.log(params['code']);
+            // this.param2 = params['param2'];
+        });
     }
     getTournaments() {
         return this.http.get(this.url);

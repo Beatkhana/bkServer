@@ -29,7 +29,7 @@ app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 // app.use((req, res) => {
-//     res.sendFile(__dirname + '/public/index.html')
+//     res.sendFile(__dirname + '/public/index.html') 
 // })
 var PORT = +process.env.PORT || 8080;
 app.listen(PORT, function () {

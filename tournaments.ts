@@ -14,7 +14,6 @@ export class tournaments {
         //     this.db.query('SELECT 1');
         // }, 5000);
     }
-    
 
     getAll(callback:Function) {
         var data:any = [];
@@ -27,6 +26,13 @@ export class tournaments {
     getActive(callback:Function) {
         var data:any = [];
         const result = this.db.query("SELECT * FROM tournaments WHERE archived = 0",(result: any) => {
+            return callback(result);
+        });
+    }
+
+    getArchived(callback:Function) {
+        var data:any = [];
+        const result = this.db.query("SELECT * FROM tournaments WHERE archived = 1",(result: any) => {
             return callback(result);
         });
     }

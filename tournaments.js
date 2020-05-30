@@ -23,6 +23,12 @@ var tournaments = /** @class */ (function () {
             return callback(result);
         });
     };
+    tournaments.prototype.getArchived = function (callback) {
+        var data = [];
+        var result = this.db.query("SELECT * FROM tournaments WHERE archived = 1", function (result) {
+            return callback(result);
+        });
+    };
     tournaments.prototype.getTournament = function (id, callback) {
         var data = [];
         var result = this.db.query("SELECT * FROM tournaments WHERE id = " + id, function (result) {
