@@ -44,7 +44,7 @@ router.get(baseUrl + '/user', function (req, res) {
 });
 
 router.get(baseUrl + '/logout', function (req, res) {
-    req.session.destroy()
+    req.session.destroy(()=>{});
     // user.logOut()
     res.redirect('/');
 });
