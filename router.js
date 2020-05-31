@@ -10,6 +10,7 @@ var tournament = new tournaments_1.tournaments();
 var user = new userAuth_1.userAuth();
 var router = express_1.default.Router();
 var baseUrl = '/api';
+var session = require('express-session');
 // Routes
 router.get(baseUrl, function (req, res) {
     res.send({ hello: 'there' });
@@ -21,7 +22,13 @@ router.get(baseUrl + '/tournaments', function (req, res) {
 });
 router.get(baseUrl + '/discordAuth', function (req, res) {
     if (req.query.code) {
-        user.sendCode(req.query.code.toString(), function () {
+        // console.log(req.query.code);
+        user.sendCode(req.query.code.toString(), function (usrRes) {
+            // console.log(user.getUser())
+            // res.redirect('/');
+            // req.session
+            req.session.user = usrRes;
+            // res.send(usrRes);
             res.redirect('/');
         });
     }
@@ -30,16 +37,23 @@ router.get(baseUrl + '/discordAuth', function (req, res) {
     }
 });
 router.get(baseUrl + '/user', function (req, res) {
-    res.send(user.getUser());
+    // console.log(req.session); 
+    // res.send(user.getUser());
+    // console.log(req.session);
+    res.send(req.session.user);
+});
+router.get(baseUrl + '/logout', function (req, res) {
+    req.session.destroy();
+    // user.logOut()
+    res.redirect('/');
 });
 router.get(baseUrl + '/tournament/archived', function (req, res) {
-    // console.log(req.params)
     tournament.getArchived(function (result) {
         res.send(result);
     });
 });
 router.get(baseUrl + '/tournament/:id', function (req, res) {
-    console.log(req.params);
+    // console.log(req.params)
     tournament.getTournament(req.params.id, function (result) {
         res.send(result);
     });

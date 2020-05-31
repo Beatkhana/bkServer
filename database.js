@@ -24,29 +24,9 @@ var database = /** @class */ (function () {
         // this.connected = true;
     }
     database.prototype.query = function (sql, callback) {
-        // this.connectDb();
-        // this.con.query(sql, function (err, result, fields) {
-        //     // if (err) console.log('error');
-        //     // return callback(result);
-        //     if (!err) {
-        //         // res.send(rows);
-        //         if (this.con) {
-        //             this.con.end(function (err) {
-        //                 if (err) {
-        //                     return console.log('error:' + err.message);
-        //                 }
-        //                 console.log('Close the database connection.');
-        //             });
-        //             return callback(result);
-        //         }
-        //     } else {
-        //         console.log(err);
-        //     }
-        // });
         this.con.getConnection(function (err, connection) {
             if (err)
-                throw err; // not connected!
-            console.log('yee');
+                throw err;
             var result;
             // Use the connection
             connection.query(sql, function (error, results, fields) {
