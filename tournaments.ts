@@ -51,7 +51,7 @@ export class tournaments {
         fs.writeFile('public/assets/images/'+data.imgName, base64Img, {encoding: 'base64'}, function(err) {
             console.log('File created');
         });
-        data.image = 'public/assets/images/'+data.imgName;
+        data.image = 'assets/images/'+data.imgName;
         delete data.imgName;
         console.log(data);
         const result = this.db.preparedQuery(`INSERT INTO tournaments SET ?`, [data] ,(result: any) => {
