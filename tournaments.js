@@ -42,10 +42,10 @@ var tournaments = /** @class */ (function () {
     tournaments.prototype.save = function (data, callback) {
         var base64String = data.image;
         var base64Img = base64String.split(';base64,').pop();
-        fs_1.default.writeFile('public/assets/images/' + data.imgName, base64Img, { encoding: 'base64' }, function (err) {
+        fs_1.default.writeFile('./public/assets/images/' + data.imgName, base64Img, { encoding: 'base64' }, function (err) {
             console.log('File created');
         });
-        data.image = 'public/assets/images/' + data.imgName;
+        data.image = 'assets/images/' + data.imgName;
         delete data.imgName;
         console.log(data);
         var result = this.db.preparedQuery("INSERT INTO tournaments SET ?", [data], function (result) {

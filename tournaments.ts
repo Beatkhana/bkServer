@@ -48,7 +48,7 @@ export class tournaments {
     save(data:any, callback:Function) {
         let base64String = data.image;
         let base64Img = base64String.split(';base64,').pop();
-        fs.writeFile('public/assets/images/'+data.imgName, base64Img, {encoding: 'base64'}, function(err) {
+        fs.writeFile('./public/assets/images/'+data.imgName, base64Img, {encoding: 'base64'}, function(err) {
             console.log('File created');
         });
         data.image = 'assets/images/'+data.imgName;
