@@ -16,7 +16,7 @@ export class database {
             connectionLimit: 10
             // host: "sql230.main-hosting.eu",
             // user: "u826845424_beatKhanaTest",
-            // password: "tY5p5DsA91ay",
+            // password: "Vl0M6MbwGFyj",
             // database: "u826845424_beatKhanaTest"
         });
 
@@ -29,19 +29,25 @@ export class database {
         this.con.getConnection(function (err, connection) {
             if (err) throw err;
             var result;
-            // Use the connection
             connection.query(sql, function (error, results, fields) {
-                // When done with the connection, release it.
                 result = results;
-                // console.log(results);
                 connection.release();
-                // console.log(results);
-                
-                // Handle error after the release.
                 if (error) throw error;
                 return callback(result);
+            });
+        });
+    }
 
-                // Don't use the connection here, it has been returned to the pool.
+    preparedQuery(sql:string, params: any[], callback:Function) {
+        this.con.getConnection(function (err, connection) {
+            if (err) throw err;
+            var result;
+            var query = connection.query(sql, params, function (error, results, fields) {
+                result = results;
+                connection.release();
+                console.log(query.sql);
+                if (error) throw error;
+                return callback(result);
             });
         });
     }

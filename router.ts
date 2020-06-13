@@ -22,13 +22,8 @@ router.get(baseUrl + '/tournaments', function (req, res) {
 
 router.get(baseUrl + '/discordAuth', function (req, res) {
     if(req.query.code){
-        // console.log(req.query.code);
         user.sendCode(req.query.code.toString(), (usrRes) => {
-            // console.log(user.getUser())
-            // res.redirect('/');
-            // req.session
             req.session.user = usrRes;
-            // res.send(usrRes);
             res.redirect('/');
         });
     }else {
@@ -48,6 +43,19 @@ router.get(baseUrl + '/logout', function (req, res) {
     // user.logOut()
     res.redirect('/');
 });
+
+router.post(baseUrl + '/tournament', function (req, res) {
+    // tournament.getArchived((result: any) => {
+    //     res.send(result);
+    // });
+    // console.log(req.session.user)
+    if(req.session.user[0]['roleIds'].indexOf('1') > -1){
+        
+        tournament.save(req.body, (sqlRes) => {
+            res.send(sqlRes);
+        });
+    }
+}); 
 
 router.get(baseUrl + '/tournament/archived', function (req, res) {
     tournament.getArchived((result: any) => {

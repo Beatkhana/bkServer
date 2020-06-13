@@ -21,6 +21,7 @@ export class userAuth {
         data.append('client_id', '670442368385810452');
         data.append('client_secret', 'akUcvbwH4mIo3scebnz8qE15huReD6l9');
         data.append('grant_type', 'authorization_code');
+        // data.append('redirect_uri', 'http://localhost:4200/api/discordAuth');
         data.append('redirect_uri', 'https://beatkhanatest.herokuapp.com/api/discordAuth');
         data.append('scope', 'identify');
         data.append('code', code);
@@ -58,9 +59,15 @@ export class userAuth {
     checkuser(discordId, callback) {
         if (discordId) {
             // console.log(discordId)
-            const res = this.db.query("SELECT * FROM users WHERE discordId = " + discordId, (result: any) => {
+            const res = this.db.query(`SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, users.*, GROUP_CONCAT(DISTINCT r.roleName SEPARATOR ', ') as roleNames
+            FROM users
+            LEFT JOIN roleassignment ra ON ra.userId = users.discordId
+            LEFT JOIN roles r ON r.roleId = ra.roleId
+            WHERE users.discordId = ${discordId}
+            GROUP BY users.discordId`, (result: any) => {
                 if (result.length > 0) {
-                    // this.user = result;
+                    result[0].roleIds = result[0].roleIds.split(', ');
+                    result[0].roleNames = result[0].roleNames.split(', ');
                     callback(result);
                 }
             });

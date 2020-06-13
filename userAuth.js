@@ -16,6 +16,7 @@ var userAuth = /** @class */ (function () {
         data.append('client_secret', 'akUcvbwH4mIo3scebnz8qE15huReD6l9');
         data.append('grant_type', 'authorization_code');
         data.append('redirect_uri', 'http://localhost:4200/api/discordAuth');
+        // data.append('redirect_uri', 'https://beatkhanatest.herokuapp.com/api/discordAuth');
         data.append('scope', 'identify');
         data.append('code', code);
         fetch('https://discordapp.com/api/oauth2/token', {
@@ -50,9 +51,10 @@ var userAuth = /** @class */ (function () {
     userAuth.prototype.checkuser = function (discordId, callback) {
         if (discordId) {
             // console.log(discordId)
-            var res = this.db.query("SELECT * FROM users WHERE discordId = " + discordId, function (result) {
+            var res = this.db.query("SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, users.*, GROUP_CONCAT(DISTINCT r.roleName SEPARATOR ', ') as roleNames\n            FROM users\n            LEFT JOIN roleassignment ra ON ra.userId = users.discordId\n            LEFT JOIN roles r ON r.roleId = ra.roleId\n            WHERE users.discordId = " + discordId + "\n            GROUP BY users.discordId", function (result) {
                 if (result.length > 0) {
-                    // this.user = result;
+                    result[0].roleIds = result[0].roleIds.split(', ');
+                    result[0].roleNames = result[0].roleNames.split(', ');
                     callback(result);
                 }
             });

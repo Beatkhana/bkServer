@@ -26,5 +26,8 @@
         "tslint": "^6.1.2",
         "typescript": "^3.9.3",
         "zone.js": "~0.10.2"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.4"
     }
 }

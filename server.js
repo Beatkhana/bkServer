@@ -22,7 +22,8 @@ app.use(function (req, res, next) {
     }
 });
 app.use(compression());
-app.use(express_1.default.json());
+// app.use(express.json());
+app.use(express_1.default.json({ limit: '50mb' }));
 app.use(session({
     name: 'uId',
     resave: false,
