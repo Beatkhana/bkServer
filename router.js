@@ -53,6 +53,17 @@ router.post(baseUrl + '/tournament', function (req, res) {
         });
     }
 });
+router.put(baseUrl + '/archiveTournament', function (req, res) {
+    // tournament.getArchived((result: any) => {
+    //     res.send(result);
+    // });
+    // console.log(req.session.user)
+    if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
+        tournament.archive(req.body, function (sqlRes) {
+            res.send(sqlRes);
+        });
+    }
+});
 router.get(baseUrl + '/tournament/archived', function (req, res) {
     tournament.getArchived(function (result) {
         res.send(result);

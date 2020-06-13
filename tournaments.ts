@@ -5,9 +5,6 @@ import fs from 'fs';
 
 
 export class tournaments {
-
-    // public con: mysql.Connection;
-    // public connected: boolean = false;
     db = new database();
 
     constructor () {
@@ -55,6 +52,18 @@ export class tournaments {
         delete data.imgName;
         console.log(data);
         const result = this.db.preparedQuery(`INSERT INTO tournaments SET ?`, [data] ,(result: any) => {
+            return callback(result);
+        });
+    }
+
+    archive(data:any, callback:Function) {
+        console.log(data);
+        data = data.id;
+        let id = data.id;
+        delete data.id;
+        data.archived = 1;
+        console.log(data);
+        const result = this.db.preparedQuery(`UPDATE tournaments SET ? WHERE ?? = ?`, [data, 'id', id] ,(result: any) => {
             return callback(result);
         });
     }

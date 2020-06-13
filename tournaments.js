@@ -52,6 +52,17 @@ var tournaments = /** @class */ (function () {
             return callback(result);
         });
     };
+    tournaments.prototype.archive = function (data, callback) {
+        console.log(data);
+        data = data.id;
+        var id = data.id;
+        delete data.id;
+        data.archived = 1;
+        console.log(data);
+        var result = this.db.preparedQuery("UPDATE tournaments SET ? WHERE ?? = ?", [data, 'id', id], function (result) {
+            return callback(result);
+        });
+    };
     return tournaments;
 }());
 exports.tournaments = tournaments;
