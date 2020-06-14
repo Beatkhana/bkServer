@@ -5,11 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.tournaments = void 0;
 var database_1 = require("./database");
-var fs_1 = __importDefault(require("fs"));
+// import jimp from 'jimp';
+var sharp_1 = __importDefault(require("sharp"));
 var tournaments = /** @class */ (function () {
     function tournaments() {
-        // public con: mysql.Connection;
-        // public connected: boolean = false;
         this.db = new database_1.database();
         // setInterval(function () {
         //     this.db.query('SELECT 1');
@@ -42,10 +41,33 @@ var tournaments = /** @class */ (function () {
     tournaments.prototype.save = function (data, callback) {
         var base64String = data.image;
         var base64Img = base64String.split(';base64,').pop();
-        fs_1.default.writeFile('./public/assets/images/' + data.imgName, base64Img, { encoding: 'base64' }, function (err) {
-            console.log('File created');
-        });
-        data.image = 'assets/images/' + data.imgName;
+        // fs.writeFile('./public/assets/images/' + data.imgName, base64Img, { encoding: 'base64' }, function (err) {
+        //     console.log('File created');
+        // });
+        // console.log(data);
+        var imgName = data.imgName;
+        imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
+        // jimp
+        var buf = Buffer.from(base64Img, 'base64');
+        sharp_1.default(buf)
+            .resize({ width: 550 })
+            // .webp({ lossless: true })
+            .toFile('./public/assets/images/' + imgName)
+            .catch(function (err) { console.log(err); });
+        // jimp.read(buf, (err, image) => {
+        //     if (err) throw err;
+        //     else {
+        //         if(image.bitmap.width > 550) {
+        //             image.resize(550,jimp.AUTO)
+        //             .quality(100)
+        //             .write('./public/assets/images/' + imgName);
+        //         }else {
+        //             image.write('./public/assets/images/' + imgName);
+        //         }
+        //         console.log(imgName);
+        //     }
+        // });
+        data.image = 'assets/images/' + imgName;
         delete data.imgName;
         console.log(data);
         var result = this.db.preparedQuery("INSERT INTO tournaments SET ?", [data], function (result) {

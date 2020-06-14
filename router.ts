@@ -1,8 +1,10 @@
 import express from 'express';
 import { tournaments } from './tournaments';
 import { userAuth } from './userAuth';
+import { rankings } from './rankings';
 
 const tournament = new tournaments();
+const ranking = new rankings();
 const user = new userAuth();
 const router = express.Router();
 const baseUrl = '/api';
@@ -32,23 +34,21 @@ router.get(baseUrl + '/discordAuth', function (req, res) {
 });
 
 router.get(baseUrl + '/user', function (req, res) {
-    // console.log(req.session); 
-    // res.send(user.getUser());
-    // console.log(req.session);
     res.send(req.session.user);
+});
+
+router.get(baseUrl + '/user/:id', function (req, res) {
+    ranking.getUser(req.params.id, (result: any) => {
+        res.send(result);
+    })
 });
 
 router.get(baseUrl + '/logout', function (req, res) {
     req.session.destroy(()=>{});
-    // user.logOut()
     res.redirect('/');
 });
 
 router.post(baseUrl + '/tournament', function (req, res) {
-    // tournament.getArchived((result: any) => {
-    //     res.send(result);
-    // });
-    // console.log(req.session.user)
     if(req.session.user[0]['roleIds'].indexOf('1') > -1){
         
         tournament.save(req.body, (sqlRes) => {
@@ -58,12 +58,7 @@ router.post(baseUrl + '/tournament', function (req, res) {
 }); 
 
 router.put(baseUrl + '/archiveTournament', function (req, res) {
-    // tournament.getArchived((result: any) => {
-    //     res.send(result);
-    // });
-    // console.log(req.session.user)
     if(req.session.user[0]['roleIds'].indexOf('1') > -1){
-        
         tournament.archive(req.body, (sqlRes) => {
             res.send(sqlRes);
         });
@@ -77,8 +72,13 @@ router.get(baseUrl + '/tournament/archived', function (req, res) {
 }); 
 
 router.get(baseUrl + '/tournament/:id', function (req, res) {
-    // console.log(req.params)
     tournament.getTournament(req.params.id,(result: any) => {
+        res.send(result);
+    });
+}); 
+
+router.get(baseUrl + '/rankings', function (req, res) {
+    ranking.getRanks((result: any) => {
         res.send(result);
     });
 }); 

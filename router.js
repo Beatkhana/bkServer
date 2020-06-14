@@ -6,7 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = __importDefault(require("express"));
 var tournaments_1 = require("./tournaments");
 var userAuth_1 = require("./userAuth");
+var rankings_1 = require("./rankings");
 var tournament = new tournaments_1.tournaments();
+var ranking = new rankings_1.rankings();
 var user = new userAuth_1.userAuth();
 var router = express_1.default.Router();
 var baseUrl = '/api';
@@ -32,21 +34,18 @@ router.get(baseUrl + '/discordAuth', function (req, res) {
     }
 });
 router.get(baseUrl + '/user', function (req, res) {
-    // console.log(req.session); 
-    // res.send(user.getUser());
-    // console.log(req.session);
     res.send(req.session.user);
+});
+router.get(baseUrl + '/user/:id', function (req, res) {
+    ranking.getUser(req.params.id, function (result) {
+        res.send(result);
+    });
 });
 router.get(baseUrl + '/logout', function (req, res) {
     req.session.destroy(function () { });
-    // user.logOut()
     res.redirect('/');
 });
 router.post(baseUrl + '/tournament', function (req, res) {
-    // tournament.getArchived((result: any) => {
-    //     res.send(result);
-    // });
-    // console.log(req.session.user)
     if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
         tournament.save(req.body, function (sqlRes) {
             res.send(sqlRes);
@@ -54,10 +53,6 @@ router.post(baseUrl + '/tournament', function (req, res) {
     }
 });
 router.put(baseUrl + '/archiveTournament', function (req, res) {
-    // tournament.getArchived((result: any) => {
-    //     res.send(result);
-    // });
-    // console.log(req.session.user)
     if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
         tournament.archive(req.body, function (sqlRes) {
             res.send(sqlRes);
@@ -70,8 +65,12 @@ router.get(baseUrl + '/tournament/archived', function (req, res) {
     });
 });
 router.get(baseUrl + '/tournament/:id', function (req, res) {
-    // console.log(req.params)
     tournament.getTournament(req.params.id, function (result) {
+        res.send(result);
+    });
+});
+router.get(baseUrl + '/rankings', function (req, res) {
+    ranking.getRanks(function (result) {
         res.send(result);
     });
 });
