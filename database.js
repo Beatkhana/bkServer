@@ -20,8 +20,6 @@ var database = /** @class */ (function () {
             // password: "Vl0M6MbwGFyj",
             // database: "u826845424_beatKhanaTest"
         });
-        // this.connectDb();
-        // this.connected = true;
     }
     database.prototype.query = function (sql, callback) {
         this.con.getConnection(function (err, connection) {
@@ -30,10 +28,10 @@ var database = /** @class */ (function () {
             var result;
             connection.query(sql, function (error, results, fields) {
                 result = results;
+                err = error;
                 connection.release();
-                if (error)
-                    throw error;
-                return callback(result);
+                // if (error) throw error;
+                return callback(err, result);
             });
         });
     };
@@ -45,10 +43,9 @@ var database = /** @class */ (function () {
             var query = connection.query(sql, params, function (error, results, fields) {
                 result = results;
                 connection.release();
-                console.log(query.sql);
-                if (error)
-                    throw error;
-                return callback(result);
+                // console.log(query.sql);
+                // if (error) throw error;
+                return callback(error, result);
             });
         });
     };

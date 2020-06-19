@@ -19,10 +19,6 @@ export class database {
             // password: "Vl0M6MbwGFyj",
             // database: "u826845424_beatKhanaTest"
         });
-
-
-        // this.connectDb();
-        // this.connected = true;
     }
 
     query(sql: string, callback: Function) {
@@ -31,9 +27,10 @@ export class database {
             var result;
             connection.query(sql, function (error, results, fields) {
                 result = results;
+                err = error;
                 connection.release();
-                if (error) throw error;
-                return callback(result);
+                // if (error) throw error;
+                return callback(err, result);
             });
         });
     }
@@ -45,9 +42,9 @@ export class database {
             var query = connection.query(sql, params, function (error, results, fields) {
                 result = results;
                 connection.release();
-                console.log(query.sql);
-                if (error) throw error;
-                return callback(result);
+                // console.log(query.sql);
+                // if (error) throw error;
+                return callback( error, result);
             });
         });
     }

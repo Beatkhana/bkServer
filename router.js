@@ -24,9 +24,16 @@ router.get(baseUrl + '/tournaments', function (req, res) {
 });
 router.get(baseUrl + '/discordAuth', function (req, res) {
     if (req.query.code) {
-        user.sendCode(req.query.code.toString(), function (usrRes) {
-            req.session.user = usrRes;
-            res.redirect('/');
+        user.sendCode(req.query.code.toString(), function (usrRes, newUsr) {
+            if (newUsr === void 0) { newUsr = false; }
+            if (!newUsr) {
+                req.session.user = usrRes;
+                res.redirect('/');
+            }
+            else {
+                req.session.newUsr = usrRes;
+                res.redirect('/sign-up');
+            }
         });
     }
     else {
@@ -36,27 +43,80 @@ router.get(baseUrl + '/discordAuth', function (req, res) {
 router.get(baseUrl + '/user', function (req, res) {
     res.send(req.session.user);
 });
+router.post(baseUrl + '/newUser', function (req, res) {
+    if (req.session.newUsr[0]) {
+        var usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'] };
+        user.newUser(usrData, function (result) {
+            // req.session.destroy(() => { });
+            req.session.user = result;
+            res.send({ message: 'success' });
+        });
+    }
+    else {
+        res.sendStatus(400);
+    }
+});
+router.get(baseUrl + '/users', function (req, res) {
+    ranking.allUsers(function (result) {
+        res.send(result);
+    });
+});
 router.get(baseUrl + '/user/:id', function (req, res) {
     ranking.getUser(req.params.id, function (result) {
         res.send(result);
     });
 });
+// logout
 router.get(baseUrl + '/logout', function (req, res) {
     req.session.destroy(function () { });
     res.redirect('/');
 });
+// create tournament
 router.post(baseUrl + '/tournament', function (req, res) {
     if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
         tournament.save(req.body, function (sqlRes) {
             res.send(sqlRes);
         });
     }
+    else {
+        res.sendStatus(401);
+    }
 });
+//delete tournament
+router.post(baseUrl + '/tournament/delete/:id', function (req, res) {
+    if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
+        tournament.delete(parseInt(req.params.id), function (sqlRes) {
+            res.send(sqlRes);
+        });
+    }
+    else {
+        res.sendStatus(401);
+    }
+});
+// update tournament
+router.put(baseUrl + '/tournament/:id', function (req, res) {
+    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, function (isOwner) {
+        console.log(isOwner);
+        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
+            tournament.update({ "tournament": req.body, "id": req.params.id }, function (sqlRes) {
+                res.send(sqlRes);
+            });
+        }
+        else {
+            res.sendStatus(401);
+        }
+    });
+    // console.log(tournament.isOwner(req.session.user[0]['discordId'], req.params.id));
+});
+// archive tournament
 router.put(baseUrl + '/archiveTournament', function (req, res) {
     if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
         tournament.archive(req.body, function (sqlRes) {
             res.send(sqlRes);
         });
+    }
+    else {
+        res.sendStatus(401);
     }
 });
 router.get(baseUrl + '/tournament/archived', function (req, res) {

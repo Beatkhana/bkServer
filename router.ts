@@ -2,6 +2,7 @@ import express from 'express';
 import { tournaments } from './tournaments';
 import { userAuth } from './userAuth';
 import { rankings } from './rankings';
+import e from 'express';
 
 const tournament = new tournaments();
 const ranking = new rankings();
@@ -23,12 +24,17 @@ router.get(baseUrl + '/tournaments', function (req, res) {
 });
 
 router.get(baseUrl + '/discordAuth', function (req, res) {
-    if(req.query.code){
-        user.sendCode(req.query.code.toString(), (usrRes) => {
-            req.session.user = usrRes;
-            res.redirect('/');
+    if (req.query.code) {
+        user.sendCode(req.query.code.toString(), (usrRes, newUsr = false) => {
+            if(!newUsr) {
+                req.session.user = usrRes;
+                res.redirect('/');
+            } else {
+                req.session.newUsr = usrRes;
+                res.redirect('/sign-up');
+            }
         });
-    }else {
+    } else {
         res.redirect('/');
     }
 });
@@ -37,50 +43,101 @@ router.get(baseUrl + '/user', function (req, res) {
     res.send(req.session.user);
 });
 
+router.post(baseUrl + '/newUser', function (req, res) {
+    if(req.session.newUsr[0]) {
+        let usrData = {links: req.body, discordId: req.session.newUsr[0]['discordId']};
+        user.newUser(usrData, (result) => {
+            // req.session.destroy(() => { });
+            req.session.user = result;
+            res.send({message: 'success'});
+        });
+    } else {
+        res.sendStatus(400);
+    }
+});
+
+router.get(baseUrl + '/users', function (req, res) {
+    ranking.allUsers((result: any) => {
+        res.send(result);
+    });
+});
+
 router.get(baseUrl + '/user/:id', function (req, res) {
     ranking.getUser(req.params.id, (result: any) => {
         res.send(result);
     })
 });
 
+// logout
 router.get(baseUrl + '/logout', function (req, res) {
-    req.session.destroy(()=>{});
+    req.session.destroy(() => { });
     res.redirect('/');
 });
 
+// create tournament
 router.post(baseUrl + '/tournament', function (req, res) {
-    if(req.session.user[0]['roleIds'].indexOf('1') > -1){
-        
+    if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
         tournament.save(req.body, (sqlRes) => {
             res.send(sqlRes);
         });
+    } else {
+        res.sendStatus(401);
     }
-}); 
+});
 
+//delete tournament
+router.post(baseUrl + '/tournament/delete/:id', function (req, res) {
+    if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
+        tournament.delete(parseInt(req.params.id), (sqlRes) => {
+            res.send(sqlRes);
+        });
+    } else {
+        res.sendStatus(401);
+    }
+});
+
+// update tournament
+router.put(baseUrl + '/tournament/:id', function (req, res) {
+    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, (isOwner)=> {
+        console.log(isOwner);
+        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
+            tournament.update({ "tournament": req.body, "id": req.params.id }, (sqlRes) => {
+                res.send(sqlRes);
+            });
+        } else {
+            res.sendStatus(401);
+        }
+    })
+    // console.log(tournament.isOwner(req.session.user[0]['discordId'], req.params.id));
+});
+
+// archive tournament
 router.put(baseUrl + '/archiveTournament', function (req, res) {
-    if(req.session.user[0]['roleIds'].indexOf('1') > -1){
+    if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
         tournament.archive(req.body, (sqlRes) => {
             res.send(sqlRes);
         });
+    } else {
+        res.sendStatus(401);
     }
-}); 
+});
 
 router.get(baseUrl + '/tournament/archived', function (req, res) {
     tournament.getArchived((result: any) => {
         res.send(result);
     });
-}); 
+});
 
 router.get(baseUrl + '/tournament/:id', function (req, res) {
-    tournament.getTournament(req.params.id,(result: any) => {
+    tournament.getTournament(req.params.id, (result: any) => {
         res.send(result);
     });
-}); 
+});
 
 router.get(baseUrl + '/rankings', function (req, res) {
     ranking.getRanks((result: any) => {
         res.send(result);
     });
-}); 
+});
 
 module.exports = router;
