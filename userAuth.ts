@@ -32,7 +32,8 @@ export class userAuth {
 
 
         // data.append('redirect_uri', 'http://localhost:4200/api/discordAuth');
-        data.append('redirect_uri', 'https://beatkhanatest.herokuapp.com/api/discordAuth');
+        // data.append('redirect_uri', 'https://beatkhanatest.herokuapp.com/api/discordAuth');
+        data.append('redirect_uri', 'https://beatkhana.com/api/discordAuth');
         data.append('scope', 'identify');
         data.append('code', code);
 
