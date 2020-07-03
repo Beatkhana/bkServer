@@ -26,7 +26,8 @@ var database = /** @class */ (function () {
             if (err)
                 throw err;
             var result;
-            connection.query(sql, function (error, results, fields) {
+            var query = connection.query(sql, function (error, results, fields) {
+                console.log(query.sql);
                 result = results;
                 err = error;
                 connection.release();

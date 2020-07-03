@@ -12,7 +12,7 @@ export class rankings {
     allUsers(callback:Function) {
         var data:any = [];
         
-        const result = this.db.query("SELECT * FROM users",(result: any) => {
+        const result = this.db.query("SELECT * FROM users",(err, result: any) => {
             return callback(result);
         });
     }

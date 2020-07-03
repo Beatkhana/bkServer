@@ -8,7 +8,8 @@ var rankings = /** @class */ (function () {
     }
     rankings.prototype.allUsers = function (callback) {
         var data = [];
-        var result = this.db.query("SELECT * FROM users", function (result) {
+        var result = this.db.query("SELECT * FROM users", function (err, result) {
+            console.log(result);
             return callback(result);
         });
     };

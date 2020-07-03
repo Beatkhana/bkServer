@@ -25,7 +25,8 @@ export class database {
         this.con.getConnection(function (err, connection) {
             if (err) throw err;
             var result;
-            connection.query(sql, function (error, results, fields) {
+            var query = connection.query(sql, function (error, results, fields) {
+                console.log(query.sql);
                 result = results;
                 err = error;
                 connection.release();
