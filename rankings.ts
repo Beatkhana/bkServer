@@ -12,7 +12,7 @@ export class rankings {
     allUsers(callback:Function) {
         var data:any = [];
         
-        const result = this.db.query("SELECT * FROM users",(err, result: any) => {
+        const result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users",(err, result: any) => {
             return callback(result);
         });
     }
