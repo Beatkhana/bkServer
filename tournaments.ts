@@ -18,28 +18,28 @@ export class tournaments {
     getAll(callback: Function) {
         var data: any = [];
 
-        const result = this.db.query("SELECT * FROM tournaments", (err, result: any) => {
+        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, \`time\`, signup, discord, twitchLink, prize, info, challongeLink, archived, \`first\`, \`second\`, third FROM tournaments", (err, result: any) => {
             return callback(result);
         });
     }
 
     getActive(callback: Function) {
         var data: any = [];
-        const result = this.db.query("SELECT * FROM tournaments WHERE archived = 0", (err, result: any) => {
+        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, \`time\`, signup, discord, twitchLink, prize, info, challongeLink, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 0", (err, result: any) => {
             return callback(result);
         });
     }
 
     getArchived(callback: Function) {
         var data: any = [];
-        const result = this.db.query("SELECT * FROM tournaments WHERE archived = 1", (err, result: any) => {
+        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, \`time\`, signup, discord, twitchLink, prize, info, challongeLink, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 1", (err, result: any) => {
             return callback(result);
         });
     }
 
     getTournament(id: string, callback: Function) {
         var data: any = [];
-        const result = this.db.query(`SELECT * FROM tournaments WHERE id = ${id}`, (err, result: any) => {
+        const result = this.db.query(`SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, \`time\`, signup, discord, twitchLink, prize, info, challongeLink, archived, \`first\`, \`second\`, third FROM tournaments WHERE id = ${id}`, (err, result: any) => {
             return callback(result);
         });
     }
