@@ -70,9 +70,12 @@ export class userAuth {
             WHERE users.discordId = ${discordId}
             GROUP BY users.discordId`, (err, result: any) => {
                 if (result.length > 0) {
+                    console.log(result);
                     result[0].discordId = discordId.toString();
-                    result[0].roleIds = result[0].roleIds.split(', ');
-                    result[0].roleNames = result[0].roleNames.split(', ');
+                    if(result[0].roleIds.length > 0) {
+                        result[0].roleIds = result[0].roleIds.split(', ');
+                        result[0].roleNames = result[0].roleNames.split(', ');
+                    }
                     callback(result);
                 } else {
                     result = [{
