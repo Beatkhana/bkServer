@@ -75,6 +75,9 @@ export class userAuth {
                     if(result[0].roleNames != null ) {
                         result[0].roleIds = result[0].roleIds.split(', ');
                         result[0].roleNames = result[0].roleNames.split(', ');
+                    } else {
+                        result[0].roleIds = [];
+                        result[0].roleNames = [];
                     }
                     callback(result);
                 } else {
