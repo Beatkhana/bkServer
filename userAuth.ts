@@ -72,7 +72,7 @@ export class userAuth {
                 if (result.length > 0) {
                     console.log(result);
                     result[0].discordId = discordId.toString();
-                    if(result[0].roleIds.length > 0) {
+                    if(result[0].roleNames != null ) {
                         result[0].roleIds = result[0].roleIds.split(', ');
                         result[0].roleNames = result[0].roleNames.split(', ');
                     }
