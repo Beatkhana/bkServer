@@ -18,13 +18,13 @@ export class rankings {
     }
 
     getRanks(callback:Function) {
-        const result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users ORDER BY tourneyRank",(result: any) => {
+        const result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users ORDER BY tourneyRank",(err, result: any) => {
             return callback(result);
         });
     }
 
     getUser(userId:string, callback:Function) {
-        this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users WHERE discordId = "+userId,(result: any) => {
+        this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users WHERE discordId = "+userId,(err, result: any) => {
             return callback(result);
         });
     }

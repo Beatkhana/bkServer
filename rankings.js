@@ -9,17 +9,16 @@ var rankings = /** @class */ (function () {
     rankings.prototype.allUsers = function (callback) {
         var data = [];
         var result = this.db.query("SELECT * FROM users", function (err, result) {
-            console.log(result);
             return callback(result);
         });
     };
     rankings.prototype.getRanks = function (callback) {
-        var result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users ORDER BY tourneyRank", function (result) {
+        var result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users ORDER BY tourneyRank", function (err, result) {
             return callback(result);
         });
     };
     rankings.prototype.getUser = function (userId, callback) {
-        this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users WHERE discordId = " + userId, function (result) {
+        this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users WHERE discordId = " + userId, function (err, result) {
             return callback(result);
         });
     };

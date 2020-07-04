@@ -20,9 +20,9 @@ var userAuth = /** @class */ (function () {
         data.append('client_id', '721696709331386398');
         data.append('client_secret', 'LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6');
         data.append('grant_type', 'authorization_code');
-        data.append('redirect_uri', 'http://localhost:4200/api/discordAuth');
+        // data.append('redirect_uri', 'http://localhost:4200/api/discordAuth');
         // data.append('redirect_uri', 'https://beatkhanatest.herokuapp.com/api/discordAuth');
-        // data.append('redirect_uri', 'https://beatkhana.com/api/discordAuth');
+        data.append('redirect_uri', 'https://beatkhana.com/api/discordAuth');
         data.append('scope', 'identify');
         data.append('code', code);
         fetch('https://discordapp.com/api/oauth2/token', {
