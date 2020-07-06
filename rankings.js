@@ -8,7 +8,7 @@ var rankings = /** @class */ (function () {
     }
     rankings.prototype.allUsers = function (callback) {
         var data = [];
-        var result = this.db.query("SELECT * FROM users", function (err, result) {
+        var result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users", function (err, result) {
             return callback(result);
         });
     };

@@ -13,9 +13,22 @@ var user = new userAuth_1.userAuth();
 var router = express_1.default.Router();
 var baseUrl = '/api';
 var session = require('express-session');
+var CLIENT_ID = '721696709331386398';
+var CLIENT_SECRET = 'LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6';
+var env = process.env.NODE_ENV || 'prod';
+var redirect = "";
+if (env == 'prod') {
+    redirect = encodeURIComponent('https://beatkhana.com/api/discordAuth');
+}
+else {
+    redirect = encodeURIComponent('http://localhost:4200/api/discordAuth');
+}
 // Routes
 router.get(baseUrl, function (req, res) {
-    res.send({ hello: 'there' });
+    res.send({ 'hello there': 'general kenobi' });
+});
+router.get(baseUrl + '/login', function (req, res) {
+    res.redirect("https://discordapp.com/api/oauth2/authorize?client_id=" + CLIENT_ID + "&scope=identify&response_type=code&redirect_uri=" + redirect);
 });
 router.get(baseUrl + '/tournaments', function (req, res) {
     tournament.getActive(function (result) {

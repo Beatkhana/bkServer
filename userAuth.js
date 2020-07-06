@@ -13,16 +13,21 @@ var userAuth = /** @class */ (function () {
     userAuth.prototype.sendCode = function (code, callback) {
         var _this = this;
         var data = new FormData();
-        // bsl
-        // data.append('client_id', '670442368385810452');
-        // data.append('client_secret', 'akUcvbwH4mIo3scebnz8qE15huReD6l9');
         // beatkhana
         data.append('client_id', '721696709331386398');
         data.append('client_secret', 'LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6');
         data.append('grant_type', 'authorization_code');
-        data.append('redirect_uri', 'http://localhost:4200/api/discordAuth');
-        // data.append('redirect_uri', 'https://beatkhanatest.herokuapp.com/api/discordAuth');
-        // data.append('redirect_uri', 'https://beatkhana.com/api/discordAuth');
+        var env = process.env.NODE_ENV || 'prod';
+        var redirect = "";
+        if (env == 'prod') {
+            redirect = 'https://beatkhana.com/api/discordAuth';
+        }
+        else {
+            redirect = 'http://localhost:4200/api/discordAuth';
+        }
+        console.log(redirect);
+        console.log(env);
+        data.append('redirect_uri', redirect);
         data.append('scope', 'identify');
         data.append('code', code);
         fetch('https://discordapp.com/api/oauth2/token', {
@@ -40,6 +45,8 @@ var userAuth = /** @class */ (function () {
         }); })
             .then(function (userRes) { return userRes.json(); })
             .then(function (data) {
+            console.log('discord return');
+            console.log(data);
             _this.checkuser(data.id, function (userRes, newUser) {
                 callback(userRes, newUser);
             });
@@ -87,10 +94,10 @@ var userAuth = /** @class */ (function () {
                 localRank: ssData.playerInfo.countryRank,
                 country: ssData.playerInfo.country
             };
-            console.log(user);
+            // console.log(user);
             var result = _this.db.preparedQuery("INSERT INTO users SET ?", [user], function (err, result) {
-                console.log(result);
-                console.log(err);
+                // console.log(result);
+                // console.log(err);
                 var loggedUser = user;
                 loggedUser.roleIds = [];
                 loggedUser.roleNames = [];

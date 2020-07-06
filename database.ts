@@ -8,17 +8,36 @@ export class database {
     public connected: boolean = false;
 
     constructor() {
-        this.con = mysql.createPool({
-            host: "us-cdbr-east-05.cleardb.net",
-            user: "bf459e897fa39a",
-            password: "88303776",
-            database: "heroku_11100f74419df40",
-            connectionLimit: 10
-            // host: "sql230.main-hosting.eu",
-            // user: "u826845424_beatKhanaTest",
-            // password: "Vl0M6MbwGFyj",
-            // database: "u826845424_beatKhanaTest"
-        });
+        const env = process.env.NODE_ENV || 'prod';
+        if (env == 'prod') {
+            this.con = mysql.createPool({
+                host: "us-cdbr-east-02.cleardb.com",
+                user: "bdaa6c4e2efd54",
+                password: "f84071f4",
+                database: "heroku_da687e9a34aa489",
+                connectionLimit: 10
+            });
+        } else {
+            this.con = mysql.createPool({
+                host: "us-cdbr-east-05.cleardb.net",
+                user: "bf459e897fa39a",
+                password: "88303776",
+                database: "heroku_11100f74419df40",
+                connectionLimit: 10
+            });
+        }
+        // this.con = mysql.createPool({
+        //     // host: "us-cdbr-east-05.cleardb.net",
+        //     // user: "bf459e897fa39a",
+        //     // password: "88303776",
+        //     // database: "heroku_11100f74419df40",
+        //     connectionLimit: 10,
+        //     // host: "sql230.main-hosting.eu",
+        //     host: "213.190.6.106",
+        //     user: "u826845424_beatKhanaTest",
+        //     password: "Vl0M6MbwGFyj",
+        //     database: "u826845424_beatKhanaTest"
+        // });
     }
 
     query(sql: string, callback: Function) {
@@ -26,7 +45,7 @@ export class database {
             if (err) throw err;
             var result;
             var query = connection.query(sql, function (error, results, fields) {
-                console.log(query.sql);
+                // console.log(query.sql);
                 result = results;
                 err = error;
                 connection.release();
@@ -36,7 +55,7 @@ export class database {
         });
     }
 
-    preparedQuery(sql:string, params: any[], callback:Function) {
+    preparedQuery(sql: string, params: any[], callback: Function) {
         this.con.getConnection(function (err, connection) {
             if (err) throw err;
             var result;
@@ -45,7 +64,7 @@ export class database {
                 connection.release();
                 // console.log(query.sql);
                 // if (error) throw error;
-                return callback( error, result);
+                return callback(error, result);
             });
         });
     }

@@ -34,14 +34,28 @@ app.use(session({
         sameSite: true
     }
 }));
+app.use(function (err, req, res, next) {
+    switch (err.message) {
+        case 'NoCodeProvided':
+            return res.status(400).send({
+                status: 'ERROR',
+                error: err.message,
+            });
+        default:
+            return res.status(500).send({
+                status: 'ERROR',
+                error: err.message,
+            });
+    }
+});
 app.use('/', router);
-app.use(express_1.default.static(path.join(__dirname, 'public')));
+app.use(express_1.default.static(path.join(__dirname, 'public'), { maxAge: "30d" }));
 // console.log(path.join(__dirname, 'public/index.html'));
 app.get('*', function (req, res) {
     res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 app.get('/hi', function (req, res) {
-    console.log(req.session);
+    // console.log(req.session); 
     // res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 var PORT = +process.env.PORT || 8080;

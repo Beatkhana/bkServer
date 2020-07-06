@@ -16,25 +16,25 @@ var tournaments = /** @class */ (function () {
     }
     tournaments.prototype.getAll = function (callback) {
         var data = [];
-        var result = this.db.query("SELECT * FROM tournaments", function (err, result) {
+        var result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, \`time\`, signup, discord, twitchLink, prize, info, challongeLink, archived, \`first\`, \`second\`, third FROM tournaments", function (err, result) {
             return callback(result);
         });
     };
     tournaments.prototype.getActive = function (callback) {
         var data = [];
-        var result = this.db.query("SELECT * FROM tournaments WHERE archived = 0", function (err, result) {
+        var result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, \`time\`, signup, discord, twitchLink, prize, info, challongeLink, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 0", function (err, result) {
             return callback(result);
         });
     };
     tournaments.prototype.getArchived = function (callback) {
         var data = [];
-        var result = this.db.query("SELECT * FROM tournaments WHERE archived = 1", function (err, result) {
+        var result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, \`time\`, signup, discord, twitchLink, prize, info, challongeLink, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 1", function (err, result) {
             return callback(result);
         });
     };
     tournaments.prototype.getTournament = function (id, callback) {
         var data = [];
-        var result = this.db.query("SELECT * FROM tournaments WHERE id = " + id, function (err, result) {
+        var result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, `date`, `time`, signup, discord, twitchLink, prize, info, challongeLink, archived, `first`, `second`, third FROM tournaments WHERE id = " + id, function (err, result) {
             return callback(result);
         });
     };

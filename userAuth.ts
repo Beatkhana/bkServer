@@ -20,20 +20,24 @@ export class userAuth {
     sendCode(code: string, callback: Function) {
         const data = new FormData();
 
-        // bsl
-        // data.append('client_id', '670442368385810452');
-        // data.append('client_secret', 'akUcvbwH4mIo3scebnz8qE15huReD6l9');
-
         // beatkhana
         data.append('client_id', '721696709331386398');
         data.append('client_secret', 'LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6');
 
         data.append('grant_type', 'authorization_code');
 
+        const env = process.env.NODE_ENV || 'prod';
+        let redirect = "";
+        if (env == 'prod') {
+            redirect = 'https://beatkhana.com/api/discordAuth';
+        } else {
+            redirect = 'http://localhost:4200/api/discordAuth';
+        }
 
-        // data.append('redirect_uri', 'http://localhost:4200/api/discordAuth');
-        // data.append('redirect_uri', 'https://beatkhanatest.herokuapp.com/api/discordAuth');
-        data.append('redirect_uri', 'https://beatkhana.com/api/discordAuth');
+        console.log(redirect)
+        console.log(env)
+
+        data.append('redirect_uri', redirect);
         data.append('scope', 'identify');
         data.append('code', code);
 
@@ -70,9 +74,9 @@ export class userAuth {
             WHERE users.discordId = ${discordId}
             GROUP BY users.discordId`, (err, result: any) => {
                 if (result.length > 0) {
-                    console.log(result);
+                    // console.log(result);
                     result[0].discordId = discordId.toString();
-                    if(result[0].roleNames != null ) {
+                    if (result[0].roleNames != null) {
                         result[0].roleIds = result[0].roleIds.split(', ');
                         result[0].roleNames = result[0].roleNames.split(', ');
                     } else {
@@ -92,7 +96,7 @@ export class userAuth {
 
     newUser(data, callback: Function) {
         // console.log(data);
-        this.getSSData(data.links.scoreSaber.split('u/')[1], (ssData)=> {
+        this.getSSData(data.links.scoreSaber.split('u/')[1], (ssData) => {
             let user = {
                 discordId: data.discordId,
                 ssId: ssData.playerInfo.playerId,
@@ -103,10 +107,10 @@ export class userAuth {
                 localRank: ssData.playerInfo.countryRank,
                 country: ssData.playerInfo.country
             };
-            console.log(user);
+            // console.log(user);
             const result = this.db.preparedQuery(`INSERT INTO users SET ?`, [user], (err, result: any) => {
-                console.log(result);
-                console.log(err);
+                // console.log(result);
+                // console.log(err);
                 let loggedUser: any = user;
                 loggedUser.roleIds = [];
                 loggedUser.roleNames = [];
