@@ -8,8 +8,8 @@ export class database {
     public connected: boolean = false;
 
     constructor() {
-        const env = process.env.NODE_ENV || 'prod';
-        if (env == 'prod') {
+        const env = process.env.NODE_ENV || 'production';
+        if (env == 'production') {
             this.con = mysql.createPool({
                 host: "us-cdbr-east-02.cleardb.com",
                 user: "bdaa6c4e2efd54",

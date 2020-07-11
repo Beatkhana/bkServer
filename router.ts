@@ -15,9 +15,9 @@ const session = require('express-session');
 const CLIENT_ID = '721696709331386398';
 const CLIENT_SECRET = 'LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6';
 
-const env = process.env.NODE_ENV || 'prod';
+const env = process.env.NODE_ENV || 'production';
 let redirect = "";
-if (env == 'prod') {
+if (env == 'production') {
     redirect = encodeURIComponent('https://beatkhana.com/api/discordAuth');
 } else {
     redirect = encodeURIComponent('http://localhost:4200/api/discordAuth');

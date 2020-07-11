@@ -26,9 +26,9 @@ export class userAuth {
 
         data.append('grant_type', 'authorization_code');
 
-        const env = process.env.NODE_ENV || 'prod';
+        const env = process.env.NODE_ENV || 'production';
         let redirect = "";
-        if (env == 'prod') {
+        if (env == 'production') {
             redirect = 'https://beatkhana.com/api/discordAuth';
         } else {
             redirect = 'http://localhost:4200/api/discordAuth';
