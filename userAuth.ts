@@ -34,8 +34,8 @@ export class userAuth {
             redirect = 'http://localhost:4200/api/discordAuth';
         }
 
-        console.log(redirect)
-        console.log(env)
+        // console.log(redirect)
+        // console.log(env)
 
         data.append('redirect_uri', redirect);
         data.append('scope', 'identify');

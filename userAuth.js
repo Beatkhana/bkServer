@@ -45,8 +45,6 @@ var userAuth = /** @class */ (function () {
         }); })
             .then(function (userRes) { return userRes.json(); })
             .then(function (data) {
-            console.log('discord return');
-            console.log(data);
             _this.checkuser(data.id, function (userRes, newUser) {
                 callback(userRes, newUser);
             });
@@ -59,7 +57,7 @@ var userAuth = /** @class */ (function () {
         if (discordId) {
             var res = this.db.query("SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, users.*, GROUP_CONCAT(DISTINCT r.roleName SEPARATOR ', ') as roleNames\n            FROM users\n            LEFT JOIN roleassignment ra ON ra.userId = users.discordId\n            LEFT JOIN roles r ON r.roleId = ra.roleId\n            WHERE users.discordId = " + discordId + "\n            GROUP BY users.discordId", function (err, result) {
                 if (result.length > 0) {
-                    console.log(result);
+                    // console.log(result);
                     result[0].discordId = discordId.toString();
                     if (result[0].roleNames != null) {
                         result[0].roleIds = result[0].roleIds.split(', ');

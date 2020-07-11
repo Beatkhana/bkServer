@@ -9,6 +9,7 @@ var app = express_1.default();
 var path = require('path');
 var compression = require('compression');
 var session = require('express-session');
+var cron = require('node-cron');
 app.use(function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -50,6 +51,7 @@ app.use(function (err, req, res, next) {
 });
 app.use('/', router);
 app.use(express_1.default.static(path.join(__dirname, 'public'), { maxAge: "30d" }));
+app.use(express_1.default.static(path.join(__dirname, 'public/assets'), { maxAge: "30d" }));
 // console.log(path.join(__dirname, 'public/index.html'));
 app.get('*', function (req, res) {
     res.sendFile(path.join(__dirname, 'public/index.html'));
@@ -61,4 +63,10 @@ app.get('/hi', function (req, res) {
 var PORT = +process.env.PORT || 8080;
 app.listen(PORT, function () {
     console.log("Server now listening on " + PORT);
+    var env = process.env.NODE_ENV || 'prod';
+    console.log('Rnning in ' + env + ' mode');
 });
+// Crons
+// cron.schedule("* * * * *", () => { 
+//     console.log("Running cron :)");
+// });

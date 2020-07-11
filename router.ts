@@ -41,7 +41,7 @@ router.get(baseUrl + '/tournaments', function (req, res) {
 router.get(baseUrl + '/discordAuth', function (req, res) {
     if (req.query.code) {
         user.sendCode(req.query.code.toString(), (usrRes, newUsr = false) => {
-            if(!newUsr) {
+            if (!newUsr) {
                 req.session.user = usrRes;
                 res.redirect('/');
             } else {
@@ -59,12 +59,12 @@ router.get(baseUrl + '/user', function (req, res) {
 });
 
 router.post(baseUrl + '/newUser', function (req, res) {
-    if(req.session.newUsr[0]) {
-        let usrData = {links: req.body, discordId: req.session.newUsr[0]['discordId']};
+    if (req.session.newUsr[0]) {
+        let usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'] };
         user.newUser(usrData, (result) => {
             // req.session.destroy(() => { });
             req.session.user = result;
-            res.send({message: 'success'});
+            res.send({ message: 'success' });
         });
     } else {
         res.sendStatus(400);
@@ -91,6 +91,10 @@ router.get(baseUrl + '/logout', function (req, res) {
 
 // create tournament
 router.post(baseUrl + '/tournament', function (req, res) {
+    if (req.session.user == null) {
+        res.sendStatus(401);
+        return null;
+    }
     if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
         tournament.save(req.body, (sqlRes) => {
             res.send(sqlRes);
@@ -102,6 +106,10 @@ router.post(baseUrl + '/tournament', function (req, res) {
 
 //delete tournament
 router.post(baseUrl + '/tournament/delete/:id', function (req, res) {
+    if (req.session.user == null) {
+        res.sendStatus(401);
+        return null;
+    }
     if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
         tournament.delete(parseInt(req.params.id), (sqlRes) => {
             res.send(sqlRes);
@@ -113,8 +121,11 @@ router.post(baseUrl + '/tournament/delete/:id', function (req, res) {
 
 // update tournament
 router.put(baseUrl + '/tournament/:id', function (req, res) {
-    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, (isOwner)=> {
-        console.log(isOwner);
+    if (req.session.user == null) {
+        res.sendStatus(401);
+        return null;
+    }
+    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, (isOwner) => {
         if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
             tournament.update({ "tournament": req.body, "id": req.params.id }, (sqlRes) => {
                 res.send(sqlRes);
@@ -123,11 +134,14 @@ router.put(baseUrl + '/tournament/:id', function (req, res) {
             res.sendStatus(401);
         }
     })
-    // console.log(tournament.isOwner(req.session.user[0]['discordId'], req.params.id));
 });
 
 // archive tournament
 router.put(baseUrl + '/archiveTournament', function (req, res) {
+    if (req.session.user == null) {
+        res.sendStatus(401);
+        return null;
+    }
     if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
         tournament.archive(req.body, (sqlRes) => {
             res.send(sqlRes);
@@ -135,6 +149,12 @@ router.put(baseUrl + '/archiveTournament', function (req, res) {
     } else {
         res.sendStatus(401);
     }
+});
+
+router.get(baseUrl + '/events', function (req, res) {
+    tournament.events((result: any) => {
+        res.send(result);
+    });
 });
 
 router.get(baseUrl + '/tournament/archived', function (req, res) {

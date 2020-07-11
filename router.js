@@ -108,8 +108,11 @@ router.post(baseUrl + '/tournament/delete/:id', function (req, res) {
 });
 // update tournament
 router.put(baseUrl + '/tournament/:id', function (req, res) {
+    if (req.session.user == null) {
+        res.sendStatus(401);
+        return null;
+    }
     tournament.isOwner(req.session.user[0]['discordId'], req.params.id, function (isOwner) {
-        console.log(isOwner);
         if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
             tournament.update({ "tournament": req.body, "id": req.params.id }, function (sqlRes) {
                 res.send(sqlRes);
@@ -131,6 +134,11 @@ router.put(baseUrl + '/archiveTournament', function (req, res) {
     else {
         res.sendStatus(401);
     }
+});
+router.get(baseUrl + '/events', function (req, res) {
+    tournament.events(function (result) {
+        res.send(result);
+    });
 });
 router.get(baseUrl + '/tournament/archived', function (req, res) {
     tournament.getArchived(function (result) {
