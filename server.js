@@ -63,7 +63,7 @@ app.get('/hi', function (req, res) {
 var PORT = +process.env.PORT || 8080;
 app.listen(PORT, function () {
     console.log("Server now listening on " + PORT);
-    var env = process.env.NODE_ENV || 'prod';
+    var env = process.env.NODE_ENV || 'production';
     console.log('Rnning in ' + env + ' mode');
 });
 // Crons

@@ -15,9 +15,9 @@ var baseUrl = '/api';
 var session = require('express-session');
 var CLIENT_ID = '721696709331386398';
 var CLIENT_SECRET = 'LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6';
-var env = process.env.NODE_ENV || 'prod';
+var env = process.env.NODE_ENV || 'production';
 var redirect = "";
-if (env == 'prod') {
+if (env == 'production') {
     redirect = encodeURIComponent('https://beatkhana.com/api/discordAuth');
 }
 else {
@@ -86,6 +86,10 @@ router.get(baseUrl + '/logout', function (req, res) {
 });
 // create tournament
 router.post(baseUrl + '/tournament', function (req, res) {
+    if (req.session.user == null) {
+        res.sendStatus(401);
+        return null;
+    }
     if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
         tournament.save(req.body, function (sqlRes) {
             res.send(sqlRes);
@@ -97,6 +101,10 @@ router.post(baseUrl + '/tournament', function (req, res) {
 });
 //delete tournament
 router.post(baseUrl + '/tournament/delete/:id', function (req, res) {
+    if (req.session.user == null) {
+        res.sendStatus(401);
+        return null;
+    }
     if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
         tournament.delete(parseInt(req.params.id), function (sqlRes) {
             res.send(sqlRes);
@@ -122,10 +130,13 @@ router.put(baseUrl + '/tournament/:id', function (req, res) {
             res.sendStatus(401);
         }
     });
-    // console.log(tournament.isOwner(req.session.user[0]['discordId'], req.params.id));
 });
 // archive tournament
 router.put(baseUrl + '/archiveTournament', function (req, res) {
+    if (req.session.user == null) {
+        res.sendStatus(401);
+        return null;
+    }
     if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
         tournament.archive(req.body, function (sqlRes) {
             res.send(sqlRes);

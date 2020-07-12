@@ -17,16 +17,16 @@ var userAuth = /** @class */ (function () {
         data.append('client_id', '721696709331386398');
         data.append('client_secret', 'LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6');
         data.append('grant_type', 'authorization_code');
-        var env = process.env.NODE_ENV || 'prod';
+        var env = process.env.NODE_ENV || 'production';
         var redirect = "";
-        if (env == 'prod') {
+        if (env == 'production') {
             redirect = 'https://beatkhana.com/api/discordAuth';
         }
         else {
             redirect = 'http://localhost:4200/api/discordAuth';
         }
-        console.log(redirect);
-        console.log(env);
+        // console.log(redirect)
+        // console.log(env)
         data.append('redirect_uri', redirect);
         data.append('scope', 'identify');
         data.append('code', code);

@@ -9,6 +9,7 @@ export class database {
 
     constructor() {
         const env = process.env.NODE_ENV || 'production';
+        // console.log(env);
         if (env == 'production') {
             this.con = mysql.createPool({
                 host: "us-cdbr-east-02.cleardb.com",
@@ -43,10 +44,8 @@ export class database {
     query(sql: string, callback: Function) {
         this.con.getConnection(function (err, connection) {
             if (err) throw err;
-            var result;
             var query = connection.query(sql, function (error, results, fields) {
-                // console.log(query.sql);
-                result = results;
+                let result = results;
                 err = error;
                 connection.release();
                 // if (error) throw error;

@@ -67,13 +67,13 @@ app.get('/hi', (req, res) => {
 
 const PORT = +process.env.PORT || 8080;
 
-app.listen(PORT, () => {
+app.listen(PORT, () => { 
     console.log("Server now listening on " + PORT);
     const env = process.env.NODE_ENV || 'production';
     console.log('Rnning in '+ env +' mode')
 });
 
-// Crons
+// Crons???
 // cron.schedule("* * * * *", () => { 
 //     console.log("Running cron :)");
 // });
