@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 19.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 4000 4000" style="enable-background:new 0 0 4000 4000;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:url(#XMLID_23_);}
+	.st1{fill:url(#XMLID_24_);}
+	.st2{fill:url(#XMLID_25_);}
+	.st3{fill:url(#XMLID_26_);}
+	.st4{fill:url(#XMLID_27_);}
+	.st5{fill:url(#XMLID_31_);}
+	.st6{fill:url(#XMLID_35_);}
+	.st7{fill:url(#XMLID_36_);}
+	.st8{fill:url(#XMLID_37_);}
+	.st9{fill:url(#XMLID_56_);}
+	.st10{fill:url(#XMLID_57_);}
+	.st11{fill:url(#XMLID_58_);}
+	.st12{fill:url(#XMLID_59_);}
+	.st13{fill:url(#XMLID_60_);}
+	.st14{fill:url(#XMLID_61_);}
+	#XMLID_202_, #XMLID_129_{
+		transform-origin: center;
+
+		-webkit-animation-name: spin;
+		-webkit-animation-duration: 2000ms;
+		-webkit-animation-iteration-count: infinite;
+		-webkit-animation-timing-function: linear;
+		-moz-animation-name: spin;
+		-moz-animation-duration: 2000ms;
+		-moz-animation-iteration-count: infinite;
+		-moz-animation-timing-function: linear;
+		-ms-animation-name: spin;
+		-ms-animation-duration: 2000ms;
+		-ms-animation-iteration-count: infinite;
+		-ms-animation-timing-function: linear;
+		animation-name: spin;
+		animation-duration: 2000ms;
+		animation-iteration-count: infinite;
+		animation-timing-function: linear;
+	}
+
+	#XMLID_300_, #XMLID_464_ {
+		transform-origin: center;
+
+		-webkit-animation-name: spin;
+		-webkit-animation-duration: 2000ms;
+		-webkit-animation-iteration-count: infinite;
+		-webkit-animation-timing-function: linear;
+		-moz-animation-name: spin;
+		-moz-animation-duration: 2000ms;
+		-moz-animation-iteration-count: infinite;
+		-moz-animation-timing-function: linear;
+		-ms-animation-name: spin;
+		-ms-animation-duration: 2000ms;
+		-ms-animation-iteration-count: infinite;
+		-ms-animation-timing-function: linear;
+		animation-name: spin;
+		animation-duration: 2000ms;
+		animation-iteration-count: infinite;
+		animation-timing-function: linear;
+		animation-direction: reverse;
+	}
+
+	@-ms-keyframes spin {
+		from {
+			-ms-transform: rotate(0deg);
+		}
+		to {
+			-ms-transform: rotate(360deg);
+		}
+	}
+
+	@-moz-keyframes spin {
+		from {
+			-moz-transform: rotate(0deg);
+		}
+		to {
+			-moz-transform: rotate(360deg);
+		}
+	}
+
+	@-webkit-keyframes spin {
+		from {
+			-webkit-transform: rotate(0deg);
+		}
+		to {
+			-webkit-transform: rotate(360deg);
+		}
+	}
+
+	@keyframes spin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
+</style>
+<g id="XMLID_299_">
+	<g id="XMLID_464_">
+		<linearGradient id="XMLID_23_" gradientUnits="userSpaceOnUse" x1="3296.3193" y1="1972.8806" x2="652.7027" y2="1958.6677">
+			<stop  offset="0" style="stop-color:#00A9C5"/>
+			<stop  offset="1" style="stop-color:#5368C1"/>
+		</linearGradient>
+		<path id="XMLID_34_" class="st0" d="M1708.5,3175.9c-212.6-51.3-414.2-159.8-580.1-325.8c-480.3-480.3-480.3-1259,0-1739.2
+			c266-266,623.5-384.6,971.1-356V612.2c-384.1-28.3-777.9,104.4-1071.7,398.1c-535.8,535.8-535.8,1404.6,0,1940.4
+			c193.8,193.8,431.3,317.5,680.7,371.1V3175.9z"/>
+	</g>
+	<g id="XMLID_317_">
+		<linearGradient id="XMLID_24_" gradientUnits="userSpaceOnUse" x1="925.2834" y1="1980.5015" x2="3070.7153" y2="1980.5015">
+			<stop  offset="0" style="stop-color:#FFC03B"/>
+			<stop  offset="1" style="stop-color:#D27E3D"/>
+		</linearGradient>
+		<path id="XMLID_32_" class="st1" d="M1896.5,912.6v410.5h-188V947.5c-171.8,48-334,139.4-469,274.5
+			c-418.9,418.9-418.9,1098.1,0,1517c135.1,135.1,297.3,226.6,469,274.5V1561.7h188v1486.7c67.5,6.4,135.5,6.4,203,0v-387.2h188
+			v352.4c171.8-48,334-139.4,469-274.5c418.9-418.9,418.9-1098.1,0-1517c-135.1-135.1-297.3-226.6-469-274.5v1475.1h-188v-1510
+			C2032,906.2,1964,906.2,1896.5,912.6z"/>
+	</g>
+	<g id="XMLID_300_">
+		<linearGradient id="XMLID_25_" gradientUnits="userSpaceOnUse" x1="3296.1624" y1="2002.0819" x2="652.5457" y2="1987.8689">
+			<stop  offset="0" style="stop-color:#00A9C5"/>
+			<stop  offset="1" style="stop-color:#5368C1"/>
+		</linearGradient>
+		<path id="XMLID_33_" class="st2" d="M2968.2,1010.3c-193.8-193.8-431.3-317.5-680.7-371.1v145.9
+			c212.6,51.3,414.2,159.8,580.1,325.8c480.3,480.3,480.3,1259,0,1739.2c-266,266-623.5,384.6-971.1,356v142.7
+			c384.1,28.3,777.9-104.4,1071.7-398.1C3504,2414.9,3504,1546.1,2968.2,1010.3z"/>
+	</g>
+</g>
+<g id="XMLID_202_">
+	<linearGradient id="XMLID_26_" gradientUnits="userSpaceOnUse" x1="3828.4785" y1="1525.1068" x2="365.8307" y2="994.0259">
+		<stop  offset="0" style="stop-color:#FFC03B"/>
+		<stop  offset="1" style="stop-color:#D27E3D"/>
+	</linearGradient>
+	<path id="XMLID_297_" class="st3" d="M623.4,1287.2c60.6-119.8,136.3-230.7,224.8-330L679.5,788.5
+		C569.4,910.2,475.9,1047,402.6,1195.7L623.4,1287.2z"/>
+	<linearGradient id="XMLID_27_" gradientUnits="userSpaceOnUse" x1="3732.1765" y1="2152.9956" x2="269.5287" y2="1621.9147">
+		<stop  offset="0" style="stop-color:#FFC03B"/>
+		<stop  offset="1" style="stop-color:#D27E3D"/>
+	</linearGradient>
+	<path id="XMLID_294_" class="st4" d="M463,1864.8c10.2-136.8,38.2-268.5,81.8-393l-220.4-91.3c-54.8,152.8-89.3,315.3-100.1,484.3
+		H463z"/>
+	<linearGradient id="XMLID_31_" gradientUnits="userSpaceOnUse" x1="3548.7705" y1="3348.8018" x2="86.1228" y2="2817.7207">
+		<stop  offset="0" style="stop-color:#FFC03B"/>
+		<stop  offset="1" style="stop-color:#D27E3D"/>
+	</linearGradient>
+	<path id="XMLID_237_" class="st5" d="M610.7,2648.4l-220.4,91.3c71.9,151.9,164.7,292,274.7,416.6l168.8-168.8
+		C745.2,2885.4,670,2771.4,610.7,2648.4z"/>
+	<linearGradient id="XMLID_35_" gradientUnits="userSpaceOnUse" x1="3631.8523" y1="2807.1089" x2="169.2046" y2="2276.0278">
+		<stop  offset="0" style="stop-color:#FFC03B"/>
+		<stop  offset="1" style="stop-color:#D27E3D"/>
+	</linearGradient>
+	<path id="XMLID_236_" class="st6" d="M535.5,2462.3c-41.5-125.9-67.1-258.9-74.6-396.8H222.4c8,170.1,40,333.9,92.5,488.2
+		L535.5,2462.3z"/>
+	<linearGradient id="XMLID_36_" gradientUnits="userSpaceOnUse" x1="3485.5012" y1="3761.3186" x2="22.8534" y2="3230.2378">
+		<stop  offset="0" style="stop-color:#FFC03B"/>
+		<stop  offset="1" style="stop-color:#D27E3D"/>
+	</linearGradient>
+	<path id="XMLID_235_" class="st7" d="M805.9,3299.1c247.6,223.9,558.4,379.1,902.6,435.5v-241.9c-278.5-53-530.4-181-733.9-362.2
+		L805.9,3299.1z"/>
+	<linearGradient id="XMLID_37_" gradientUnits="userSpaceOnUse" x1="3903.239" y1="1037.668" x2="440.5912" y2="506.587">
+		<stop  offset="0" style="stop-color:#FFC03B"/>
+		<stop  offset="1" style="stop-color:#D27E3D"/>
+	</linearGradient>
+	<path id="XMLID_215_" class="st8" d="M991,816.3c62.4-54,129.1-103.1,199.7-146.7V396.4c-133.5,68.2-257,152.9-368.4,251.2
+		L991,816.3z"/>
+</g>
+<g id="XMLID_129_">
+	<linearGradient id="XMLID_56_" gradientUnits="userSpaceOnUse" x1="3890.3748" y1="1121.5431" x2="427.7269" y2="590.4622">
+		<stop  offset="0" style="stop-color:#FFC03B"/>
+		<stop  offset="1" style="stop-color:#D27E3D"/>
+	</linearGradient>
+	<path id="XMLID_201_" class="st9" d="M3372.6,1287.2l220.8-91.5c-73.3-148.7-166.8-285.5-276.9-407.2l-168.7,168.7
+		C3236.3,1056.5,3312,1167.3,3372.6,1287.2z"/>
+	<linearGradient id="XMLID_57_" gradientUnits="userSpaceOnUse" x1="3708.6021" y1="2306.7004" x2="245.9543" y2="1775.6196">
+		<stop  offset="0" style="stop-color:#FFC03B"/>
+		<stop  offset="1" style="stop-color:#D27E3D"/>
+	</linearGradient>
+	<path id="XMLID_200_" class="st10" d="M3535.1,2065.5c-7.5,137.9-33.1,271-74.6,396.8l220.6,91.4c52.5-154.3,84.5-318.1,92.5-488.2
+		H3535.1z"/>
+	<linearGradient id="XMLID_58_" gradientUnits="userSpaceOnUse" x1="3611.293" y1="2941.1558" x2="148.6452" y2="2410.075">
+		<stop  offset="0" style="stop-color:#FFC03B"/>
+		<stop  offset="1" style="stop-color:#D27E3D"/>
+	</linearGradient>
+	<path id="XMLID_196_" class="st11" d="M3385.3,2648.4c-59.4,123-134.6,237-223,339.2l168.8,168.8
+		c110-124.6,202.8-264.7,274.7-416.6L3385.3,2648.4z"/>
+	<linearGradient id="XMLID_59_" gradientUnits="userSpaceOnUse" x1="3515.6755" y1="3564.5815" x2="53.0278" y2="3033.5007">
+		<stop  offset="0" style="stop-color:#FFC03B"/>
+		<stop  offset="1" style="stop-color:#D27E3D"/>
+	</linearGradient>
+	<path id="XMLID_139_" class="st12" d="M3021.4,3130.4c-203.5,181.2-455.4,309.2-733.9,362.2v241.9
+		c344.1-56.4,655-211.6,902.6-435.5L3021.4,3130.4z"/>
+	<linearGradient id="XMLID_60_" gradientUnits="userSpaceOnUse" x1="3808.6638" y1="1654.2974" x2="346.0161" y2="1123.2164">
+		<stop  offset="0" style="stop-color:#FFC03B"/>
+		<stop  offset="1" style="stop-color:#D27E3D"/>
+	</linearGradient>
+	<path id="XMLID_138_" class="st13" d="M3451.2,1471.8c43.6,124.5,71.6,256.3,81.8,393h238.7c-10.9-169-45.3-331.5-100.1-484.3
+		L3451.2,1471.8z"/>
+	<linearGradient id="XMLID_61_" gradientUnits="userSpaceOnUse" x1="3944.9377" y1="765.7915" x2="482.29" y2="234.7106">
+		<stop  offset="0" style="stop-color:#FFC03B"/>
+		<stop  offset="1" style="stop-color:#D27E3D"/>
+	</linearGradient>
+	<path id="XMLID_133_" class="st14" d="M3173.7,647.5c-111.3-98.3-234.9-183-368.4-251.2v273.2c70.6,43.5,137.3,92.7,199.7,146.7
+		L3173.7,647.5z"/>
+</g>
+</svg>
