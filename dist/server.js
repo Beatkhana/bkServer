@@ -9,6 +9,7 @@ var app = express_1.default();
 var path = require('path');
 var compression = require('compression');
 var session = require('express-session');
+var MemoryStore = require('memorystore')(session);
 var cron = require('node-cron');
 app.use(function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -30,6 +31,9 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     secret: 'jfgdasjkfdau',
+    store: new MemoryStore({
+        checkPeriod: 86400000 // prune expired entries every 24h
+    }),
     cookie: {
         maxAge: 604800000,
         sameSite: true
@@ -64,7 +68,7 @@ var PORT = +process.env.PORT || 8080;
 app.listen(PORT, function () {
     console.log("Server now listening on " + PORT);
     var env = process.env.NODE_ENV || 'production';
-    console.log('Rnning in ' + env + ' mode');
+    console.log('Running in ' + env + ' mode');
 });
 // Crons???
 // cron.schedule("* * * * *", () => { 

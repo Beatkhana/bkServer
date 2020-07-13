@@ -146,6 +146,47 @@ router.put(baseUrl + '/archiveTournament', function (req, res) {
         res.sendStatus(401);
     }
 });
+// Add map pool
+router.post(baseUrl + '/tournament/addPool', function (req, res) {
+    if (req.session.user == null) {
+        res.sendStatus(401);
+        return null;
+    }
+    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, function (isOwner) {
+        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
+            tournament.addPool(req.body, function (sqlRes) {
+                res.send(sqlRes);
+            });
+        }
+        else {
+            res.sendStatus(401);
+        }
+    });
+});
+// get map pools
+router.get(baseUrl + '/map-pools/:id', function (req, res) {
+    tournament.getMapPools(req.params.id, function (result) {
+        res.send(result);
+    });
+});
+// Add song
+router.post(baseUrl + '/tournament/addSong', function (req, res) {
+    if (req.session.user == null) {
+        res.sendStatus(401);
+        return null;
+    }
+    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, function (isOwner) {
+        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
+            tournament.addSong(req.body, function (sqlRes) {
+                res.send(sqlRes);
+            });
+        }
+        else {
+            res.sendStatus(401);
+        }
+    });
+});
+// Calendar events
 router.get(baseUrl + '/events', function (req, res) {
     tournament.events(function (result) {
         res.send(result);

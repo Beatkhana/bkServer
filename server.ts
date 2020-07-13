@@ -56,7 +56,7 @@ app.use((err, req, res, next) => {
 
 app.use('/', router);
 
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: "30d" }));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public/assets'), { maxAge: "30d" }));
 // console.log(path.join(__dirname, 'public/index.html'));
 
