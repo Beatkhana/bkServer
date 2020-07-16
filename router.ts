@@ -217,4 +217,10 @@ router.get(baseUrl + '/rankings', function (req, res) {
     });
 });
 
+router.get(baseUrl + '/team', function (req, res) {
+    ranking.getTeam((result: any) => {
+        res.send(result);
+    });
+});
+
 module.exports = router;
