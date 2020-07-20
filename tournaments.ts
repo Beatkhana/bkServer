@@ -118,7 +118,6 @@ export class tournaments {
     }
 
     // Map Pools
-
     addPool(data: any, callback: Function) {
         this.db.preparedQuery(`INSERT INTO map_pools SET ?`, [data], (err, result) => {
             let flag = false;
@@ -130,10 +129,29 @@ export class tournaments {
         })
     }
 
-    getMapPools(tournamentId: string, callback: Function) {
-        this.db.preparedQuery(`SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE tournamentId = ?`, [tournamentId], (err, result: any) => {
+    updatePool(data:any, callback:Function) {
+        let poolId = data.poolId;
+        delete data.poolId;
+        this.db.preparedQuery(`UPDATE map_pools SET ? WHERE id = ?`, [data, poolId], (err, result) => {
+            let flag = false;
+            if (err) flag = true;
+            return callback({
+                data: result,
+                flag: flag,
+                err: err
+            });
+        })
+    }
+
+    getMapPools(tournamentId: string, callback: Function, isAuth: boolean = false) {
+        let sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?`;
+        if(isAuth){
+            sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE tournamentId = ?`;
+        }
+        this.db.preparedQuery(sql, [tournamentId], (err, result: any) => {
             let mapPools = {};
             // console.log(result)
+            if(result == undefined) return callback({});
             for (const song of result) {
                 if (song.poolId in mapPools) {
                     mapPools[song.poolId].songs.push(

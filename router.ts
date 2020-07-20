@@ -29,7 +29,7 @@ router.get(baseUrl, function (req, res) {
 });
 
 router.get(baseUrl + '/login', function (req, res) {
-    res.redirect(`https://discordapp.com/api/oauth2/authorize?client_id=${CLIENT_ID}&scope=identify&response_type=code&redirect_uri=${redirect}`);
+    res.redirect(`https://discordapp.com/api/oauth2/authorize?client_id=${CLIENT_ID}&scope=identify&response_type=code&redirect_uri=${redirect}&state=${req.query.url}`);
 });
 
 router.get(baseUrl + '/tournaments', function (req, res) {
@@ -43,7 +43,11 @@ router.get(baseUrl + '/discordAuth', function (req, res) {
         user.sendCode(req.query.code.toString(), (usrRes, newUsr = false) => {
             if (!newUsr) {
                 req.session.user = usrRes;
-                res.redirect('/');
+                if (req.query.state != undefined) {
+                    res.redirect(`${req.query.state}`);
+                } else {
+                    res.redirect('/');
+                }
             } else {
                 req.session.newUsr = usrRes;
                 res.redirect('/sign-up');
@@ -69,7 +73,7 @@ router.post(baseUrl + '/newUser', function (req, res) {
     } else {
         res.sendStatus(400);
     }
-}); 
+});
 
 router.get(baseUrl + '/users', function (req, res) {
     ranking.allUsers((result: any) => {
@@ -170,8 +174,43 @@ router.post(baseUrl + '/tournament/addPool', function (req, res) {
 
 // get map pools
 router.get(baseUrl + '/map-pools/:id', function (req, res) {
-    tournament.getMapPools(req.params.id, (result: any) => {
-        res.send(result);
+    if (req.session.user == null) {
+        tournament.getMapPools(req.params.id, (result: any) => {
+            res.send(result);
+        });
+        return null;
+    }
+    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, (isOwner) => {
+        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
+            tournament.getMapPools(req.params.id, (result: any) => {
+                res.send(result);
+            }, true);
+            return null;
+        } else {
+            tournament.getMapPools(req.params.id, (result: any) => {
+                res.send(result);
+            });
+            return null;
+        }
+    });
+});
+
+// Udate map pools
+router.put(baseUrl + '/map-pools/:id', function (req, res) {
+    if (req.session.user == null) {
+        res.sendStatus(401);
+        return null;
+    }
+    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, (isOwner) => {
+        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
+            tournament.updatePool(req.body, (result) => {
+                res.send(result);
+            });
+            return null;
+        } else {
+            res.sendStatus(401);
+            return null;
+        }
     });
 });
 
