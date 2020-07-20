@@ -231,6 +231,23 @@ router.post(baseUrl + '/tournament/addSong', function (req, res) {
     })
 });
 
+// Delete song from pool
+router.post(baseUrl + '/map-pools/deleteSong', function (req, res) {
+    if (req.session.user == null) {
+        res.sendStatus(401);
+        return null;
+    }
+    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, (isOwner) => {
+        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
+            tournament.deleteSong(req.body, (sqlRes) => {
+                res.send(sqlRes);
+            });
+        } else {
+            res.sendStatus(401);
+        }
+    })
+});
+
 // Calendar events
 router.get(baseUrl + '/events', function (req, res) {
     tournament.events((result: any) => {

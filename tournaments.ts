@@ -222,6 +222,17 @@ export class tournaments {
             });
     }
 
+    deleteSong(data:any, callback:Function) {
+        this.db.preparedQuery(`DELETE FROM pool_link WHERE ?`, [data], (err, result) => {
+            let flag = false;
+            if (err) flag = true;
+            return callback({
+                data: result,
+                flag: flag
+            });
+        })
+    }
+
     saveSong(data, callback: Function) {
         this.db.preparedQuery(`INSERT INTO pool_link (songHash, songName, songAuthor, levelAuthor, \`key\`, songDiff, ssLink, poolId) VALUES ?`, [data], (err, result) => {
             let flag = false;
