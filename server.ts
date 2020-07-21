@@ -9,6 +9,9 @@ var MemoryStore = require('memorystore')(session)
 
 const cron = require('node-cron');
 
+// const cronJobs = require('./crons')
+import {crons} from './crons';
+
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -78,6 +81,7 @@ app.listen(PORT, () => {
 });
 
 // Crons???
-// cron.schedule("* * * * *", () => { 
-//     console.log("Running cron :)");
-// });
+cron.schedule("0,30 * * * *", () => { 
+    console.log("Running Cron: Update users");
+    crons.updateSSData();
+});

@@ -12,13 +12,41 @@ export class rankings {
     allUsers(callback:Function) {
         var data:any = [];
         
-        const result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users",(err, result: any) => {
+        const result = this.db.query(`SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, 
+        CAST(\`users\`.\`discordId\` AS CHAR) as discordId,
+        CAST(\`users\`.\`ssId\` AS CHAR) as ssId,
+        \`users\`.\`name\`,
+        \`users\`.\`twitchName\`,
+        \`users\`.\`avatar\`,
+        \`users\`.\`globalRank\`,
+        \`users\`.\`localRank\`,
+        \`users\`.\`country\`,
+        \`users\`.\`tourneyRank\`,
+        \`users\`.\`TR\`,
+        \`users\`.\`pronoun\`, 
+        GROUP_CONCAT(DISTINCT r.roleName SEPARATOR ', ') as roleNames
+        FROM users
+        LEFT JOIN roleassignment ra ON ra.userId = users.discordId
+        LEFT JOIN roles r ON r.roleId = ra.roleId
+        GROUP BY users.discordId`,(err, result: any) => {
             return callback(result);
         });
     }
 
     getTeam(callback:Function) {
-        const result = this.db.query(`SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, users.*, GROUP_CONCAT(DISTINCT r.roleName SEPARATOR ', ') as roleNames
+        const result = this.db.query(`SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, 
+        CAST(\`users\`.\`discordId\` AS CHAR) as discordId,
+        CAST(\`users\`.\`ssId\` AS CHAR) as ssId,
+        \`users\`.\`name\`,
+        \`users\`.\`twitchName\`,
+        \`users\`.\`avatar\`,
+        \`users\`.\`globalRank\`,
+        \`users\`.\`localRank\`,
+        \`users\`.\`country\`,
+        \`users\`.\`tourneyRank\`,
+        \`users\`.\`TR\`,
+        \`users\`.\`pronoun\`, 
+        GROUP_CONCAT(DISTINCT r.roleName SEPARATOR ', ') as roleNames
         FROM users
         LEFT JOIN roleassignment ra ON ra.userId = users.discordId
         LEFT JOIN roles r ON r.roleId = ra.roleId
@@ -33,7 +61,7 @@ export class rankings {
     }
 
     getRanks(callback:Function) {
-        const result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users ORDER BY tourneyRank",(err, result: any) => {
+        const result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users ORDER BY tourneyRank LIMIT 25",(err, result: any) => {
             return callback(result);
         });
     }

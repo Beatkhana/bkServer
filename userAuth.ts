@@ -122,21 +122,21 @@ export class userAuth {
     }
 
     getSSData(id, callback: Function) {
-        // console.log(`https://new.scoresaber.com/api/player/${id}/basic`);
-        // https.get(`https://new.scoresaber.com/api/player/${id}/basic`, (resp) => {
-        //     let data = '';
-        //     resp.on('end', () => {
-        //         console.log(JSON.parse(data).explanation);
-        //     });
-
-        // }).on("error", (err) => {
-        //     console.log("Error: " + err.message);
-        // });
         request(`https://new.scoresaber.com/api/player/${id}/basic`, { json: true }, (err, res, body) => {
             if (err) { return console.log(err); }
-            // console.log(body.url);
-            // console.log(body);
             callback(body);
+        });
+    }
+
+    update(id, data, callback:Function) {
+        const result = this.db.preparedQuery(`UPDATE users SET ? WHERE discordId = ?`, [data, id], (err, result: any) => {
+            let flag = false;
+            if (err) flag = true;
+            return callback({
+                data: result,
+                flag: flag,
+                err: err
+            });
         });
     }
 

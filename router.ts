@@ -62,6 +62,20 @@ router.get(baseUrl + '/user', function (req, res) {
     res.send(req.session.user);
 });
 
+router.put(baseUrl + '/user/:id', function (req, res) {
+    isAdmin(req, auth => {
+        if (auth) {
+            user.update(req.params.id, req.body, (response) => {
+                res.send(response);
+            });
+            return null;
+        } else {
+            res.sendStatus(401);
+            return null;
+        }
+    });
+});
+
 router.post(baseUrl + '/newUser', function (req, res) {
     if (req.session.newUsr[0]) {
         let usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'] };
