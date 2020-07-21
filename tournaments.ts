@@ -11,7 +11,7 @@ import cheerio from 'cheerio';
 
 export class tournaments {
     db = new database();
-
+    env = process.env.NODE_ENV || 'production';
     constructor() {
         // setInterval(function () {
         //     this.db.query('SELECT 1');
@@ -21,28 +21,28 @@ export class tournaments {
     getAll(callback: Function) {
         var data: any = [];
 
-        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, endDate, \`time\`, discord, twitchLink, prize, info, challongeLink, archived, \`first\`, \`second\`, third FROM tournaments", (err, result: any) => {
+        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments", (err, result: any) => {
             return callback(result);
         });
     }
 
     getActive(callback: Function) {
         var data: any = [];
-        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, endDate, \`time\`, discord, twitchLink, prize, info, challongeLink, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 0", (err, result: any) => {
+        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 0", (err, result: any) => {
             return callback(result);
         });
     }
 
     getArchived(callback: Function) {
         var data: any = [];
-        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, endDate, \`time\`, discord, twitchLink, prize, info, challongeLink, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 1", (err, result: any) => {
+        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 1", (err, result: any) => {
             return callback(result);
         });
     }
 
     getTournament(id: string, callback: Function) {
         var data: any = [];
-        const result = this.db.query(`SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, endDate, \`time\`, discord, twitchLink, prize, info, challongeLink, archived, \`first\`, \`second\`, third FROM tournaments WHERE id = ${id}`, (err, result: any) => {
+        const result = this.db.query(`SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments WHERE id = ${id}`, (err, result: any) => {
             return callback(result);
         });
     }
@@ -54,50 +54,100 @@ export class tournaments {
         let imgName = data.imgName;
         imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
 
+        let savePath = this.env == 'development' ? '../app/src/assets/images/' : './public/assets/images/';
+
         // jimp
         const buf = Buffer.from(base64Img, 'base64');
         sharp(buf)
             .resize({ width: 550 })
-            .toFile('./public/assets/images/' + imgName)
-            .catch(err => { console.log(err) });
+            .toFile(savePath + imgName)
+            .catch(err => {
+                return callback({
+                    flag: true,
+                    err: err
+                });
+            });
 
 
         data.image = 'assets/images/' + imgName;
         delete data.imgName;
-        console.log(data);
+
+        try {
+            data.date = this.formatDate(data.date);
+            data.endDate = this.formatDate(data.endDate);
+        } catch (err) {
+            return callback({
+                flag: true,
+                err: err
+            });
+        }
 
         const result = this.db.preparedQuery(`INSERT INTO tournaments SET ?`, [data], (err, result: any) => {
-            return callback(result);
+            let flag = false;
+            if (err) flag = true;
+            return callback({
+                data: result,
+                flag: flag,
+                err: err
+            });
         });
     }
 
     delete(id: number, callback: Function) {
         const result = this.db.preparedQuery(`DELETE FROM tournaments WHERE id = ?`, [id], (err, result: any) => {
-            if (err) return callback({ 'error': err });
-            return callback({ 'message': "success" });
+            let flag = false;
+            if (err) flag = true;
+            return callback({
+                data: result,
+                flag: flag,
+                err: err
+            });
         });
     }
 
     update(data: any, callback: Function) {
-        // console.log(data);
+        try {
+            data.tournament.date = this.formatDate(data.tournament.date);
+            data.tournament.endDate = this.formatDate(data.tournament.endDate);
+        } catch (err) {
+            return callback({
+                flag: true,
+                err: err
+            });
+        }
         const result = this.db.preparedQuery(`UPDATE tournaments SET ? WHERE ?? = ?`, [data.tournament, 'id', data.id], (err, result: any) => {
             let flag = false;
             if (err) flag = true;
             return callback({
                 data: result,
-                flag: flag
+                flag: flag,
+                err: err
             });
         });
     }
 
     archive(data: any, callback: Function) {
-        // console.log(data);
-        let id = data.tournament.id;
-        delete data.tournament.id;
-        data.tournament.archived = 1;
-        // console.log(data);
-        const result = this.db.preparedQuery(`UPDATE tournaments SET ? WHERE ?? = ?`, [data.tournament, 'id', id], (err, result: any) => {
-            return callback(result);
+        try {
+            data.tournament = {
+                first: data.first,
+                second: data.second,
+                third: data.third,
+                archived: 1
+            };
+        } catch (err) {
+            return callback({
+                flag: true,
+                err: err
+            });
+        }
+        const result = this.db.preparedQuery(`UPDATE tournaments SET ? WHERE ?? = ?`, [data.tournament, 'id', data.id], (err, result: any) => {
+            let flag = false;
+            if (err) flag = true;
+            return callback({
+                data: result,
+                flag: flag,
+                err: err
+            });
         });
     }
 
@@ -124,12 +174,13 @@ export class tournaments {
             if (err) flag = true;
             return callback({
                 data: result,
-                flag: flag
+                flag: flag,
+                err: err
             });
         })
     }
 
-    updatePool(data:any, callback:Function) {
+    updatePool(data: any, callback: Function) {
         let poolId = data.poolId;
         delete data.poolId;
         this.db.preparedQuery(`UPDATE map_pools SET ? WHERE id = ?`, [data, poolId], (err, result) => {
@@ -145,13 +196,13 @@ export class tournaments {
 
     getMapPools(tournamentId: string, callback: Function, isAuth: boolean = false) {
         let sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?`;
-        if(isAuth){
+        if (isAuth) {
             sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE tournamentId = ?`;
         }
         this.db.preparedQuery(sql, [tournamentId], (err, result: any) => {
             let mapPools = {};
             // console.log(result)
-            if(result == undefined) return callback({});
+            if (result == undefined) return callback({});
             for (const song of result) {
                 if (song.poolId in mapPools) {
                     mapPools[song.poolId].songs.push(
@@ -217,13 +268,15 @@ export class tournaments {
                 });
             })
             .catch(function (err) {
-                //handle error
-                // no
+                return callback({
+                    flag: true,
+                    err: err
+                });
             });
     }
 
-    deleteSong(data:any, callback:Function) {
-        this.db.preparedQuery(`DELETE FROM pool_link WHERE ?`, [data], (err, result) => {
+    deleteSong(data: any, callback: Function) {
+        this.db.preparedQuery(`DELETE FROM pool_link WHERE id = ?`, [data], (err, result) => {
             let flag = false;
             if (err) flag = true;
             return callback({
@@ -239,7 +292,8 @@ export class tournaments {
             if (err) flag = true;
             return callback({
                 data: result,
-                flag: flag
+                flag: flag,
+                err: err
             });
         })
     }
@@ -261,6 +315,20 @@ export class tournaments {
                 }
                 return callback(info);
             })
+    }
+
+    private formatDate(date) {
+        var d = new Date(date),
+            month = '' + (d.getUTCMonth() + 1),
+            day = '' + d.getUTCDate(),
+            year = d.getUTCFullYear();
+
+        if (month.length < 2)
+            month = '0' + month;
+        if (day.length < 2)
+            day = '0' + day;
+
+        return [year, month, day].join('-');
     }
 
 }

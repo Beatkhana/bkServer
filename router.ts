@@ -97,101 +97,80 @@ router.get(baseUrl + '/logout', function (req, res) {
 router.post(baseUrl + '/tournament', function (req, res) {
     isAdmin(req, auth => {
         if (auth) {
-            tournament.save(req.body, (sqlRes) => {
-                res.send(sqlRes);
+            tournament.save(req.body, (response) => {
+                res.send(response);
+            });
+            return null;
+        } else {
+            res.sendStatus(401);
+            return null;
+        }
+    });
+});
+
+//delete tournament
+router.post(baseUrl + '/tournament/delete/:id', function (req, res) {
+    isAdmin(req, auth => {
+        if (auth) {
+            tournament.delete(parseInt(req.params.id), (response) => {
+                res.send(response);
+            });
+            return null;
+        } else {
+            res.sendStatus(401);
+            return null;
+        }
+    });
+});
+
+// update tournament
+router.put(baseUrl + '/tournament/:id', function (req, res) {
+    isAdminOwner(req, req.params.id, auth => {
+        if (auth) {
+            tournament.update({ "tournament": req.body, "id": req.params.id }, (response) => {
+                res.send(response);
+            });
+            return null;
+        } else {
+            res.sendStatus(401);
+            return null;
+        }
+    });
+});
+
+// archive tournament
+router.put(baseUrl + '/archiveTournament', function (req, res) {
+    isAdmin(req, auth => {
+        if (auth) {
+            tournament.archive(req.body, (response) => {
+                res.send(response);
             });
         } else {
             res.sendStatus(401);
             return null;
         }
-    })
-    // if (req.session.user == null) {
-    //     res.sendStatus(401);
-    //     return null;
-    // }
-    // if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
-    //     tournament.save(req.body, (sqlRes) => {
-    //         res.send(sqlRes);
-    //     });
-    // } else {
-    //     res.sendStatus(401);
-    // }
-});
-
-//delete tournament
-router.post(baseUrl + '/tournament/delete/:id', function (req, res) {
-    if (req.session.user == null) {
-        res.sendStatus(401);
-        return null;
-    }
-    if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
-        tournament.delete(parseInt(req.params.id), (sqlRes) => {
-            res.send(sqlRes);
-        });
-    } else {
-        res.sendStatus(401);
-    }
-});
-
-// update tournament
-router.put(baseUrl + '/tournament/:id', function (req, res) {
-    if (req.session.user == null) {
-        res.sendStatus(401);
-        return null;
-    }
-    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, (isOwner) => {
-        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
-            tournament.update({ "tournament": req.body, "id": req.params.id }, (sqlRes) => {
-                res.send(sqlRes);
-            });
-        } else {
-            res.sendStatus(401);
-        }
-    })
-});
-
-// archive tournament
-router.put(baseUrl + '/archiveTournament', function (req, res) {
-    if (req.session.user == null) {
-        res.sendStatus(401);
-        return null;
-    }
-    if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
-        tournament.archive(req.body, (sqlRes) => {
-            res.send(sqlRes);
-        });
-    } else {
-        res.sendStatus(401);
-    }
+    });
 });
 
 // Add map pool
 router.post(baseUrl + '/tournament/addPool', function (req, res) {
-    if (req.session.user == null) {
-        res.sendStatus(401);
-        return null;
-    }
-    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, (isOwner) => {
-        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
-            tournament.addPool(req.body, (sqlRes) => {
-                res.send(sqlRes);
+    isAdminOwner(req, req.body.tournamentId, auth => {
+        if (auth) {
+            tournament.addPool(req.body, (response) => {
+                res.send(response);
             });
+            return null;
         } else {
             res.sendStatus(401);
+            return null;
         }
     });
 });
 
 // get map pools
 router.get(baseUrl + '/map-pools/:id', function (req, res) {
-    if (req.session.user == null) {
-        tournament.getMapPools(req.params.id, (result: any) => {
-            res.send(result);
-        });
-        return null;
-    }
-    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, (isOwner) => {
-        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
+    isAdminOwner(req, req.params.id, auth => {
+        if (auth) {
             tournament.getMapPools(req.params.id, (result: any) => {
                 res.send(result);
             }, true);
@@ -207,12 +186,8 @@ router.get(baseUrl + '/map-pools/:id', function (req, res) {
 
 // Udate map pools
 router.put(baseUrl + '/map-pools/:id', function (req, res) {
-    if (req.session.user == null) {
-        res.sendStatus(401);
-        return null;
-    }
-    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, (isOwner) => {
-        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
+    isAdminOwner(req, req.params.id, auth => {
+        if (auth) {
             tournament.updatePool(req.body, (result) => {
                 res.send(result);
             });
@@ -226,36 +201,32 @@ router.put(baseUrl + '/map-pools/:id', function (req, res) {
 
 // Add song
 router.post(baseUrl + '/tournament/addSong', function (req, res) {
-    if (req.session.user == null) {
-        res.sendStatus(401);
-        return null;
-    }
-    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, (isOwner) => {
-        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
-            tournament.addSong(req.body, (sqlRes) => {
-                res.send(sqlRes);
+    isAdminOwner(req, req.body.tournamentId, auth => {
+        if (auth) {
+            tournament.addSong(req.body, (response) => {
+                res.send(response);
             });
+            return null;
         } else {
             res.sendStatus(401);
+            return null;
         }
-    })
+    });
 });
 
 // Delete song from pool
 router.post(baseUrl + '/map-pools/deleteSong', function (req, res) {
-    if (req.session.user == null) {
-        res.sendStatus(401);
-        return null;
-    }
-    tournament.isOwner(req.session.user[0]['discordId'], req.params.id, (isOwner) => {
-        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
-            tournament.deleteSong(req.body, (sqlRes) => {
-                res.send(sqlRes);
+    isAdminOwner(req, req.body.tournamentId, auth => {
+        if (auth) {
+            tournament.deleteSong(req.body.id, (response) => {
+                res.send(response);
             });
+            return null;
         } else {
             res.sendStatus(401);
+            return null;
         }
-    })
+    });
 });
 
 // Calendar events
@@ -293,8 +264,8 @@ module.exports = router;
 
 // Auth stuff
 function isAdminOwner(req, tournamentId, callback: Function) {
-    tournament.isOwner(req.session.user[0]['discordId'], tournamentId, (isOwner) => {
-        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
+    tournament.isOwner(req.session.user != null && req.session.user[0]['discordId'], tournamentId, (isOwner) => {
+        if ((req.session.user != null && req.session.user[0]['roleIds'].indexOf('1') > -1) || isOwner) {
             callback(true);
             return null;
         } else {
