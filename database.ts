@@ -19,26 +19,21 @@ export class database {
                 connectionLimit: 10
             });
         } else {
+            // this.con = mysql.createPool({
+            //     host: "us-cdbr-east-05.cleardb.net",
+            //     user: "bf459e897fa39a",
+            //     password: "88303776",
+            //     database: "heroku_11100f74419df40",
+            //     connectionLimit: 10
+            // });
             this.con = mysql.createPool({
-                host: "us-cdbr-east-05.cleardb.net",
-                user: "bf459e897fa39a",
-                password: "88303776",
+                host: "localhost",
+                user: "dan",
+                password: "test",
                 database: "heroku_11100f74419df40",
                 connectionLimit: 10
             });
         }
-        // this.con = mysql.createPool({
-        //     // host: "us-cdbr-east-05.cleardb.net",
-        //     // user: "bf459e897fa39a",
-        //     // password: "88303776",
-        //     // database: "heroku_11100f74419df40",
-        //     connectionLimit: 10,
-        //     // host: "sql230.main-hosting.eu",
-        //     host: "213.190.6.106",
-        //     user: "u826845424_beatKhanaTest",
-        //     password: "Vl0M6MbwGFyj",
-        //     database: "u826845424_beatKhanaTest"
-        // });
     }
 
     query(sql: string, callback: Function) {

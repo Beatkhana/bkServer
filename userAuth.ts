@@ -105,7 +105,8 @@ export class userAuth {
                 avatar: ssData.playerInfo.avatar,
                 globalRank: ssData.playerInfo.rank,
                 localRank: ssData.playerInfo.countryRank,
-                country: ssData.playerInfo.country
+                country: ssData.playerInfo.country,
+                pronoun: data.links.pronoun
             };
             // console.log(user);
             const result = this.db.preparedQuery(`INSERT INTO users SET ?`, [user], (err, result: any) => {

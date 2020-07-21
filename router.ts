@@ -95,17 +95,27 @@ router.get(baseUrl + '/logout', function (req, res) {
 
 // create tournament
 router.post(baseUrl + '/tournament', function (req, res) {
-    if (req.session.user == null) {
-        res.sendStatus(401);
-        return null;
-    }
-    if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
-        tournament.save(req.body, (sqlRes) => {
-            res.send(sqlRes);
-        });
-    } else {
-        res.sendStatus(401);
-    }
+    isAdmin(req, auth => {
+        if (auth) {
+            tournament.save(req.body, (sqlRes) => {
+                res.send(sqlRes);
+            });
+        } else {
+            res.sendStatus(401);
+            return null;
+        }
+    })
+    // if (req.session.user == null) {
+    //     res.sendStatus(401);
+    //     return null;
+    // }
+    // if (req.session.user[0]['roleIds'].indexOf('1') > -1) {
+    //     tournament.save(req.body, (sqlRes) => {
+    //         res.send(sqlRes);
+    //     });
+    // } else {
+    //     res.sendStatus(401);
+    // }
 });
 
 //delete tournament
@@ -280,3 +290,26 @@ router.get(baseUrl + '/team', function (req, res) {
 });
 
 module.exports = router;
+
+// Auth stuff
+function isAdminOwner(req, tournamentId, callback: Function) {
+    tournament.isOwner(req.session.user[0]['discordId'], tournamentId, (isOwner) => {
+        if (req.session.user[0]['roleIds'].indexOf('1') > -1 || isOwner) {
+            callback(true);
+            return null;
+        } else {
+            callback(false);
+            return null;
+        }
+    })
+}
+
+function isAdmin(req, callback: Function) {
+    if (req.session.user == null || req.session.user[0]['roleIds'].indexOf('1') == -1) {
+        callback(false);
+        return null;
+    } else {
+        callback(true);
+        return null;
+    }
+}
