@@ -26,9 +26,37 @@ export class tournaments {
         });
     }
 
-    getActive(callback: Function) {
-        var data: any = [];
-        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 0", (err, result: any) => {
+    getActive(callback: Function, userId = 0) {
+        let sqlWhere = "";
+        switch (true) {
+            case userId > 0:
+                sqlWhere = `AND (ts.public = 1 OR owner = ${userId})`;
+                break;
+            case userId < 0:
+                sqlWhere = ``;
+                break;
+            case userId == 0:
+                sqlWhere = `AND ts.public = 1`;
+                break;
+        }
+        const result = this.db.query(`SELECT \`tournaments\`.\`id\`,
+        \`tournaments\`.\`name\`,
+        \`tournaments\`.\`image\`,
+        \`tournaments\`.\`date\`,
+        \`tournaments\`.\`endDate\`,
+        \`tournaments\`.\`discord\`,
+        \`tournaments\`.\`twitchLink\`,
+        \`tournaments\`.\`prize\`,
+        \`tournaments\`.\`info\`,
+        CAST(\`tournaments\`.\`owner\` AS CHAR) as owner,
+        \`tournaments\`.\`archived\`,
+        \`tournaments\`.\`first\`,
+        \`tournaments\`.\`second\`,
+        \`tournaments\`.\`third\`,
+        ts.public
+        FROM tournaments 
+        LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
+        WHERE archived = 0 ${sqlWhere}`, (err, result: any) => {
             return callback(result);
         });
     }
@@ -40,9 +68,44 @@ export class tournaments {
         });
     }
 
-    getTournament(id: string, callback: Function) {
-        var data: any = [];
-        const result = this.db.query(`SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments WHERE id = ${id}`, (err, result: any) => {
+    getTournament(id: string, callback: Function, userId = 0) {
+        let sqlWhere = "";
+        switch (true) {
+            case userId > 0:
+                sqlWhere = `AND (ts.public = 1 OR owner = ${userId})`;
+                break;
+            case userId < 0:
+                sqlWhere = ``;
+                break;
+            case userId == 0:
+                sqlWhere = `AND ts.public = 1`;
+                break;
+        }
+        const result = this.db.query(`SELECT \`tournaments\`.\`id\` as tournamentId,
+        \`tournaments\`.\`name\`,
+        \`tournaments\`.\`image\`,
+        \`tournaments\`.\`date\`,
+        \`tournaments\`.\`endDate\`,
+        \`tournaments\`.\`discord\`,
+        \`tournaments\`.\`twitchLink\`,
+        \`tournaments\`.\`prize\`,
+        \`tournaments\`.\`info\`,
+        CAST(\`tournaments\`.\`owner\` AS CHAR) as owner,
+        \`tournaments\`.\`archived\`,
+        \`tournaments\`.\`first\`,
+        \`tournaments\`.\`second\`,
+        \`tournaments\`.\`third\`,
+        ts.id as settingsId,
+        ts.tournamentId,
+        ts.public_singups,
+        ts.public,
+        ts.state,
+        ts.type,
+        ts.has_bracket,
+        ts.has_map_pool
+        FROM tournaments 
+        LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
+        WHERE tournaments.id = ${id} ${sqlWhere}`, (err, result: any) => {
             return callback(result);
         });
     }
@@ -85,11 +148,24 @@ export class tournaments {
         const result = this.db.preparedQuery(`INSERT INTO tournaments SET ?`, [data], (err, result: any) => {
             let flag = false;
             if (err) flag = true;
-            return callback({
-                data: result,
-                flag: flag,
-                err: err
-            });
+            if (!err) {
+                this.db.preparedQuery('INSERT INTO tournament_settings SET tournamentId = ?', [result.insertId], (err, result2: any) => {
+                    let flag = false;
+                    if (err) flag = true;
+                    console.log(err);
+                    return callback({
+                        data: result,
+                        flag: flag,
+                        err: err
+                    });
+                })
+            } else {
+                return callback({
+                    data: result,
+                    flag: flag,
+                    err: err
+                });
+            }
         });
     }
 
@@ -116,6 +192,18 @@ export class tournaments {
             });
         }
         const result = this.db.preparedQuery(`UPDATE tournaments SET ? WHERE ?? = ?`, [data.tournament, 'id', data.id], (err, result: any) => {
+            let flag = false;
+            if (err) flag = true;
+            return callback({
+                data: result,
+                flag: flag,
+                err: err
+            });
+        });
+    }
+
+    updateSettings(data: any, callback: Function) {
+        const result = this.db.preparedQuery(`UPDATE tournament_settings SET ? WHERE ?? = ?`, [data.settings, 'id', data.settingsId], (err, result: any) => {
             let flag = false;
             if (err) flag = true;
             return callback({

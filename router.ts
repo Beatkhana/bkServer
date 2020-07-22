@@ -32,12 +32,6 @@ router.get(baseUrl + '/login', function (req, res) {
     res.redirect(`https://discordapp.com/api/oauth2/authorize?client_id=${CLIENT_ID}&scope=identify&response_type=code&redirect_uri=${redirect}&state=${req.query.url}`);
 });
 
-router.get(baseUrl + '/tournaments', function (req, res) {
-    tournament.getActive((result: any) => {
-        res.send(result);
-    });
-});
-
 router.get(baseUrl + '/discordAuth', function (req, res) {
     if (req.query.code) {
         user.sendCode(req.query.code.toString(), (usrRes, newUsr = false) => {
@@ -107,6 +101,50 @@ router.get(baseUrl + '/logout', function (req, res) {
     res.redirect('/');
 });
 
+// Get all tournaments
+router.get(baseUrl + '/tournaments', function (req, res) {
+    if (req.session.user != null) {
+        isAdmin(req, isAuth => {
+            if(isAuth) {
+                tournament.getActive((result: any) => {
+                    res.send(result);
+                },-1);
+            }else {
+                tournament.getActive((result: any) => {
+                    res.send(result);
+                },req.session.user[0]['discordId']);
+            }
+        })
+    }else {
+        tournament.getActive((result: any) => {
+            res.send(result);
+        });
+    }
+});
+
+// Get tournament
+router.get(baseUrl + '/tournament/:id', function (req, res) {
+    if (req.session.user != null) {
+        isAdmin(req, isAuth => {
+            if(isAuth) {
+                tournament.getTournament(req.params.id, (result: any) => {
+                    res.send(result);
+                }, -1);
+            }else {
+                tournament.getTournament(req.params.id, (result: any) => {
+                    res.send(result);
+                },req.session.user[0]['discordId']);
+            }
+        });
+        return null;
+    }else {
+        tournament.getTournament(req.params.id, (result: any) => {
+            res.send(result);
+        });
+        return null;
+    }
+});
+
 // create tournament
 router.post(baseUrl + '/tournament', function (req, res) {
     isAdmin(req, auth => {
@@ -142,6 +180,20 @@ router.put(baseUrl + '/tournament/:id', function (req, res) {
     isAdminOwner(req, req.params.id, auth => {
         if (auth) {
             tournament.update({ "tournament": req.body, "id": req.params.id }, (response) => {
+                res.send(response);
+            });
+            return null;
+        } else {
+            res.sendStatus(401);
+            return null;
+        }
+    });
+});
+
+router.put(baseUrl + '/tournament/:id/settings', function (req, res) {
+    isAdminOwner(req, req.params.id, auth => {
+        if (auth) {
+            tournament.updateSettings(req.body, (response) => {
                 res.send(response);
             });
             return null;
@@ -256,11 +308,6 @@ router.get(baseUrl + '/tournament/archived', function (req, res) {
     });
 });
 
-router.get(baseUrl + '/tournament/:id', function (req, res) {
-    tournament.getTournament(req.params.id, (result: any) => {
-        res.send(result);
-    });
-});
 
 router.get(baseUrl + '/rankings', function (req, res) {
     ranking.getRanks((result: any) => {
