@@ -22,17 +22,19 @@ export class crons {
                         } else {
                             info = {
                                 ssId: data.playerInfo.playerId,
-                                name: data.playerInfo.playerName,
+                                // name: data.playerInfo.playerName,
                                 avatar: data.playerInfo.avatar,
                                 globalRank: data.playerInfo.rank,
                                 localRank: data.playerInfo.countryRank,
-                                country: data.playerInfo.country,
+                                // country: data.playerInfo.country,
                             };
                         }
     
                         db.preparedQuery('UPDATE users SET ? WHERE discordId = ?', [info, user.discordId], (err, res) => {
                             if(!err) {
                                 completed += 1;
+                            }else {
+                                console.log(err)
                             }
                         })
                     }
@@ -46,6 +48,4 @@ export class crons {
             return new Promise( resolve => setTimeout(resolve, ms) );
         }
     }
-
-    
 }

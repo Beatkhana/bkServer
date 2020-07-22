@@ -59,24 +59,21 @@ app.use((err, req, res, next) => {
 
 app.use('/', router);
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'public/assets'), { maxAge: "30d" }));
-// console.log(path.join(__dirname, 'public/index.html'));
+const env = process.env.NODE_ENV || 'production';
+const mainDir = env == 'development' ? 'dist/public' : 'public';
+const assetDir = env == 'development' ? 'dist/public/assets' : 'public/assets';
+
+app.use(express.static(path.join(__dirname, assetDir), { maxAge: "30d" }));
+app.use(express.static(path.join(__dirname, mainDir)));
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/index.html'));
-});
-
-app.get('/hi', (req, res) => {
-    // console.log(req.session); 
-    // res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 const PORT = +process.env.PORT || 8080;
 
 app.listen(PORT, () => {
     console.log("Server now listening on " + PORT);
-    const env = process.env.NODE_ENV || 'production';
     console.log('Running in ' + env + ' mode')
 });
 

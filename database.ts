@@ -16,7 +16,8 @@ export class database {
                 user: "bdaa6c4e2efd54",
                 password: "f84071f4",
                 database: "heroku_da687e9a34aa489",
-                connectionLimit: 10
+                connectionLimit: 10,
+                charset : 'utf8mb4'
             });
         } else {
             // this.con = mysql.createPool({
@@ -31,7 +32,8 @@ export class database {
                 user: "dan",
                 password: "test",
                 database: "heroku_11100f74419df40",
-                connectionLimit: 10
+                connectionLimit: 10,
+                charset : 'utf8mb4'
             });
         }
     }
