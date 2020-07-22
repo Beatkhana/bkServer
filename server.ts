@@ -63,7 +63,7 @@ const env = process.env.NODE_ENV || 'production';
 const mainDir = env == 'development' ? 'dist/public' : 'public';
 const assetDir = env == 'development' ? 'dist/public/assets' : 'public/assets';
 
-app.use(express.static(path.join(__dirname, assetDir), { maxAge: "30d" }));
+app.use('/assets', express.static(path.join(__dirname, assetDir), { maxAge: "30d" }));
 app.use(express.static(path.join(__dirname, mainDir)));
 
 app.get('*', (req, res) => {
