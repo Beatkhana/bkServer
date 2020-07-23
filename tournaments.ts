@@ -142,6 +142,7 @@ export class tournaments {
 
         let savePath = this.env == 'development' ? '../app/src/assets/images/' : './public/assets/images/';
 
+        let imgErr = false;
         // sharp
         const buf = await Buffer.from(base64Img, 'base64');
         const webpData = await sharp(buf)
@@ -152,47 +153,51 @@ export class tournaments {
         await sharp(webpData)
             .toFile(savePath + imgName)
             .catch(err => {
+                imgErr = true;
+                console.log(err);
                 return callback({
                     flag: true,
                     err: err
                 });
             });
-
-
-        data.image = 'assets/images/' + imgName;
-        delete data.imgName;
-
-        try {
-            data.date = this.formatDate(data.date);
-            data.endDate = this.formatDate(data.endDate);
-        } catch (err) {
-            return callback({
-                flag: true,
-                err: err
-            });
-        }
-
-        const result = this.db.preparedQuery(`INSERT INTO tournaments SET ?`, [data], (err, result: any) => {
-            let flag = false;
-            if (err) flag = true;
-            if (!err) {
-                this.db.preparedQuery('INSERT INTO tournament_settings SET tournamentId = ?', [result.insertId], (err, result2: any) => {
-                    let flag = false;
-                    if (err) flag = true;
+        
+        if(!imgErr) {
+            data.image = 'assets/images/' + imgName;
+            delete data.imgName;
+    
+            try {
+                data.date = this.formatDate(data.date);
+                data.endDate = this.formatDate(data.endDate);
+            } catch (err) {
+                return callback({
+                    flag: true,
+                    err: err
+                });
+            }
+    
+            const result = this.db.preparedQuery(`INSERT INTO tournaments SET ?`, [data], (err, result: any) => {
+                let flag = false;
+                if (err) flag = true;
+                if (!err) {
+                    this.db.preparedQuery('INSERT INTO tournament_settings SET tournamentId = ?', [result.insertId], (err, result2: any) => {
+                        let flag = false;
+                        if (err) flag = true;
+                        return callback({
+                            data: result,
+                            flag: flag,
+                            err: err
+                        });
+                    })
+                } else {
                     return callback({
                         data: result,
                         flag: flag,
                         err: err
                     });
-                })
-            } else {
-                return callback({
-                    data: result,
-                    flag: flag,
-                    err: err
-                });
-            }
-        });
+                }
+            });
+        }
+
     }
 
     delete(id: number, callback: Function) {

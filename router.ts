@@ -123,7 +123,6 @@ router.get(baseUrl + '/tournaments', function (req, res) {
 });
 
 router.get(baseUrl + '/tournament/archived', function (req, res) {
-    console.log('bitch');
     tournament.getArchived((result: any) => {
         res.send(result);
     });

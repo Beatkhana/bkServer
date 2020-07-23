@@ -136,7 +136,6 @@ var tournaments = /** @class */ (function () {
                         base64Img = base64String.split(';base64,').pop();
                         imgName = data.imgName;
                         imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
-                        imgName = data.name + '.webp';
                         savePath = this.env == 'development' ? '../app/src/assets/images/' : './public/assets/images/';
                         return [4 /*yield*/, Buffer.from(base64Img, 'base64')];
                     case 1:
