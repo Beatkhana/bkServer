@@ -139,8 +139,6 @@ export class tournaments {
 
         let imgName = data.imgName;
         imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
-
-        console.log(__filename);
         let savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname+'/public/assets/images/';
 
         let imgErr = false;
@@ -155,7 +153,6 @@ export class tournaments {
             .toFile(savePath + imgName)
             .catch(err => {
                 imgErr = true;
-                console.log(err);
                 return callback({
                     flag: true,
                     err: err
