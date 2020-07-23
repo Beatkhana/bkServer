@@ -97,7 +97,7 @@ export class tournaments {
         \`tournaments\`.\`third\`,
         ts.id as settingsId,
         ts.tournamentId,
-        ts.public_singups,
+        ts.public_signups,
         ts.public,
         ts.state,
         ts.type,
@@ -106,6 +106,29 @@ export class tournaments {
         FROM tournaments 
         LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
         WHERE tournaments.id = ${id} ${sqlWhere}`, (err, result: any) => {
+            return callback(result);
+        });
+    }
+
+    participants(id, callback: Function) {
+        const result = this.db.query(`SELECT p.id AS participantId,
+        CAST(p.userId AS CHAR) as userId,
+        p.forfeit,
+        p.seed,
+        CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
+        CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
+        \`u\`.\`name\`,
+        \`u\`.\`twitchName\`,
+        \`u\`.\`avatar\`,
+        \`u\`.\`globalRank\`,
+        \`u\`.\`localRank\`,
+        \`u\`.\`country\`,
+        \`u\`.\`tourneyRank\`,
+        \`u\`.\`TR\`,
+        \`u\`.\`pronoun\`
+        FROM participants p
+        LEFT JOIN users u ON u.discordId = p.userId
+        WHERE p.tournamentId = ${id}`, (err, result: any) => {
             return callback(result);
         });
     }
@@ -211,6 +234,31 @@ export class tournaments {
                 flag: flag,
                 err: err
             });
+        });
+    }
+
+    signUp(data: any, callback: Function) {
+
+        this.db.preparedQuery(`SELECT public_signups FROM tournament_settings WHERE tournamentId = ?`, [data.tournamentId], (err, result: any) => {
+            let flag = false;
+            if (err) flag = true;
+            if (result[0].public_signups = 1) {
+                const result = this.db.preparedQuery(`INSERT INTO participants SET ?`, [data], (err, result: any) => {
+                    let flag = false;
+                    if (err) flag = true;
+                    return callback({
+                        data: result,
+                        flag: flag,
+                        err: err
+                    });
+                });
+            } else {
+                return callback({
+                    data: result,
+                    flag: true,
+                    err: err
+                });
+            }
         });
     }
 

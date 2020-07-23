@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { response } from 'express';
 import { tournaments } from './tournaments';
 import { userAuth } from './userAuth';
 import { rankings } from './rankings';
@@ -122,6 +122,13 @@ router.get(baseUrl + '/tournaments', function (req, res) {
     }
 });
 
+router.get(baseUrl + '/tournament/archived', function (req, res) {
+    console.log('bitch');
+    tournament.getArchived((result: any) => {
+        res.send(result);
+    });
+});
+
 // Get tournament
 router.get(baseUrl + '/tournament/:id', function (req, res) {
     if (req.session.user != null) {
@@ -190,6 +197,7 @@ router.put(baseUrl + '/tournament/:id', function (req, res) {
     });
 });
 
+// Update tournament settings
 router.put(baseUrl + '/tournament/:id/settings', function (req, res) {
     isAdminOwner(req, req.params.id, auth => {
         if (auth) {
@@ -202,6 +210,27 @@ router.put(baseUrl + '/tournament/:id/settings', function (req, res) {
             return null;
         }
     });
+});
+
+// Sign up for tournament settings
+router.post(baseUrl + '/tournament/:id/signUp', function (req, res) {
+    if (req.session.user[0] != null) {
+        req.body.userId = req.session.user[0].discordId;
+        tournament.signUp(req.body, response => {
+            res.send(response);
+        });
+    } else {
+        res.sendStatus(401);
+        return null;
+    }
+});
+
+// Get participants
+router.get(baseUrl + '/tournament/:id/participants', function (req, res) {
+    tournament.participants(req.params.id, response => {
+        res.send(response);
+    });
+    return null;
 });
 
 // archive tournament
@@ -301,13 +330,6 @@ router.get(baseUrl + '/events', function (req, res) {
         res.send(result);
     });
 });
-
-router.get(baseUrl + '/tournament/archived', function (req, res) {
-    tournament.getArchived((result: any) => {
-        res.send(result);
-    });
-});
-
 
 router.get(baseUrl + '/rankings', function (req, res) {
     ranking.getRanks((result: any) => {
