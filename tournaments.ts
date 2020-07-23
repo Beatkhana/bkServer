@@ -133,19 +133,24 @@ export class tournaments {
         });
     }
 
-    save(data: any, callback: Function) {
+    async save(data: any, callback: Function) {
         let base64String = data.image;
         let base64Img = base64String.split(';base64,').pop();
 
         let imgName = data.imgName;
         imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
+        imgName = data.name + '.webp';
 
         let savePath = this.env == 'development' ? '../app/src/assets/images/' : './public/assets/images/';
 
-        // jimp
-        const buf = Buffer.from(base64Img, 'base64');
-        sharp(buf)
+        // sharp
+        const buf = await Buffer.from(base64Img, 'base64');
+        const webpData = await sharp(buf)
             .resize({ width: 550 })
+            .webp({lossless: true, quality: 50})
+            .toBuffer();
+        
+        await sharp(webpData)
             .toFile(savePath + imgName)
             .catch(err => {
                 return callback({
@@ -175,7 +180,6 @@ export class tournaments {
                 this.db.preparedQuery('INSERT INTO tournament_settings SET tournamentId = ?', [result.insertId], (err, result2: any) => {
                     let flag = false;
                     if (err) flag = true;
-                    console.log(err);
                     return callback({
                         data: result,
                         flag: flag,
