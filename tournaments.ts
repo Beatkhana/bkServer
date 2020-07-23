@@ -149,15 +149,12 @@ export class tournaments {
             .resize({ width: 550 })
             .webp({lossless: true, quality: 50})
             .toBuffer();
-
-        console.log(savePath+imgName);
         
         await sharp(webpData)
             .toFile(savePath + imgName)
             .then(info => { console.log(info) })
             .catch(err => {
                 imgErr = true;
-                console.log(err)
                 return callback({
                     flag: true,
                     err: err
