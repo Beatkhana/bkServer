@@ -11,6 +11,8 @@ var compression = require('compression');
 var session = require('express-session');
 var MemoryStore = require('memorystore')(session);
 var cron = require('node-cron');
+// const cronJobs = require('./crons')
+var crons_1 = require("./crons");
 app.use(function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -54,23 +56,21 @@ app.use(function (err, req, res, next) {
     }
 });
 app.use('/', router);
-app.use(express_1.default.static(path.join(__dirname, 'public'), { maxAge: "30d" }));
-app.use(express_1.default.static(path.join(__dirname, 'public/assets'), { maxAge: "30d" }));
-// console.log(path.join(__dirname, 'public/index.html'));
+var env = process.env.NODE_ENV || 'production';
+var mainDir = env == 'development' ? 'dist/public' : 'public';
+var assetDir = env == 'development' ? 'dist/public/assets' : 'public/assets';
+app.use('/assets', express_1.default.static(path.join(__dirname, assetDir), { maxAge: "30d" }));
+app.use(express_1.default.static(path.join(__dirname, mainDir)));
 app.get('*', function (req, res) {
     res.sendFile(path.join(__dirname, 'public/index.html'));
-});
-app.get('/hi', function (req, res) {
-    // console.log(req.session); 
-    // res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 var PORT = +process.env.PORT || 8080;
 app.listen(PORT, function () {
     console.log("Server now listening on " + PORT);
-    var env = process.env.NODE_ENV || 'production';
     console.log('Running in ' + env + ' mode');
 });
 // Crons???
-// cron.schedule("* * * * *", () => { 
-//     console.log("Running cron :)");
-// });
+cron.schedule("0,30 * * * *", function () {
+    console.log("Running Cron: Update users");
+    crons_1.crons.updateSSData();
+});

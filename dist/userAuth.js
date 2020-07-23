@@ -90,7 +90,8 @@ var userAuth = /** @class */ (function () {
                 avatar: ssData.playerInfo.avatar,
                 globalRank: ssData.playerInfo.rank,
                 localRank: ssData.playerInfo.countryRank,
-                country: ssData.playerInfo.country
+                country: ssData.playerInfo.country,
+                pronoun: data.links.pronoun
             };
             // console.log(user);
             var result = _this.db.preparedQuery("INSERT INTO users SET ?", [user], function (err, result) {
@@ -104,22 +105,23 @@ var userAuth = /** @class */ (function () {
         });
     };
     userAuth.prototype.getSSData = function (id, callback) {
-        // console.log(`https://new.scoresaber.com/api/player/${id}/basic`);
-        // https.get(`https://new.scoresaber.com/api/player/${id}/basic`, (resp) => {
-        //     let data = '';
-        //     resp.on('end', () => {
-        //         console.log(JSON.parse(data).explanation);
-        //     });
-        // }).on("error", (err) => {
-        //     console.log("Error: " + err.message);
-        // });
         request("https://new.scoresaber.com/api/player/" + id + "/basic", { json: true }, function (err, res, body) {
             if (err) {
                 return console.log(err);
             }
-            // console.log(body.url);
-            // console.log(body);
             callback(body);
+        });
+    };
+    userAuth.prototype.update = function (id, data, callback) {
+        var result = this.db.preparedQuery("UPDATE users SET ? WHERE discordId = ?", [data, id], function (err, result) {
+            var flag = false;
+            if (err)
+                flag = true;
+            return callback({
+                data: result,
+                flag: flag,
+                err: err
+            });
         });
     };
     userAuth.prototype.getUser = function () {

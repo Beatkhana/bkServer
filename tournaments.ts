@@ -139,7 +139,6 @@ export class tournaments {
 
         let imgName = data.imgName;
         imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
-        imgName = data.name + '.webp';
 
         let savePath = this.env == 'development' ? '../app/src/assets/images/' : './public/assets/images/';
 
