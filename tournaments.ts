@@ -306,7 +306,7 @@ export class tournaments {
     }
 
     events(callback: Function) {
-        const result = this.db.query(`SELECT id, name, date as startDate, endDate FROM tournaments ORDER BY date`, (err, result: any) => {
+        const result = this.db.query(`SELECT tournaments.id, tournaments.name, tournaments.date as startDate, tournaments.endDate FROM tournaments LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id WHERE ts.public = 1 ORDER BY date`, (err, result: any) => {
             return callback(result);
         });
     }
