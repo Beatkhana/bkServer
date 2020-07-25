@@ -6,6 +6,7 @@ import sharp from 'sharp';
 
 import * as rp from 'request-promise';
 import cheerio from 'cheerio';
+import { tournamentUpdate } from './models/tournament.models';
 
 
 
@@ -140,19 +141,19 @@ export class tournaments {
         let imgName = data.imgName;
         imgName = imgName.toLowerCase();
         imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
-        let savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname+'/public/assets/images/';
+        let savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname + '/public/assets/images/';
 
         let imgErr = false;
         // sharp
         const buf = await Buffer.from(base64Img, 'base64');
         const webpData = await sharp(buf)
             .resize({ width: 550 })
-            .webp({lossless: true, quality: 50})
+            .webp({ lossless: true, quality: 50 })
             .toBuffer();
-        
+
         await sharp(webpData)
             .toFile(savePath + imgName)
-            .then(info => { console.log(info) })
+            // .then(info => { console.log(info) })
             .catch(err => {
                 imgErr = true;
                 return callback({
@@ -160,11 +161,11 @@ export class tournaments {
                     err: err
                 });
             });
-        
-        if(!imgErr) {
+
+        if (!imgErr) {
             data.image = 'assets/images/' + imgName;
             delete data.imgName;
-    
+
             try {
                 data.date = this.formatDate(data.date);
                 data.endDate = this.formatDate(data.endDate);
@@ -174,7 +175,7 @@ export class tournaments {
                     err: err
                 });
             }
-    
+
             const result = this.db.preparedQuery(`INSERT INTO tournaments SET ?`, [data], (err, result: any) => {
                 let flag = false;
                 if (err) flag = true;
@@ -212,25 +213,61 @@ export class tournaments {
         });
     }
 
-    update(data: any, callback: Function) {
-        try {
-            data.tournament.date = this.formatDate(data.tournament.date);
-            data.tournament.endDate = this.formatDate(data.tournament.endDate);
-        } catch (err) {
-            return callback({
-                flag: true,
-                err: err
+    async update(data: tournamentUpdate, callback: Function) {
+        let imgErr = false;
+        let imgName: string = data.tournament.image;
+
+        if (this.isBase64(data.tournament.image)) {
+
+            let base64String = data.tournament.image;
+            let base64Img = base64String.split(';base64,').pop();
+
+            imgName = data.tournament.imgName;
+            imgName = imgName.toLowerCase();
+            imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
+            let savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname + '/public/assets/images/';
+            // sharp
+            const buf = await Buffer.from(base64Img, 'base64');
+            const webpData = await sharp(buf)
+                .resize({ width: 550 })
+                .webp({ lossless: true, quality: 50 })
+                .toBuffer();
+
+            await sharp(webpData)
+                .toFile(savePath + imgName)
+                .catch(err => {
+                    imgErr = true;
+                    return callback({
+                        flag: true,
+                        err: err
+                    });
+                });
+            data.tournament.image = 'assets/images/' + imgName;
+        }
+
+        if (!imgErr) {
+            delete data.tournament.imgName;
+
+            try {
+                data.tournament.date = this.formatDate(data.tournament.date);
+                data.tournament.endDate = this.formatDate(data.tournament.endDate);
+            } catch (err) {
+                return callback({
+                    flag: true,
+                    err: err
+                });
+            }
+
+            const result = this.db.preparedQuery(`UPDATE tournaments SET ? WHERE ?? = ?`, [data.tournament, 'id', data.id], (err, result: any) => {
+                let flag = false;
+                if (err) flag = true;
+                return callback({
+                    data: data.tournament,
+                    flag: flag,
+                    err: err
+                });
             });
         }
-        const result = this.db.preparedQuery(`UPDATE tournaments SET ? WHERE ?? = ?`, [data.tournament, 'id', data.id], (err, result: any) => {
-            let flag = false;
-            if (err) flag = true;
-            return callback({
-                data: result,
-                flag: flag,
-                err: err
-            });
-        });
     }
 
     updateSettings(data: any, callback: Function) {
@@ -474,5 +511,12 @@ export class tournaments {
 
         return [year, month, day].join('-');
     }
+
+
+    private isBase64(str) {
+        const base64regex = /^\s*data:([a-z]+\/[a-z0-9-+.]+(;[a-z-]+=[a-z0-9-]+)?)?(;base64)?,([a-z0-9!$&',()*+;=\-._~:@\/?%\s]*)\s*$/i;
+        return base64regex.test(str);
+    }
+
 
 }
