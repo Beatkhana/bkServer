@@ -41,7 +41,7 @@ export class userAuth {
         data.append('scope', 'identify');
         data.append('code', code);
 
-        fetch('https://discordapp.com/api/oauth2/token', {
+        fetch('https://discord.com/api/oauth2/token', {
             method: 'POST',
             body: data,
         })
@@ -49,7 +49,7 @@ export class userAuth {
             .then(info => {
                 return info;
             })
-            .then(info => fetch('https://discordapp.com/api/users/@me', {
+            .then(info => fetch('https://discord.com/api/users/@me', {
                 headers: {
                     authorization: `${info.token_type} ${info.access_token}`,
                 },

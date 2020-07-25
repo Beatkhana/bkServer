@@ -29,7 +29,7 @@ router.get(baseUrl, function (req, res) {
 });
 
 router.get(baseUrl + '/login', function (req, res) {
-    res.redirect(`https://discordapp.com/api/oauth2/authorize?client_id=${CLIENT_ID}&scope=identify&response_type=code&redirect_uri=${redirect}&state=${req.query.url}`);
+    res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&scope=identify&response_type=code&redirect_uri=${redirect}&state=${req.query.url}`);
 });
 
 router.get(baseUrl + '/discordAuth', function (req, res) {
