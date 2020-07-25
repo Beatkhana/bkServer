@@ -1,4 +1,5 @@
 import { database } from './database';
+import { updateUser } from './models/user.model';
 
 const fetch = require('node-fetch');
 const FormData = require('form-data');
@@ -128,16 +129,53 @@ export class userAuth {
         });
     }
 
-    update(id, data, callback:Function) {
-        const result = this.db.preparedQuery(`UPDATE users SET ? WHERE discordId = ?`, [data, id], (err, result: any) => {
-            let flag = false;
-            if (err) flag = true;
-            return callback({
-                data: result,
-                flag: flag,
-                err: err
+    async update(id, data: updateUser, callback: Function) {
+        let roleIds = [];
+        let roleError = false;
+        if (data.roleIds.length > 0) {
+            roleIds = data.roleIds;
+            let insert = [];
+            for (const roleId of roleIds) {
+                insert.push([id, roleId]);
+            }
+            await this.db.preparedQuery(`DELETE FROM roleassignment WHERE userId = ?;`, [id], (err, result: any) => {
+                let flag = false;
+                if (err) flag = true;
+                if (flag) {
+                    roleError = true;
+                    return callback({
+                        data: result,
+                        flag: flag,
+                        err: err
+                    });
+                } else {
+                    this.db.preparedQuery(`INSERT INTO roleassignment (userId, roleId) VALUES ?`, [insert], (err, result: any) => {
+                        let flag = false;
+                        if (err) flag = true;
+                        if (flag) {
+                            roleError = true;
+                            return callback({
+                                data: result,
+                                flag: flag,
+                                err: err
+                            });
+                        }
+                    });
+                }
             });
-        });
+        }
+        if(!roleError) {
+            delete data.roleIds;
+            const result = this.db.preparedQuery(`UPDATE users SET ? WHERE discordId = ?`, [data, id], (err, result: any) => {
+                let flag = false;
+                if (err) flag = true;
+                return callback({
+                    data: result,
+                    flag: flag,
+                    err: err
+                });
+            });
+        }
     }
 
     getUser() {
