@@ -6,7 +6,7 @@ import sharp from 'sharp';
 
 import * as rp from 'request-promise';
 import cheerio from 'cheerio';
-import { tournamentUpdate } from './models/tournament.models';
+import { removeParticipant, tournamentUpdate } from './models/tournament.models';
 
 
 
@@ -82,7 +82,7 @@ export class tournaments {
                 sqlWhere = `AND ts.public = 1`;
                 break;
         }
-        const result = this.db.query(`SELECT \`tournaments\`.\`id\` as tournamentId,
+        const result = this.db.preparedQuery(`SELECT \`tournaments\`.\`id\` as tournamentId,
         \`tournaments\`.\`name\`,
         \`tournaments\`.\`image\`,
         \`tournaments\`.\`date\`,
@@ -106,16 +106,17 @@ export class tournaments {
         ts.has_map_pool
         FROM tournaments 
         LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
-        WHERE tournaments.id = ${id} ${sqlWhere}`, (err, result: any) => {
+        WHERE tournaments.id = ? ?`, [id, sqlWhere], (err, result: any) => {
             return callback(result);
         });
     }
 
-    participants(id, callback: Function) {
-        const result = this.db.query(`SELECT p.id AS participantId,
+    participants(id, callback: Function, isAuth = false) {
+        const result = this.db.preparedQuery(`SELECT p.id AS participantId,
         CAST(p.userId AS CHAR) as userId,
         p.forfeit,
         p.seed,
+        ${isAuth ? 'p.comment,' : ''}
         CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
         CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
         \`u\`.\`name\`,
@@ -129,8 +130,20 @@ export class tournaments {
         \`u\`.\`pronoun\`
         FROM participants p
         LEFT JOIN users u ON u.discordId = p.userId
-        WHERE p.tournamentId = ${id}`, (err, result: any) => {
+        WHERE p.tournamentId = ?`, [id], (err, result: any) => {
             return callback(result);
+        });
+    }
+
+    removeParticipant(data: removeParticipant, callback: Function) {
+        const result = this.db.preparedQuery("DELETE FROM participants WHERE id = ?", [data.participantId], (err, result: any) => {
+            let flag = false;
+            if (err) flag = true;
+            return callback({
+                data: result,
+                flag: flag,
+                err: err
+            });
         });
     }
 

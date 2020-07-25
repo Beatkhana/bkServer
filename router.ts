@@ -226,10 +226,33 @@ router.post(baseUrl + '/tournament/:id/signUp', function (req, res) {
 
 // Get participants
 router.get(baseUrl + '/tournament/:id/participants', function (req, res) {
-    tournament.participants(req.params.id, response => {
-        res.send(response);
-    });
-    return null;
+    isAdminOwner(req, req.params.id, isAuth => {
+        if(isAuth){
+            tournament.participants(req.params.id, response => {
+                res.send(response);
+            }, true);
+            return null;
+        } else {
+            tournament.participants(req.params.id, response => {
+                res.send(response);
+            });
+            return null;
+        }
+    })
+});
+
+router.post(baseUrl + '/tournament/:id/deleteParticipant', function (req, res) {
+    isAdminOwner(req, req.params.id, isAuth => {
+        if(isAuth){
+            tournament.removeParticipant(req.body, response => {
+                res.send(response);
+            });
+            return null;
+        } else {
+            res.sendStatus(401)
+            return null;
+        }
+    })
 });
 
 // archive tournament

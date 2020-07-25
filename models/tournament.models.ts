@@ -13,3 +13,7 @@ export interface tournamentUpdate {
     },
     id: string
 }
+
+export interface removeParticipant {
+    participantId: string
+}
