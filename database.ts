@@ -17,7 +17,8 @@ export class database {
                 password: "f84071f4",
                 database: "heroku_da687e9a34aa489",
                 connectionLimit: 10,
-                charset : 'utf8mb4'
+                charset : 'utf8mb4',
+                timezone: 'utc'
             });
         } else {
             // this.con = mysql.createPool({
@@ -33,7 +34,8 @@ export class database {
                 password: "test",
                 database: "heroku_11100f74419df40",
                 connectionLimit: 10,
-                charset : 'utf8mb4'
+                charset : 'utf8mb4',
+                timezone: 'utc'
             });
         }
     }
