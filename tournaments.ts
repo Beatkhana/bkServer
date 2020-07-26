@@ -31,7 +31,7 @@ export class tournaments {
         let sqlWhere = "";
         switch (true) {
             case userId > 0:
-                sqlWhere = `AND (ts.public = 1 OR owner = ${userId})`;
+                sqlWhere = `AND (ts.public = 1 OR owner = ?)`;
                 break;
             case userId < 0:
                 sqlWhere = ``;
@@ -40,7 +40,7 @@ export class tournaments {
                 sqlWhere = `AND ts.public = 1`;
                 break;
         }
-        const result = this.db.query(`SELECT \`tournaments\`.\`id\`,
+        const result = this.db.preparedQuery(`SELECT \`tournaments\`.\`id\`,
         \`tournaments\`.\`name\`,
         \`tournaments\`.\`image\`,
         \`tournaments\`.\`date\`,
@@ -57,7 +57,7 @@ export class tournaments {
         ts.public
         FROM tournaments 
         LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
-        WHERE archived = 0 ${sqlWhere}`, (err, result: any) => {
+        WHERE archived = 0 ${sqlWhere}`, [userId], (err, result: any) => {
             return callback(result);
         });
     }
@@ -73,7 +73,7 @@ export class tournaments {
         let sqlWhere = "";
         switch (true) {
             case userId > 0:
-                sqlWhere = `AND (ts.public = 1 OR owner = ${userId})`;
+                sqlWhere = `AND (ts.public = 1 OR owner = ?)`;
                 break;
             case userId < 0:
                 sqlWhere = ``;
@@ -105,7 +105,7 @@ export class tournaments {
         ts.has_map_pool
         FROM tournaments 
         LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
-        WHERE tournaments.id = ? ?`, [id, sqlWhere], (err, result: any) => {
+        WHERE tournaments.id = ? ${sqlWhere}`, [id, userId], (err, result: any) => {
             return callback(result);
         });
     }
@@ -236,10 +236,33 @@ export class tournaments {
 
             imgName = data.tournament.imgName;
             imgName = imgName.toLowerCase();
-            imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
+            imgName = imgName.replace(/\s/g,"");
+            imgName = imgName.substring(0, imgName.indexOf('.')) + '.gif';
             let savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname + '/public/assets/images/';
-            // sharp
+            // // sharp
             const buf = await Buffer.from(base64Img, 'base64');
+
+            // jimp.read(buf, (err, image) => {
+            //     if (err) throw err;
+            //     else {
+            //         image.resize(550, jimp.AUTO)
+            //             .quality(50)
+            //     }
+            // })
+
+            // jimp.read(buf)
+            //     .then(image => {
+            //         image.resize(550, jimp.AUTO)
+            //             .quality(50)
+            //             .write(savePath + imgName);
+            //     })
+            //     .catch(err => {
+            //         imgErr = true;
+            //         return callback({
+            //             flag: true,
+            //             err: err
+            //         });
+            //     })
             const webpData = await sharp(buf)
                 .resize({ width: 550 })
                 .webp({ lossless: true, quality: 50 })
