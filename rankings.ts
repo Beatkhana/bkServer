@@ -61,13 +61,18 @@ export class rankings {
     }
 
     getRanks(callback:Function) {
-        const result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users ORDER BY tourneyRank LIMIT 25",(err, result: any) => {
+        const result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users ORDER BY tourneyRank, globalRank=0, globalRank",(err, result: any) => {
+            console.log(err)
             return callback(result);
         });
     }
 
     getUser(userId:string, callback:Function) {
-        this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users WHERE discordId = "+userId,(err, result: any) => {
+        this.db.preparedQuery(`SELECT u.*, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u
+        LEFT JOIN participants p ON p.userId = u.discordId
+        LEFT JOIN tournaments t ON p.tournamentId = t.id
+        WHERE u.discordId = ?
+        GROUP BY u.discordId`, [userId], (err, result: any) => {
             return callback(result);
         });
     }
