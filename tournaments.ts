@@ -97,7 +97,6 @@ export class tournaments {
         \`tournaments\`.\`second\`,
         \`tournaments\`.\`third\`,
         ts.id as settingsId,
-        ts.tournamentId,
         ts.public_signups,
         ts.public,
         ts.state,

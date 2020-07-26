@@ -178,6 +178,12 @@ export class userAuth {
         }
     }
 
+    getUserRoles(userId: string, callback: Function) {
+        this.db.preparedQuery(`SELECT roleId FROM roleassignment WHERE userId = ?`, [userId], (err, result) => {
+            callback(result);
+        });
+    }
+
     getUser() {
         if (this.user != {}) {
             return this.user;
