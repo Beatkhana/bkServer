@@ -487,7 +487,7 @@ export class tournaments {
     }
 
     addSong(data: any, callback: Function) {
-        console.log(data);
+        // console.log(data);
         rp.get(data.ssLink)
             .then(html => {
                 let hash = cheerio('.box.has-shadow > b', html).text();

@@ -2,6 +2,7 @@ import express, { response } from 'express';
 import { tournaments } from './tournaments';
 import { userAuth } from './userAuth';
 import { rankings } from './rankings';
+import { logger } from './logger';
 
 import * as apiAuth from 'api-key-auth'
 // import e from 'express';
@@ -12,6 +13,8 @@ const user = new userAuth();
 // const auth = new apiAuth();
 const router = express.Router();
 const baseUrl = '/api';
+
+const log = new logger();
 
 const session = require('express-session');
 
@@ -111,6 +114,7 @@ router.post(baseUrl + '/newUser', function (req, res) {
         let usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'] };
         user.newUser(usrData, (result) => {
             // req.session.destroy(() => { });
+            log.createLog(req.session.newUsr[0]['discordId'], 'Created an account');
             req.session.user = result;
             res.send({ message: 'success' });
         });
@@ -199,6 +203,7 @@ router.post(baseUrl + '/tournament', function (req, res) {
         if (auth) {
             tournament.save(req.body, (response) => {
                 res.send(response);
+                log.createLog(req.session.user[0]['discordId'], 'Created a tournament');
             });
             return null;
         } else {
@@ -214,6 +219,7 @@ router.post(baseUrl + '/tournament/delete/:id', function (req, res) {
         if (auth) {
             tournament.delete(parseInt(req.params.id), (response) => {
                 res.send(response);
+                log.createLog(req.session.user[0]['discordId'], 'Deleted a tournament with id ' + req.params.id);
             });
             return null;
         } else {
@@ -229,6 +235,7 @@ router.put(baseUrl + '/tournament/:id', function (req, res) {
         if (auth) {
             tournament.update({ "tournament": req.body, "id": req.params.id }, (response) => {
                 res.send(response);
+                log.createLog(req.session.user[0]['discordId'], 'Updated a tournament with id ' + req.params.id);
             });
             return null;
         } else {
@@ -244,6 +251,7 @@ router.put(baseUrl + '/tournament/:id/settings', function (req, res) {
         if (auth) {
             tournament.updateSettings(req.body, (response) => {
                 res.send(response);
+                log.createLog(req.session.user[0]['discordId'], 'Updated a tournament settings with id ' + req.params.id);
             });
             return null;
         } else {
@@ -261,6 +269,7 @@ router.post(baseUrl + '/tournament/:id/signUp', function (req, res) {
                 if (isAuth) {
                     tournament.signUp(req.body, response => {
                         res.send(response);
+                        log.createLog(req.session.user[0]['discordId'], `Signed user(${req.body.userId}) up to a tournament (${req.params.id})`);
                     });
                     return null;
                 } else {
@@ -272,6 +281,7 @@ router.post(baseUrl + '/tournament/:id/signUp', function (req, res) {
             req.body.userId = req.session.user[0].discordId;
             tournament.signUp(req.body, response => {
                 res.send(response);
+                log.createLog(req.session.user[0]['discordId'], `Signed up to a tournament (${req.params.id})`);
             });
         }
     } else {
@@ -310,12 +320,14 @@ router.put(baseUrl + '/updateParticipant/:id/:participantId', function (req, res
         if (isAuth) {
             req.body.discordId = req.session.user[0].discordId;
             tournament.updateParticipant(req.body, true, response => {
+                log.createLog(req.session.user[0]['discordId'], `Updated user(${req.body.userId}) sign up on a tournament (${req.params.id})`);
                 res.send(response);
             });
             return null;
         } else if (req.session.user != null) {
             req.body.discordId = req.session.user[0].discordId;
             tournament.updateParticipant(req.body, false, response => {
+                log.createLog(req.session.user[0]['discordId'], `Updated their sign up on a tournament (${req.params.id})`);
                 res.send(response);
             });
             return null;
@@ -330,6 +342,7 @@ router.post(baseUrl + '/tournament/:id/deleteParticipant', function (req, res) {
     isAdminOwner(req, req.params.id, isAuth => {
         if (isAuth) {
             tournament.removeParticipant(req.body, response => {
+                log.createLog(req.session.user[0]['discordId'], `Removed user(${req.body.userId}) as a participant on a tournament (${req.params.id})`);
                 res.send(response);
             });
             return null;
@@ -345,6 +358,7 @@ router.put(baseUrl + '/archiveTournament', function (req, res) {
     hasPerms(req, 2, auth => {
         if (auth) {
             tournament.archive(req.body, (response) => {
+                log.createLog(req.session.user[0]['discordId'], `Archived a tournament (${req.params.id})`);
                 res.send(response);
             });
         } else {
@@ -359,6 +373,7 @@ router.post(baseUrl + '/tournament/addPool', function (req, res) {
     isAdminOwner(req, req.body.tournamentId, auth => {
         if (auth) {
             tournament.addPool(req.body, (response) => {
+                log.createLog(req.session.user[0]['discordId'], `Created a map pool for a tournament (${req.body.tournamentId})`);
                 res.send(response);
             });
             return null;
@@ -406,6 +421,7 @@ router.post(baseUrl + '/tournament/addSong', function (req, res) {
     isAdminOwner(req, req.body.tournamentId, auth => {
         if (auth) {
             tournament.addSong(req.body, (response) => {
+                log.createLog(req.session.user[0]['discordId'], `Added a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
                 res.send(response);
             });
             return null;
@@ -421,6 +437,7 @@ router.post(baseUrl + '/map-pools/deleteSong', function (req, res) {
     isAdminOwner(req, req.body.tournamentId, auth => {
         if (auth) {
             tournament.deleteSong(req.body.id, (response) => {
+                log.createLog(req.session.user[0]['discordId'], `Deleted a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
                 res.send(response);
             });
             return null;
