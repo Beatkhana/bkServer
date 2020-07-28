@@ -12,6 +12,7 @@
         "@types/express": "^4.17.6",
         "@types/express-session": "^1.17.0",
         "@types/mysql": "^2.15.13",
+        "api-key-auth": "^0.2.3",
         "cheerio": "^1.0.0-rc.3",
         "compression": "^1.7.4",
         "concurrently": "^5.2.0",

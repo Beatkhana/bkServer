@@ -2,11 +2,14 @@ import express, { response } from 'express';
 import { tournaments } from './tournaments';
 import { userAuth } from './userAuth';
 import { rankings } from './rankings';
-import e from 'express';
+
+import * as apiAuth from 'api-key-auth'
+// import e from 'express';
 
 const tournament = new tournaments();
 const ranking = new rankings();
 const user = new userAuth();
+// const auth = new apiAuth();
 const router = express.Router();
 const baseUrl = '/api';
 
@@ -22,6 +25,33 @@ if (env == 'production') {
 } else {
     redirect = encodeURIComponent('http://localhost:4200/api/discordAuth');
 }
+
+// const apiKeys = new Map();
+// apiKeys.set('123456789', {
+//     id: 1,
+//     name: 'app1',
+//     secret: 'secret1'
+// });
+// apiKeys.set('987654321', {
+//     id: 2,
+//     name: 'app2',
+//     secret: 'secret2'
+// });
+
+// function getSecret(keyId, done) {
+//     if (!apiKeys.has(keyId)) {
+//         return done(new Error('Unknown api key'));
+//     }
+//     const clientApp = apiKeys.get(keyId);
+//     done(null, clientApp.secret, {
+//         id: clientApp.id,
+//         name: clientApp.name
+//     });
+// }
+
+router.get(baseUrl + '/protected', (req, res) => {
+    res.send(req.headers);
+});
 
 // Routes
 router.get(baseUrl, function (req, res) {
@@ -105,17 +135,17 @@ router.get(baseUrl + '/logout', function (req, res) {
 router.get(baseUrl + '/tournaments', function (req, res) {
     if (req.session.user != null) {
         hasPerms(req, 2, isAuth => {
-            if(isAuth) {
+            if (isAuth) {
                 tournament.getActive((result: any) => {
                     res.send(result);
-                },-1);
-            }else {
+                }, -1);
+            } else {
                 tournament.getActive((result: any) => {
                     res.send(result);
-                },req.session.user[0]['discordId']);
+                }, req.session.user[0]['discordId']);
             }
         })
-    }else {
+    } else {
         tournament.getActive((result: any) => {
             res.send(result);
         });
@@ -132,18 +162,18 @@ router.get(baseUrl + '/tournament/archived', function (req, res) {
 router.get(baseUrl + '/tournament/:id', function (req, res) {
     if (req.session.user != null) {
         hasPerms(req, 2, isAuth => {
-            if(isAuth) {
+            if (isAuth) {
                 tournament.getTournament(req.params.id, (result: any) => {
                     res.send(result);
                 }, -1);
-            }else {
+            } else {
                 tournament.getTournament(req.params.id, (result: any) => {
                     res.send(result);
-                },req.session.user[0]['discordId']);
+                }, req.session.user[0]['discordId']);
             }
         });
         return null;
-    }else {
+    } else {
         tournament.getTournament(req.params.id, (result: any) => {
             res.send(result);
         });
@@ -227,7 +257,7 @@ router.post(baseUrl + '/tournament/:id/signUp', function (req, res) {
 // Get participants
 router.get(baseUrl + '/tournament/:id/participants', function (req, res) {
     isAdminOwner(req, req.params.id, isAuth => {
-        if(isAuth){
+        if (isAuth) {
             tournament.participants(req.params.id, response => {
                 res.send(response);
             }, true);
@@ -243,7 +273,7 @@ router.get(baseUrl + '/tournament/:id/participants', function (req, res) {
 
 router.post(baseUrl + '/tournament/:id/deleteParticipant', function (req, res) {
     isAdminOwner(req, req.params.id, isAuth => {
-        if(isAuth){
+        if (isAuth) {
             tournament.removeParticipant(req.body, response => {
                 res.send(response);
             });
@@ -369,7 +399,7 @@ module.exports = router;
 
 // Auth stuff
 function isAdminOwner(req, tournamentId, callback: Function) {
-    if(req.session.user != null) {
+    if (req.session.user != null) {
         tournament.isOwner(req.session.user != null && req.session.user[0]['discordId'], tournamentId, (isOwner) => {
             hasPerms(req, 1, isAdmin => {
                 if (isAdmin || isOwner) {
@@ -385,11 +415,11 @@ function isAdminOwner(req, tournamentId, callback: Function) {
 }
 
 function hasPerms(req, level, callback: Function) {
-    if(req.session.user != null) {
-        user.getUserRoles(req.session.user[0].discordId, (data: Array<any>)=> {
+    if (req.session.user != null) {
+        user.getUserRoles(req.session.user[0].discordId, (data: Array<any>) => {
             if (data != null && data.length > 0) {
                 let userRoles = data.map(x => x.roleId);
-                if(Math.min(...userRoles) <= level){
+                if (Math.min(...userRoles) <= level) {
                     return callback(true);
                 } else {
                     return callback(false);

@@ -102,7 +102,8 @@ export class tournaments {
         ts.state,
         ts.type,
         ts.has_bracket,
-        ts.has_map_pool
+        ts.has_map_pool,
+        ts.signup_comment
         FROM tournaments 
         LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
         WHERE tournaments.id = ? ${sqlWhere}`, [id, userId], (err, result: any) => {
