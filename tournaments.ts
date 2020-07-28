@@ -104,7 +104,8 @@ export class tournaments {
         ts.has_bracket,
         ts.has_map_pool,
         ts.signup_comment,
-        ts.comment_required
+        ts.comment_required,
+        ts.show_signups
         FROM tournaments 
         LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
         WHERE tournaments.id = ? ${sqlWhere}`, [id, userId], (err, result: any) => {
@@ -131,7 +132,8 @@ export class tournaments {
         \`u\`.\`pronoun\`
         FROM participants p
         LEFT JOIN users u ON u.discordId = p.userId
-        WHERE p.tournamentId = ?`, [id], (err, result: any) => {
+        LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
+        WHERE p.tournamentId = ? ${isAuth ? '' : 'AND ts.show_signups = 1'}`, [id], (err, result: any) => {
             return callback(result);
         });
     }
