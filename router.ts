@@ -93,8 +93,8 @@ router.put(baseUrl + '/user/:id', function (req, res) {
                 res.send(response);
             });
             return null;
-        } else if(req.session.user[0]['discordId'] == req.params.id) {
-            req.session.user[0] = {...req.session.user[0], ...req.body};
+        } else if (req.session.user[0]['discordId'] == req.params.id) {
+            req.session.user[0] = { ...req.session.user[0], ...req.body };
             user.update(req.params.id, req.body, (response) => {
                 res.send(response);
             });
@@ -250,10 +250,24 @@ router.put(baseUrl + '/tournament/:id/settings', function (req, res) {
 // Sign up for tournament settings
 router.post(baseUrl + '/tournament/:id/signUp', function (req, res) {
     if (req.session.user[0] != null) {
-        req.body.userId = req.session.user[0].discordId;
-        tournament.signUp(req.body, response => {
-            res.send(response);
-        });
+        if (req.body.userId != null) {
+            isAdminOwner(req, req.params.id, isAuth => {
+                if (isAuth) {
+                    tournament.signUp(req.body, response => {
+                        res.send(response);
+                    });
+                    return null;
+                } else {
+                    res.sendStatus(401);
+                    return null;
+                }
+            });
+        } else {
+            req.body.userId = req.session.user[0].discordId;
+            tournament.signUp(req.body, response => {
+                res.send(response);
+            });
+        }
     } else {
         res.sendStatus(401);
         return null;
@@ -268,10 +282,38 @@ router.get(baseUrl + '/tournament/:id/participants', function (req, res) {
                 res.send(response);
             }, true);
             return null;
+        } else if (req.session.user != null) {
+            tournament.participants(req.params.id, response => {
+                res.send(response);
+            }, false, req.session.user[0].discordId);
+            return null;
         } else {
             tournament.participants(req.params.id, response => {
                 res.send(response);
             });
+            return null;
+        }
+    })
+});
+
+router.put(baseUrl + '/updateParticipant/:id/:participantId', function (req, res) {
+    isAdminOwner(req, req.params.id, isAuth => {
+        req.body.participantId = req.params.participantId;
+        req.body.tournamentId = req.params.id;
+        if (isAuth) {
+            req.body.discordId = req.session.user[0].discordId;
+            tournament.updateParticipant(req.body, true, response => {
+                res.send(response);
+            });
+            return null;
+        } else if (req.session.user != null) {
+            req.body.discordId = req.session.user[0].discordId;
+            tournament.updateParticipant(req.body, false, response => {
+                res.send(response);
+            });
+            return null;
+        } else {
+            res.sendStatus(401);
             return null;
         }
     })

@@ -6,7 +6,7 @@ import sharp from 'sharp';
 
 import * as rp from 'request-promise';
 import cheerio from 'cheerio';
-import { removeParticipant, tournamentUpdate } from './models/tournament.models';
+import { removeParticipant, tournamentUpdate, updateParticipant } from './models/tournament.models';
 
 
 
@@ -22,7 +22,7 @@ export class tournaments {
     getAll(callback: Function) {
         var data: any = [];
 
-        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments", (err, result: any) => {
+        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\` as startDate, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments", (err, result: any) => {
             return callback(result);
         });
     }
@@ -40,10 +40,10 @@ export class tournaments {
                 sqlWhere = `AND ts.public = 1`;
                 break;
         }
-        const result = this.db.preparedQuery(`SELECT \`tournaments\`.\`id\`,
+        const result = this.db.preparedQuery(`SELECT \`tournaments\`.\`id\` as tournamentId,
         \`tournaments\`.\`name\`,
         \`tournaments\`.\`image\`,
-        \`tournaments\`.\`date\`,
+        \`tournaments\`.\`date\` as startDate,
         \`tournaments\`.\`endDate\`,
         \`tournaments\`.\`discord\`,
         \`tournaments\`.\`twitchLink\`,
@@ -64,7 +64,7 @@ export class tournaments {
 
     getArchived(callback: Function) {
         var data: any = [];
-        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id, name, image, \`date\`, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 1", (err, result: any) => {
+        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id as tournamentId, name, image, \`date\` as startDate, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 1", (err, result: any) => {
             return callback(result);
         });
     }
@@ -85,7 +85,7 @@ export class tournaments {
         const result = this.db.preparedQuery(`SELECT \`tournaments\`.\`id\` as tournamentId,
         \`tournaments\`.\`name\`,
         \`tournaments\`.\`image\`,
-        \`tournaments\`.\`date\`,
+        \`tournaments\`.\`date\` as startDate,
         \`tournaments\`.\`endDate\`,
         \`tournaments\`.\`discord\`,
         \`tournaments\`.\`twitchLink\`,
@@ -113,12 +113,13 @@ export class tournaments {
         });
     }
 
-    participants(id, callback: Function, isAuth = false) {
+    participants(id, callback: Function, isAuth = false, userId?: string) {
         const result = this.db.preparedQuery(`SELECT p.id AS participantId,
         CAST(p.userId AS CHAR) as userId,
         p.forfeit,
         p.seed,
         ${isAuth ? 'p.comment,' : ''}
+        ${userId != null ? 'IF(p.userId = "'+userId+'", p.comment, null) as comment,' : ''}
         CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
         CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
         \`u\`.\`name\`,
@@ -135,6 +136,24 @@ export class tournaments {
         LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
         WHERE p.tournamentId = ? ${isAuth ? '' : 'AND ts.show_signups = 1'}`, [id], (err, result: any) => {
             return callback(result);
+        });
+    }
+
+    updateParticipant(data: updateParticipant, auth = false, callback: Function) {
+        let sql = "UPDATE participants SET comment = ? WHERE tournamentId = ? AND userId = ?";
+        let params = [data.comment, data.tournamentId, data.discordId];
+        if(auth) {
+            params = [data.comment, data.participantId];
+            sql = "UPDATE participants SET comment = ? WHERE id = ?";
+        }
+        const result = this.db.preparedQuery(sql, params, (err, result: any) => {
+            let flag = false;
+            if (err) flag = true;
+            return callback({
+                data: result,
+                flag: flag,
+                err: err
+            });
         });
     }
 
@@ -382,7 +401,7 @@ export class tournaments {
     }
 
     events(callback: Function) {
-        const result = this.db.query(`SELECT tournaments.id, tournaments.name, tournaments.date as startDate, tournaments.endDate FROM tournaments LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id WHERE ts.public = 1 ORDER BY date`, (err, result: any) => {
+        const result = this.db.query(`SELECT tournaments.id as tournamentId, tournaments.name, tournaments.date as startDate, tournaments.endDate FROM tournaments LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id WHERE ts.public = 1 ORDER BY date`, (err, result: any) => {
             return callback(result);
         });
     }

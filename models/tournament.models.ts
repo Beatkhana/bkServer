@@ -14,6 +14,13 @@ export interface tournamentUpdate {
     id: string
 }
 
+export interface updateParticipant {
+    tournamentId: string,
+    comment: string
+    discordId: string,
+    participantId: string
+}
+
 export interface removeParticipant {
     participantId: string
 }
