@@ -125,6 +125,12 @@ router.get(baseUrl + '/users', function (req, res) {
     });
 });
 
+router.get(baseUrl + '/user/by-ss/:id', function (req, res) {
+    ranking.getUserSS(req.params.id, (result: any) => {
+        res.send(result);
+    })
+});
+
 router.get(baseUrl + '/user/:id', function (req, res) {
     ranking.getUser(req.params.id, (result: any) => {
         res.send(result);
@@ -296,6 +302,7 @@ router.get(baseUrl + '/tournament/:id/participants', function (req, res) {
     })
 });
 
+// update participant sign up
 router.put(baseUrl + '/updateParticipant/:id/:participantId', function (req, res) {
     isAdminOwner(req, req.params.id, isAuth => {
         req.body.participantId = req.params.participantId;

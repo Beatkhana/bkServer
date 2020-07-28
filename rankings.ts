@@ -76,4 +76,14 @@ export class rankings {
             return callback(result);
         });
     }
+
+    getUserSS(userId:string, callback:Function) {
+        this.db.preparedQuery(`SELECT u.*, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u
+        LEFT JOIN participants p ON p.userId = u.discordId
+        LEFT JOIN tournaments t ON p.tournamentId = t.id
+        WHERE u.discordId = ?
+        GROUP BY u.ssId`, [userId], (err, result: any) => {
+            return callback(result);
+        });
+    }
 }
