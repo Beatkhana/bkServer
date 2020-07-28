@@ -132,7 +132,7 @@ export class userAuth {
     async update(id, data: updateUser, callback: Function) {
         let roleIds = [];
         let roleError = false;
-        if (data.roleIds.length > 0) {
+        if (data.roleIds != null && data.roleIds.length > 0) {
             roleIds = data.roleIds;
             let insert = [];
             for (const roleId of roleIds) {

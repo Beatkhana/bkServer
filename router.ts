@@ -93,6 +93,12 @@ router.put(baseUrl + '/user/:id', function (req, res) {
                 res.send(response);
             });
             return null;
+        } else if(req.session.user[0]['discordId'] == req.params.id) {
+            req.session.user[0] = {...req.session.user[0], ...req.body};
+            user.update(req.params.id, req.body, (response) => {
+                res.send(response);
+            });
+            return null;
         } else {
             res.sendStatus(401);
             return null;
