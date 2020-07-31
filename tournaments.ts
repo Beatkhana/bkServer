@@ -6,7 +6,7 @@ import sharp from 'sharp';
 
 import * as rp from 'request-promise';
 import cheerio from 'cheerio';
-import { removeParticipant, tournamentUpdate, updateParticipant } from './models/tournament.models';
+import { removeParticipant, tournamentSettings, tournamentUpdate, updateParticipant } from './models/tournament.models';
 
 
 
@@ -105,7 +105,9 @@ export class tournaments {
         ts.has_map_pool,
         ts.signup_comment,
         ts.comment_required,
-        ts.show_signups
+        ts.show_signups,
+        ts.bracket_sort_method,
+        ts.bracket_limit
         FROM tournaments 
         LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
         WHERE tournaments.id = ? ${sqlWhere}`, [id, userId], (err, result: any) => {
@@ -119,7 +121,7 @@ export class tournaments {
         p.forfeit,
         p.seed,
         ${isAuth ? 'p.comment,' : ''}
-        ${userId != null ? 'IF(p.userId = "'+userId+'", p.comment, null) as comment,' : ''}
+        ${userId != null ? 'IF(p.userId = "' + userId + '", p.comment, null) as comment,' : ''}
         CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
         CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
         \`u\`.\`name\`,
@@ -142,7 +144,7 @@ export class tournaments {
     updateParticipant(data: updateParticipant, auth = false, callback: Function) {
         let sql = "UPDATE participants SET comment = ? WHERE tournamentId = ? AND userId = ?";
         let params = [data.comment, data.tournamentId, data.discordId];
-        if(auth) {
+        if (auth) {
             params = [data.comment, data.participantId];
             sql = "UPDATE participants SET comment = ? WHERE id = ?";
         }
@@ -259,7 +261,7 @@ export class tournaments {
 
             imgName = data.tournament.imgName;
             imgName = imgName.toLowerCase();
-            imgName = imgName.replace(/\s/g,"");
+            imgName = imgName.replace(/\s/g, "");
             imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
             let savePath = this.env == 'development' ? '../app/src/assets/tournamentImages/' : __dirname + '/public/assets/tournamentImages/';
             // // sharp
@@ -537,6 +539,90 @@ export class tournaments {
         })
     }
 
+    async generateBracket(id: string) {
+        const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
+        // console.log(settings);
+        const participants: any = await this.db.asyncPreparedQuery(`SELECT p.id AS participantId,
+        CAST(p.userId AS CHAR) as userId,
+        p.forfeit,
+        p.seed as seed,
+        CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
+        CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
+        \`u\`.\`name\`,
+        \`u\`.\`twitchName\`,
+        \`u\`.\`avatar\`,
+        \`u\`.\`globalRank\` as globalRank,
+        \`u\`.\`localRank\`,
+        \`u\`.\`country\`,
+        \`u\`.\`tourneyRank\` as tournamentRank,
+        \`u\`.\`TR\`,
+        \`u\`.\`pronoun\`
+        FROM participants p
+        LEFT JOIN users u ON u.discordId = p.userId
+        LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
+        WHERE p.tournamentId = ? ORDER BY ${settings[0].bracket_sort_method}=0, ${settings[0].bracket_sort_method} LIMIT ?`, [id, settings[0].bracket_limit]);
+        // console.log(participants.length);
+        if(participants.length % 8 != 0) throw 'Uneven number of participants';
+        let seeds = this.seeding(participants.length);
+        let matches: Array<match> = [];
+        let names = [];
+
+        for (let i = 0; i < seeds.length; i+=2) {
+            let p1Id: string, p1Name: string, p1Avatar: string = '';
+            if(participants[seeds[i]-1] != undefined) {
+                p1Id = participants[seeds[i]-1].discordId;
+                p1Name = participants[seeds[i]-1].name;
+                p1Avatar = participants[seeds[i]-1].avatar;
+            }
+            let p2Id: string, p2Name: string, p2Avatar: string = '';
+            if(participants[seeds[i+1]-1] != undefined) {
+                p2Id = participants[seeds[i+1]-1].discordId;
+                p2Name = participants[seeds[i+1]-1].name;
+                p2Avatar = participants[seeds[i+1]-1].avatar;
+            }
+            let temp: bslMatch = {
+                id: i/2,
+                round: 0,
+                matchNum: i/2,
+                p1: p1Id,
+                p2: p2Id,
+                p1Score: 0,
+                p2Score: 0,
+                status: '',
+                p1Rank: 0,
+                p2Rank: 0,
+                p1Seed: seeds[i],
+                p2Seed: seeds[i+1],
+                p1Name: p1Name,
+                p2Name: p2Name,
+                p1Country: '',
+                p2Country: '',
+                p1Avatar: p1Avatar,
+                p2Avatar: p2Avatar
+            }
+            matches.push(temp);
+        }
+
+        for (const user of participants) {
+            names.push(user.name);
+        }
+        
+        // return {
+        //     participants: participants,
+        //     matches: matches,
+        //     seeds: seeds
+        // };
+        return matches;
+    }
+
+    private singleElimMatches() {
+        
+    }
+
+    private doubleElimMatches() {
+
+    }
+
     private getBSData(hash, callback: Function): any {
         rp.get('https://beatsaver.com/api/maps/by-hash/' + hash, {
             headers: {
@@ -576,5 +662,48 @@ export class tournaments {
         return base64regex.test(str);
     }
 
+    private seeding(numPlayers: number): Array<number> {
+        const nextPlayer = (player) => {
+            let out = [];
+            let length = player.length * 2 + 1;
+            for (const value of player) {
+                out.push(value);
+                out.push(length - value);
+            }
+            return out;
+        }
+        let rounds = Math.log(numPlayers) / Math.log(2) - 1;
+        let players = [1,2];
+        for (let i = 0; i < rounds; i++) {
+            players = nextPlayer(players);
+        }
+        return players;
+    }
+}
 
+export interface match {
+    round: number,
+    matchNum: number,
+    p1: string,
+    p2: string
+}
+export interface bslMatch {
+    id: number
+    round: number,
+    matchNum: number,
+    p1: string,
+    p2: string,
+    p1Score: number, 
+    p2Score: number, 
+    status: string, 
+    p1Rank: number, 
+    p2Rank: number, 
+    p1Seed: number, 
+    p2Seed: number, 
+    p1Name: string, 
+    p2Name: string, 
+    p1Country: string, 
+    p2Country: string, 
+    p1Avatar: string, 
+    p2Avatar: string, 
 }

@@ -24,3 +24,19 @@ export interface updateParticipant {
 export interface removeParticipant {
     participantId: string
 }
+
+export interface tournamentSettings {
+    id: number,
+    tournamentId: number,
+    public_signups: boolean,
+    show_signups: boolean,
+    public: boolean,
+    state: string,
+    type: string,
+    has_bracket: boolean,
+    has_map_pool: boolean,
+    signup_comment: string,
+    comment_required: boolean,
+    bracket_sort_method: string,
+    bracket_limit: number
+}

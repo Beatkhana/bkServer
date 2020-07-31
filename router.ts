@@ -245,6 +245,32 @@ router.put(baseUrl + '/tournament/:id', function (req, res) {
     });
 });
 
+router.get(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
+    // isAdminOwner(req, req.params.id, auth => {
+    //     if (auth) {
+    //         tournament.update({ "tournament": req.body, "id": req.params.id }, (response) => {
+    //             res.send(response);
+    //             log.createLog(req.session.user[0]['discordId'], 'Updated a tournament with id ' + req.params.id);
+    //         });
+    //         return null;
+    //     } else {
+    //         res.sendStatus(401);
+    //         return null;
+    //     }
+    // });
+    // tournament.generateBracket(req.params.id, response => {
+    //     res.send(response);
+    // })
+    tournament.generateBracket(req.params.id)
+        .then(response => {
+            res.send(response);
+        })
+        .catch((err)=> {
+            console.error(err);
+            res.sendStatus(500);
+        })
+});
+
 // Update tournament settings
 router.put(baseUrl + '/tournament/:id/settings', function (req, res) {
     isAdminOwner(req, req.params.id, auth => {

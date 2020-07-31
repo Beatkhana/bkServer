@@ -17,7 +17,7 @@ export class database {
                 password: "f84071f4",
                 database: "heroku_da687e9a34aa489",
                 connectionLimit: 10,
-                charset : 'utf8mb4',
+                charset: 'utf8mb4',
                 timezone: 'utc'
             });
         } else {
@@ -34,7 +34,7 @@ export class database {
                 password: "test",
                 database: "heroku_11100f74419df40",
                 connectionLimit: 10,
-                charset : 'utf8mb4',
+                charset: 'utf8mb4',
                 timezone: 'utc'
             });
         }
@@ -63,6 +63,15 @@ export class database {
                 // console.log(query.sql);
                 // if (error) throw error;
                 return callback(error, result);
+            });
+        });
+    }
+
+    async asyncPreparedQuery(sql: string, params: any[]) {
+        return new Promise((resolve, reject) => {
+            this.con.query(sql, params, (err, result, fields) => {
+                if (err) reject(err);
+                resolve(result);
             });
         });
     }
