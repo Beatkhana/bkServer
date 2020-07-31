@@ -194,35 +194,39 @@ export class tournaments {
         const webpData = await sharp(buf)
             .resize({ width: 550 })
             .webp({ lossless: true, quality: 50 })
-            .toBuffer();
-
-        await sharp(webpData)
-            .toFile(savePath + imgName)
-            // .then(info => { console.log(info) })
-            .catch(err => {
-                imgErr = true;
-                return callback({
-                    flag: true,
-                    err: err
+            .toBuffer()
+            .then(buffer => {
+                let params = {
+                    Bucket: BUCKET_NAME,
+                    Key: imgName, // File name you want to save as in S3
+                    Body: buffer,
+                    ACL: 'public-read'
+                };
+                s3.upload(params, (err, data) => {
+                    if (err) {
+                        console.log(err)
+                        imgErr = true;
+                    }
+                    console.log(`File uploaded successfully. ${data.Location}`);
                 });
-            });
-        const fileContent = fs.readFileSync(savePath + imgName);
-        const params = {
-            Bucket: BUCKET_NAME,
-            Key: imgName, // File name you want to save as in S3
-            Body: fileContent,
-            ACL: 'public-read'
-        };
-        let s3Img = await new Promise<string>((resolve, reject) => {
-            s3.upload(params, (err, data) => {
-                if (err) {
-                    console.log(err)
-                    imgErr = true;
-                }
-                console.log(`File uploaded successfully. ${data.Location}`);
-                resolve(data.Location);
-            });
-        });
+            })
+        // const fileContent = fs.readFileSync(savePath + imgName);
+        // const params = {
+        //     Bucket: BUCKET_NAME,
+        //     Key: imgName, // File name you want to save as in S3
+        //     Body: fileContent,
+        //     ACL: 'public-read'
+        // };
+        // let s3Img = await new Promise<string>((resolve, reject) => {
+        //     s3.upload(params, (err, data) => {
+        //         if (err) {
+        //             console.log(err)
+        //             imgErr = true;
+        //         }
+        //         console.log(`File uploaded successfully. ${data.Location}`);
+        //         resolve(data.Location);
+        //     });
+        // });
         // const s3Img = await 
 
         if (!imgErr) {
@@ -317,34 +321,60 @@ export class tournaments {
             const webpData = await sharp(buf)
                 .resize({ width: 550 })
                 .webp({ lossless: true, quality: 50 })
-                .toBuffer();
-
-            await sharp(webpData)
-                .toFile(savePath + imgName)
-                .catch(err => {
-                    imgErr = true;
-                    return callback({
-                        flag: true,
-                        err: err
+                .toBuffer()
+                .then(buffer => {
+                    let params = {
+                        Bucket: BUCKET_NAME,
+                        Key: imgName, // File name you want to save as in S3
+                        Body: buffer,
+                        ACL: 'public-read'
+                    };
+                    s3.upload(params, (err, data) => {
+                        if (err) {
+                            console.log(err)
+                            imgErr = true;
+                        }
+                        console.log(`File uploaded successfully. ${data.Location}`);
                     });
-                });
-            const fileContent = fs.readFileSync(savePath + imgName);
-            const params = {
-                Bucket: BUCKET_NAME,
-                Key: imgName, // File name you want to save as in S3
-                Body: fileContent,
-                ACL: 'public-read'
-            };
-            let s3Img = await new Promise<string>((resolve, reject) => {
-                s3.upload(params, (err, data) => {
-                    if (err) {
-                        console.log(err)
-                        imgErr = true;
-                    }
-                    console.log(`File uploaded successfully. ${data.Location}`);
-                    resolve(data.Location);
-                });
-            });
+                })
+
+            // await sharp(webpData)
+            //     .toFile(savePath + imgName)
+
+            //     // .then(info => { console.log(info) })
+            //     .catch(err => {
+            //         imgErr = true;
+            //         return callback({
+            //             flag: true,
+            //             err: err
+            //         });
+            //     });
+            // await sharp(webpData)
+            //     .toFile(savePath + imgName)
+            //     .catch(err => {
+            //         imgErr = true;
+            //         return callback({
+            //             flag: true,
+            //             err: err
+            //         });
+            //     });
+            // const fileContent = fs.readFileSync(savePath + imgName);
+            // const params = {
+            //     Bucket: BUCKET_NAME,
+            //     Key: imgName, // File name you want to save as in S3
+            //     Body: fileContent,
+            //     ACL: 'public-read'
+            // };
+            // let s3Img = await new Promise<string>((resolve, reject) => {
+            //     s3.upload(params, (err, data) => {
+            //         if (err) {
+            //             console.log(err)
+            //             imgErr = true;
+            //         }
+            //         console.log(`File uploaded successfully. ${data.Location}`);
+            //         resolve(data.Location);
+            //     });
+            // });
             // console.log(location);
             data.tournament.image = imgName;
         }
