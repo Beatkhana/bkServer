@@ -186,7 +186,7 @@ export class tournaments {
         let imgName = data.imgName;
         imgName = imgName.toLowerCase();
         imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
-        let savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname + '/public/assets/images/';
+        let savePath = this.env == 'development' ? '../app/src/assets/tournamentImages/' : __dirname + '/public/assets/tournamentImages/';
 
         let imgErr = false;
         // sharp
