@@ -34,7 +34,7 @@ app.use(session({
     saveUninitialized: false,
     secret: 'jfgdasjkfdau',
     store: new MemoryStore({
-        checkPeriod: 86400000 // prune expired entries every 24h
+        checkPeriod: 86400000 // prune expired entries every week
     }),
     cookie: {
         maxAge: 604800000,
@@ -78,7 +78,7 @@ app.listen(PORT, () => {
 });
 
 // Crons???
-cron.schedule("0,30 * * * *", () => { 
+cron.schedule("0 * * * *", () => { 
     console.log("Running Cron: Update users");
     crons.updateSSData();
 });

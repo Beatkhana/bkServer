@@ -467,6 +467,20 @@ router.get(baseUrl + '/team', function (req, res) {
     });
 });
 
+router.get(baseUrl + '/logs', function (req, res) {
+    hasPerms(req, 2, isAuth => {
+        if(isAuth) {
+            log.getLogs(response => {
+                res.send(response);
+            });
+            return null;
+        } else {
+            res.sendStatus(401);
+            return null;
+        }
+    });
+});
+
 module.exports = router;
 
 // Auth stuff

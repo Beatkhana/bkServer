@@ -13,4 +13,10 @@ export class logger {
             if (err) console.error(err);
         });
     }
+
+    getLogs(callback:Function) {
+        this.db.query('SELECT logs.*, u.* FROM logs LEFT JOIN users u ON u.discordId = logs.userId', (err, result) => {
+            callback(result);
+        });
+    }
 }

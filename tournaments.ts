@@ -260,8 +260,8 @@ export class tournaments {
             imgName = data.tournament.imgName;
             imgName = imgName.toLowerCase();
             imgName = imgName.replace(/\s/g,"");
-            imgName = imgName.substring(0, imgName.indexOf('.')) + '.gif';
-            let savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname + '/public/assets/images/';
+            imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
+            let savePath = this.env == 'development' ? '../app/src/assets/tournamentImages/' : __dirname + '/public/assets/tournamentImages/';
             // // sharp
             const buf = await Buffer.from(base64Img, 'base64');
 
@@ -300,7 +300,7 @@ export class tournaments {
                         err: err
                     });
                 });
-            data.tournament.image = 'assets/images/' + imgName;
+            data.tournament.image = 'assets/tournamentImages/' + imgName;
         }
 
         if (!imgErr) {
