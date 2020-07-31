@@ -1,14 +1,22 @@
 import { database } from './database';
 import mysql from 'mysql';
-import fs from 'fs';
+// import fs from 'fs';
 // import jimp from 'jimp';
 import sharp from 'sharp';
+const AWS = require('aws-sdk');
 
 import * as rp from 'request-promise';
 import cheerio from 'cheerio';
 import { removeParticipant, tournamentSettings, tournamentUpdate, updateParticipant } from './models/tournament.models';
 
-
+const ID = 'AKIAJNEXL3RYO3HDJ5EA';
+const SECRET = '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';
+const BUCKET_NAME = 'beatkhanas3';
+const s3 = new AWS.S3({
+    accessKeyId: ID,
+    secretAccessKey: SECRET
+});
+const fs = require('fs');
 
 export class tournaments {
     db = new database();
@@ -198,9 +206,27 @@ export class tournaments {
                     err: err
                 });
             });
+        const fileContent = fs.readFileSync(savePath + imgName);
+        const params = {
+            Bucket: BUCKET_NAME,
+            Key: imgName, // File name you want to save as in S3
+            Body: fileContent,
+            ACL: 'public-read'
+        };
+        let s3Img = await new Promise<string>((resolve, reject) => {
+            s3.upload(params, (err, data) => {
+                if (err) {
+                    console.log(err)
+                    imgErr = true;
+                }
+                console.log(`File uploaded successfully. ${data.Location}`);
+                resolve(data.Location);
+            });
+        });
+        // const s3Img = await 
 
         if (!imgErr) {
-            data.image = 'assets/images/' + imgName;
+            data.image = imgName;
             delete data.imgName;
 
             try {
@@ -302,7 +328,25 @@ export class tournaments {
                         err: err
                     });
                 });
-            data.tournament.image = 'assets/tournamentImages/' + imgName;
+            const fileContent = fs.readFileSync(savePath + imgName);
+            const params = {
+                Bucket: BUCKET_NAME,
+                Key: imgName, // File name you want to save as in S3
+                Body: fileContent,
+                ACL: 'public-read'
+            };
+            let s3Img = await new Promise<string>((resolve, reject) => {
+                s3.upload(params, (err, data) => {
+                    if (err) {
+                        console.log(err)
+                        imgErr = true;
+                    }
+                    console.log(`File uploaded successfully. ${data.Location}`);
+                    resolve(data.Location);
+                });
+            });
+            // console.log(location);
+            data.tournament.image = imgName;
         }
 
         if (!imgErr) {
@@ -562,28 +606,28 @@ export class tournaments {
         LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
         WHERE p.tournamentId = ? ORDER BY ${settings[0].bracket_sort_method}=0, ${settings[0].bracket_sort_method} LIMIT ?`, [id, settings[0].bracket_limit]);
         // console.log(participants.length);
-        if(participants.length % 8 != 0) throw 'Uneven number of participants';
+        if (participants.length % 8 != 0) throw 'Uneven number of participants';
         let seeds = this.seeding(participants.length);
         let matches: Array<match> = [];
         let names = [];
 
-        for (let i = 0; i < seeds.length; i+=2) {
+        for (let i = 0; i < seeds.length; i += 2) {
             let p1Id: string, p1Name: string, p1Avatar: string = '';
-            if(participants[seeds[i]-1] != undefined) {
-                p1Id = participants[seeds[i]-1].discordId;
-                p1Name = participants[seeds[i]-1].name;
-                p1Avatar = participants[seeds[i]-1].avatar;
+            if (participants[seeds[i] - 1] != undefined) {
+                p1Id = participants[seeds[i] - 1].discordId;
+                p1Name = participants[seeds[i] - 1].name;
+                p1Avatar = participants[seeds[i] - 1].avatar;
             }
             let p2Id: string, p2Name: string, p2Avatar: string = '';
-            if(participants[seeds[i+1]-1] != undefined) {
-                p2Id = participants[seeds[i+1]-1].discordId;
-                p2Name = participants[seeds[i+1]-1].name;
-                p2Avatar = participants[seeds[i+1]-1].avatar;
+            if (participants[seeds[i + 1] - 1] != undefined) {
+                p2Id = participants[seeds[i + 1] - 1].discordId;
+                p2Name = participants[seeds[i + 1] - 1].name;
+                p2Avatar = participants[seeds[i + 1] - 1].avatar;
             }
             let temp: bslMatch = {
-                id: i/2,
+                id: i / 2,
                 round: 0,
-                matchNum: i/2,
+                matchNum: i / 2,
                 p1: p1Id,
                 p2: p2Id,
                 p1Score: 0,
@@ -592,7 +636,7 @@ export class tournaments {
                 p1Rank: 0,
                 p2Rank: 0,
                 p1Seed: seeds[i],
-                p2Seed: seeds[i+1],
+                p2Seed: seeds[i + 1],
                 p1Name: p1Name,
                 p2Name: p2Name,
                 p1Country: '',
@@ -606,7 +650,7 @@ export class tournaments {
         for (const user of participants) {
             names.push(user.name);
         }
-        
+
         // return {
         //     participants: participants,
         //     matches: matches,
@@ -616,7 +660,7 @@ export class tournaments {
     }
 
     private singleElimMatches() {
-        
+
     }
 
     private doubleElimMatches() {
@@ -673,7 +717,7 @@ export class tournaments {
             return out;
         }
         let rounds = Math.log(numPlayers) / Math.log(2) - 1;
-        let players = [1,2];
+        let players = [1, 2];
         for (let i = 0; i < rounds; i++) {
             players = nextPlayer(players);
         }
@@ -693,17 +737,17 @@ export interface bslMatch {
     matchNum: number,
     p1: string,
     p2: string,
-    p1Score: number, 
-    p2Score: number, 
-    status: string, 
-    p1Rank: number, 
-    p2Rank: number, 
-    p1Seed: number, 
-    p2Seed: number, 
-    p1Name: string, 
-    p2Name: string, 
-    p1Country: string, 
-    p2Country: string, 
-    p1Avatar: string, 
-    p2Avatar: string, 
+    p1Score: number,
+    p2Score: number,
+    status: string,
+    p1Rank: number,
+    p2Rank: number,
+    p1Seed: number,
+    p2Seed: number,
+    p1Name: string,
+    p2Name: string,
+    p1Country: string,
+    p2Country: string,
+    p1Avatar: string,
+    p2Avatar: string,
 }
