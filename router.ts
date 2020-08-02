@@ -245,6 +245,21 @@ router.put(baseUrl + '/tournament/:id', function (req, res) {
     });
 });
 
+router.post(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
+    tournament.checkKey(req.params.id, req.headers.authorization)
+        .then(isAuth => {
+            if (isAuth) {
+                res.send(req.body);
+            } else {
+                res.sendStatus(401);
+            }
+        })
+        .catch((err)=> {
+            console.error(err);
+            res.sendStatus(500);
+        });
+});
+
 router.get(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
     // isAdminOwner(req, req.params.id, auth => {
     //     if (auth) {

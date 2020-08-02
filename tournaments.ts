@@ -697,6 +697,12 @@ export class tournaments {
 
     }
 
+    async checkKey(id: string, key: string) {
+        const keyData: any = await this.db.asyncPreparedQuery("SELECT * FROM api_keys WHERE tournamentId = ?", [id]);
+        if(keyData[0].api_key == key) return true;
+        return false
+    }
+
     private getBSData(hash, callback: Function): any {
         rp.get('https://beatsaver.com/api/maps/by-hash/' + hash, {
             headers: {
