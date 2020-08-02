@@ -67,12 +67,31 @@ export class database {
         });
     }
 
-    async asyncPreparedQuery(sql: string, params: any[]) {
+    async asyncPreparedQuery(sql: string, params: any[] = []) {
         return new Promise((resolve, reject) => {
             this.con.query(sql, params, (err, result, fields) => {
                 if (err) reject(err);
                 resolve(result);
             });
         });
+    }
+
+    async paginationQuery(table: string, page: number, perPage: number, sql: string, params: any[] = []) {
+        let numRecords: any = await this.asyncPreparedQuery('SELECT COUNT(*) as numRows FROM ??', [table]);
+        numRecords = numRecords[0].numRows;
+        if(page <= numRecords/perPage) {
+            sql += " LIMIT ? OFFSET ?";
+            params.push(+perPage);
+            params.push(page*perPage);
+            return new Promise((resolve, reject) => {
+                let query = this.con.query(sql, params, (err, result, fields) => {
+                    if (err) reject(err);
+                    // console.log(query.sql);
+                    resolve({total: numRecords, data: result});
+                });
+            });
+        } else {
+            return {err: 'Invalid requested page'};
+        }
     }
 }

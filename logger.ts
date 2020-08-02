@@ -19,4 +19,9 @@ export class logger {
             callback(result);
         });
     }
+
+    async getLogs2(page: any = 0, perPage: any = 25) {
+        const result: any = this.db.paginationQuery('logs', page, perPage, "SELECT logs.*, u.* FROM logs LEFT JOIN users u ON u.discordId = logs.userId");
+        return result;
+    }
 }

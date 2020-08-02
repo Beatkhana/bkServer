@@ -60,11 +60,13 @@ export class rankings {
         });
     }
 
-    getRanks(callback:Function) {
-        const result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users ORDER BY tourneyRank, globalRank=0, globalRank",(err, result: any) => {
-            console.log(err)
-            return callback(result);
-        });
+    async getRanks(page: any = 0, perPage: any = 25) {
+        const result: any = await this.db.paginationQuery('users', page, perPage, "SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users ORDER BY tourneyRank, globalRank=0, globalRank");
+        return result;
+        // const result = this.db.query("SELECT CAST(discordId AS CHAR) as discordId, ssId, name, twitchName, avatar, globalRank, localRank, country, tourneyRank, TR FROM users ORDER BY tourneyRank, globalRank=0, globalRank",(err, result: any) => {
+        //     console.log(err)
+        //     return callback(result);
+        // });
     }
 
     getUser(userId:string, callback:Function) {
