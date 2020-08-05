@@ -7,7 +7,8 @@ const AWS = require('aws-sdk');
 
 import * as rp from 'request-promise';
 import cheerio from 'cheerio';
-import { removeParticipant, tournamentSettings, tournamentUpdate, updateParticipant } from './models/tournament.models';
+import { bslMatch, match, qualScore, qualsScore, removeParticipant, tournamentSettings, tournamentUpdate, updateParticipant } from './models/tournament.models';
+import { Observable } from 'rxjs';
 
 const ID = 'AKIAJNEXL3RYO3HDJ5EA';
 const SECRET = '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';
@@ -115,7 +116,10 @@ export class tournaments {
         ts.comment_required,
         ts.show_signups,
         ts.bracket_sort_method,
-        ts.bracket_limit
+        ts.bracket_limit,
+        ts.quals_cutoff,
+        ts.show_quals,
+        ts.has_quals
         FROM tournaments 
         LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
         WHERE tournaments.id = ? ${sqlWhere}`, [id, userId], (err, result: any) => {
@@ -128,6 +132,7 @@ export class tournaments {
         CAST(p.userId AS CHAR) as userId,
         p.forfeit,
         p.seed,
+        p.position,
         ${isAuth ? 'p.comment,' : ''}
         ${userId != null ? 'IF(p.userId = "' + userId + '", p.comment, null) as comment,' : ''}
         CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
@@ -404,7 +409,17 @@ export class tournaments {
         }
     }
 
-    updateSettings(data: any, callback: Function) {
+    async updateSettings(data: any, callback: Function) {
+        const curSettings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE id = ?", [data.settingsId]);
+        if (data.settings.state == 'main_stage' && curSettings[0].state == "qualifiers") {
+            let seeding: any = await this.seedPlayersByQuals(data.tournamentId, data.settings.quals_cutoff);
+            if(!seeding) {
+                return callback({
+                    err: 'error creating seeds',
+                    flag: true
+                })
+            }
+        }
         const result = this.db.preparedQuery(`UPDATE tournament_settings SET ? WHERE ?? = ?`, [data.settings, 'id', data.settingsId], (err, result: any) => {
             let flag = false;
             if (err) flag = true;
@@ -414,6 +429,54 @@ export class tournaments {
                 err: err
             });
         });
+    }
+
+    async seedPlayersByQuals(tournamentId: string, cutoff) {
+        let qualsScores = await this.getQualsScores(tournamentId);
+        // console.log(qualsScores);
+        qualsScores.sort((a, b) => {
+            let sumA = this.sumProperty(a.scores, 'score');
+            let sumB = this.sumProperty(b.scores, 'score');
+            let sumAPer = this.sumProperty(a.scores, 'percentage');
+            let sumBPer = this.sumProperty(b.scores, 'percentage');
+            a.avgPercentage = isNaN(sumAPer / a.scores.length * 100) ? 0 : (sumAPer / a.scores.length * 100).toFixed(2);
+            b.avgPercentage = isNaN(sumBPer / b.scores.length * 100) ? 0 : (sumBPer / b.scores.length * 100).toFixed(2);
+            a.scoreSum = sumA;
+            b.scoreSum = sumB;
+            if (sumB == sumA) {
+                if (a.globalRank == 0) return 1;
+                if (b.globalRank == 0) return -1;
+                return a.globalRank - b.globalRank;
+            }
+            return sumB - sumA;
+        });
+        for(const user of qualsScores) {
+            await this.db.asyncPreparedQuery("UPDATE participants SET seed = 0 WHERE userId = ? AND tournamentId = ?", [user.discordId, tournamentId])
+                .catch(err => {
+                    console.error(err);
+                    updateErr = true;
+                });
+        }
+        let users = [];
+        for (let i = 0; i < cutoff; i++) {
+            const user = qualsScores[i];
+            // user.seed = i;
+            let temp = {
+                discordId: user.discordId,
+                seed: i+1
+            };
+            users.push(temp);
+        }
+        let updateErr = false;
+        for (const user of users) {
+            await this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [user.seed, user.discordId, tournamentId])
+                .catch(err => {
+                    console.error(err);
+                    updateErr = true;
+                });
+        }
+        return !updateErr;
+        
     }
 
     signUp(data: any, callback: Function) {
@@ -510,9 +573,9 @@ export class tournaments {
     }
 
     getMapPools(tournamentId: string, callback: Function, isAuth: boolean = false) {
-        let sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?`;
+        let sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?`;
         if (isAuth) {
-            sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE tournamentId = ?`;
+            sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE tournamentId = ?`;
         }
         this.db.preparedQuery(sql, [tournamentId], (err, result: any) => {
             let mapPools = {};
@@ -554,6 +617,7 @@ export class tournaments {
                         image: song.image,
                         description: song.description,
                         live: !!+song.live,
+                        is_qualifiers: song.is_qualifiers,
                         songs: songs
                     }
                 }
@@ -636,13 +700,36 @@ export class tournaments {
         LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
         WHERE p.tournamentId = ? ORDER BY ${settings[0].bracket_sort_method}=0, ${settings[0].bracket_sort_method} LIMIT ?`, [id, settings[0].bracket_limit]);
         // console.log(participants.length);
-        if (participants.length % 8 != 0) throw 'Uneven number of participants';
-        let seeds = this.seeding(participants.length);
-        let matches: Array<match> = [];
-        let names = [];
+        // if (participants.length % 8 != 0) throw 'Uneven number of participants';
 
+        let matches: any[];
+        // console.log(settings)
+        if (settings[0].type == 'single_elim') {
+            matches = await this.singleElimMatches(settings, participants);
+        } else if (settings.type == 'double_elim') {
+
+        }
+
+        return matches;
+    }
+
+    private async singleElimMatches(settings: tournamentSettings, participants: any): Promise<any[]> {
+        let numParticipants = participants.length;
+        let seeds = this.seeding(numParticipants);
+        let matches: Array<match> = [];
+
+        let rounds = Math.log2(numParticipants);
+        let byes = Math.pow(2, Math.ceil(Math.log2(numParticipants))) - numParticipants;
+        let numMatches = numParticipants - 1;
+
+        let byePlayers = [];
+        let roundMatches = Math.pow(2, Math.ceil(Math.log2(numParticipants))) / 2;
+        let totalMatches = roundMatches;
+
+        // First Round
         for (let i = 0; i < seeds.length; i += 2) {
             let p1Id: string, p1Name: string, p1Avatar: string = '';
+            let isBye = true;
             if (participants[seeds[i] - 1] != undefined) {
                 p1Id = participants[seeds[i] - 1].discordId;
                 p1Name = participants[seeds[i] - 1].name;
@@ -654,8 +741,15 @@ export class tournaments {
                 p2Name = participants[seeds[i + 1] - 1].name;
                 p2Avatar = participants[seeds[i + 1] - 1].avatar;
             }
+            if (participants[seeds[i + 1] - 1] != undefined && participants[seeds[i] - 1] != undefined) {
+                isBye = false;
+            }
+            if (isBye) {
+                let nextMatch = Math.floor((i / 2) / 2) + roundMatches + 1;
+                byePlayers.push({ match: nextMatch, player: p1Id != "" ? p1Id : p2Id });
+            }
             let temp: bslMatch = {
-                id: i / 2,
+                id: i / 2 + 1,
                 round: 0,
                 matchNum: i / 2,
                 p1: p1Id,
@@ -672,34 +766,149 @@ export class tournaments {
                 p1Country: '',
                 p2Country: '',
                 p1Avatar: p1Avatar,
-                p2Avatar: p2Avatar
+                p2Avatar: p2Avatar,
+                bye: isBye
             }
             matches.push(temp);
         }
-
-        for (const user of participants) {
-            names.push(user.name);
+        // console.log(byePlayers);
+        for (let i = 1; i < rounds; i++) {
+            let x = i + 1;
+            roundMatches = Math.pow(2, Math.ceil(Math.log2(numParticipants))) / Math.pow(2, x);
+            for (let j = 0; j < roundMatches; j++) {
+                let p1Id: string, p1Name: string, p1Avatar: string = '';
+                let p2Id: string, p2Name: string, p2Avatar: string = '';
+                if (byePlayers.some(x => x.match == totalMatches + j + 1)) {
+                    let players = byePlayers.filter(x => x.match == totalMatches + j + 1);
+                    // console.log(players);
+                    if (players[0] != undefined) {
+                        p1Id = participants.find(x => x.discordId == players[0].player).discordId;
+                        p1Name = participants.find(x => x.discordId == players[0].player).name;
+                        p1Avatar = participants.find(x => x.discordId == players[0].player).avatar;
+                    }
+                    if (players[1] != undefined) {
+                        p2Id = participants.find(x => x.discordId == players[1].player).discordId;
+                        p2Name = participants.find(x => x.discordId == players[1].player).name;
+                        p2Avatar = participants.find(x => x.discordId == players[1].player).avatar;
+                    }
+                }
+                let temp: bslMatch = {
+                    id: totalMatches + j + 1,
+                    round: i,
+                    matchNum: j,
+                    p1: p1Id,
+                    p2: p2Id,
+                    p1Score: 0,
+                    p2Score: 0,
+                    status: '',
+                    p1Rank: 0,
+                    p2Rank: 0,
+                    p1Seed: seeds[i],
+                    p2Seed: seeds[i + 1],
+                    p1Name: p1Name,
+                    p2Name: p2Name,
+                    p1Country: '',
+                    p2Country: '',
+                    p1Avatar: p1Avatar,
+                    p2Avatar: p2Avatar,
+                }
+                matches.push(temp);
+            }
+            totalMatches += Math.pow(2, Math.ceil(Math.log2(numParticipants))) / Math.pow(2, x);
         }
-
-        // return {
-        //     participants: participants,
-        //     matches: matches,
-        //     seeds: seeds
-        // };
         return matches;
-    }
-
-    private singleElimMatches() {
-
     }
 
     private doubleElimMatches() {
 
     }
 
+    async saveQualScore(data: qualsScore) {
+        const tournamentSettings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [data.tournamentId]);
+        if (tournamentSettings.length <= 0 || (tournamentSettings[0].state != 'qualifiers' && !!tournamentSettings[0].public)) return { error: 'invalid tournament settings' };
+        const userInfo: any = await this.db.asyncPreparedQuery("SELECT p.*, u.discordId FROM participants p LEFT JOIN users u ON u.discordId = p.userId WHERE u.ssId = ? AND p.tournamentId = ?", [data.ssId, data.tournamentId]);
+        if (userInfo.length <= 0) return { error: "invalid user" };
+        delete data.ssId;
+        data.userId = userInfo[0].discordId;
+        const mapPool: any = await this.db.asyncPreparedQuery("SELECT pl.songHash FROM pool_link pl LEFT JOIN map_pools mp ON pl.poolId = mp.id WHERE mp.tournamentId = ? AND is_qualifiers = 1 AND live = 1", [data.tournamentId]);
+        // console.log(mapPool.some(x=> x.songHash == data.songHash));
+        if (!mapPool.some(x => x.songHash == data.songHash)) return { error: "invalid song hash" };
+        data.percentage = +data.score / +data.totalScore;
+        if (data.percentage >= 1) return { error: "invalid score" };
+        delete data.totalScore;
+        let savedData: any = await this.db.asyncPreparedQuery(`INSERT INTO qualifier_scores SET ?
+        ON DUPLICATE KEY UPDATE
+        score = GREATEST(score, VALUES(score)),
+        percentage = GREATEST(percentage, VALUES(percentage))`, [data, +data.score, data.percentage]);
+        if (savedData.insertId == 0) return { error: 'Did not beat score' };
+        return { data: "score saved successfully", flag: false };
+    }
+
+    async getQualsScores(id: string) {
+        const qualsScores: any = await this.db.asyncPreparedQuery(`SELECT p.userId as discordId, q.score, q.percentage, pl.*, u.* FROM participants p
+        LEFT JOIN users u ON u.discordId = p.userId
+        LEFT JOIN qualifier_scores q ON p.userId = q.userId 
+        LEFT JOIN pool_link pl ON pl.songHash = q.songHash
+        LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
+        WHERE ts.public = 1 AND ts.show_quals = 1 AND p.tournamentId = ?`, [id]);
+        let scores = [];
+        for (const score of qualsScores) {
+            if (scores.some(x => x.discordId == score.discordId)) {
+                //do thing
+                let pIndex = scores.findIndex(x => x.discordId == score.discordId);
+                scores[pIndex].scores.push({
+                    score: +score.score,
+                    percentage: +score.percentage,
+                    poolId: score.poolId,
+                    songHash: score.songHash,
+                    songName: score.songName,
+                    songAuthor: score.songAuthor,
+                    levelAuthor: score.levelAuthor,
+                    songDiff: score.songDiff,
+                    key: score.key,
+                    ssLink: score.ssLink
+                })
+            } else {
+                let curScore = []
+                if (score.score != null) {
+                    curScore = [
+                        {
+                            score: +score.score,
+                            percentage: +score.percentage,
+                            poolId: score.poolId,
+                            songHash: score.songHash,
+                            songName: score.songName,
+                            songAuthor: score.songAuthor,
+                            levelAuthor: score.levelAuthor,
+                            songDiff: score.songDiff,
+                            key: score.key,
+                            ssLink: score.ssLink
+                        }
+                    ]
+                }
+                let temp = {
+                    discordId: score.discordId,
+                    ssId: score.ssId,
+                    name: score.name,
+                    twitchName: score.twitchName,
+                    avatar: score.avatar,
+                    globalRank: score.globalRank,
+                    localRank: score.localRank,
+                    country: score.country,
+                    tourneyRank: score.tourneyRank,
+                    TR: score.TR,
+                    pronoun: score.pronoun,
+                    scores: curScore
+                }
+                scores.push(temp);
+            }
+        }
+        return scores;
+    }
+
     async checkKey(id: string, key: string) {
         const keyData: any = await this.db.asyncPreparedQuery("SELECT * FROM api_keys WHERE tournamentId = ?", [id]);
-        if(keyData[0].api_key == key) return true;
+        if (keyData[0].api_key == key) return true;
         return false
     }
 
@@ -759,31 +968,13 @@ export class tournaments {
         }
         return players;
     }
-}
 
-export interface match {
-    round: number,
-    matchNum: number,
-    p1: string,
-    p2: string
-}
-export interface bslMatch {
-    id: number
-    round: number,
-    matchNum: number,
-    p1: string,
-    p2: string,
-    p1Score: number,
-    p2Score: number,
-    status: string,
-    p1Rank: number,
-    p2Rank: number,
-    p1Seed: number,
-    p2Seed: number,
-    p1Name: string,
-    p2Name: string,
-    p1Country: string,
-    p2Country: string,
-    p1Avatar: string,
-    p2Avatar: string,
+    private sumProperty(items, prop) {
+        if (items == null) {
+            return 0;
+        }
+        return items.reduce(function (a, b) {
+            return b[prop] == null ? a : a + b[prop];
+        }, 0);
+    }
 }
