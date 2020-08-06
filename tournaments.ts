@@ -413,7 +413,7 @@ export class tournaments {
         const curSettings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE id = ?", [data.settingsId]);
         if (data.settings.state == 'main_stage' && curSettings[0].state == "qualifiers") {
             let seeding: any = await this.seedPlayersByQuals(data.tournamentId, data.settings.quals_cutoff);
-            if(!seeding) {
+            if (!seeding) {
                 return callback({
                     err: 'error creating seeds',
                     flag: true
@@ -450,7 +450,7 @@ export class tournaments {
             }
             return sumB - sumA;
         });
-        for(const user of qualsScores) {
+        for (const user of qualsScores) {
             await this.db.asyncPreparedQuery("UPDATE participants SET seed = 0 WHERE userId = ? AND tournamentId = ?", [user.discordId, tournamentId])
                 .catch(err => {
                     console.error(err);
@@ -463,7 +463,7 @@ export class tournaments {
             // user.seed = i;
             let temp = {
                 discordId: user.discordId,
-                seed: i+1
+                seed: i + 1
             };
             users.push(temp);
         }
@@ -476,7 +476,7 @@ export class tournaments {
                 });
         }
         return !updateErr;
-        
+
     }
 
     signUp(data: any, callback: Function) {
@@ -698,22 +698,25 @@ export class tournaments {
         FROM participants p
         LEFT JOIN users u ON u.discordId = p.userId
         LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
-        WHERE p.tournamentId = ? ORDER BY ${settings[0].bracket_sort_method}=0, ${settings[0].bracket_sort_method} LIMIT ?`, [id, settings[0].bracket_limit]);
+        WHERE p.tournamentId = ? ORDER BY ${settings[0].bracket_sort_method}=0, ${settings[0].bracket_sort_method} LIMIT ?`, [id, settings[0].bracket_limit])
+            .catch(err => {
+                console.error(err);
+            });
         // console.log(participants.length);
         // if (participants.length % 8 != 0) throw 'Uneven number of participants';
 
         let matches: any[];
         // console.log(settings)
         if (settings[0].type == 'single_elim') {
-            matches = await this.singleElimMatches(settings, participants);
-        } else if (settings.type == 'double_elim') {
-
+            matches = await this.winnersRoundMatches(settings, participants);
+        } else if (settings[0].type == 'double_elim') {
+            matches = await this.doubleElimMatches(settings, participants);
         }
 
         return matches;
     }
 
-    private async singleElimMatches(settings: tournamentSettings, participants: any): Promise<any[]> {
+    private async winnersRoundMatches(settings: tournamentSettings, participants: any): Promise<any[]> {
         let numParticipants = participants.length;
         let seeds = this.seeding(numParticipants);
         let matches: Array<match> = [];
@@ -814,13 +817,86 @@ export class tournaments {
                 }
                 matches.push(temp);
             }
+            if (settings[0].type == 'double_elim' && roundMatches == 1) {
+                let temp: bslMatch = {
+                    id: totalMatches + 2,
+                    round: i + 1,
+                    matchNum: 0,
+                    p1: '',
+                    p2: '',
+                    p1Score: 0,
+                    p2Score: 0,
+                    status: '',
+                    p1Rank: 0,
+                    p2Rank: 0,
+                    p1Seed: 0,
+                    p2Seed: 0,
+                    p1Name: '',
+                    p2Name: '',
+                    p1Country: '',
+                    p2Country: '',
+                    p1Avatar: '',
+                    p2Avatar: ''
+                }
+                matches.push(temp);
+            }
             totalMatches += Math.pow(2, Math.ceil(Math.log2(numParticipants))) / Math.pow(2, x);
         }
         return matches;
     }
 
-    private doubleElimMatches() {
+    private async doubleElimMatches(settings: tournamentSettings, participants: any): Promise<any[]> {
+        let numParticipants = participants.length;
+        let seeds = this.seeding(numParticipants);
+        let matches: Array<match> = [];
 
+        let rounds = Math.log2(numParticipants);
+        let byes = Math.pow(2, Math.ceil(Math.log2(numParticipants))) - numParticipants;
+        let numMatches = numParticipants - 1;
+
+        let byePlayers = [];
+        let roundMatches = Math.pow(2, Math.ceil(Math.log2(numParticipants))) / 2;
+        let totalMatches = roundMatches;
+
+        // Winners round
+        let winnersMatches = await this.winnersRoundMatches(settings, participants);
+
+
+
+        let losersMatchesCount = Math.pow(2, Math.ceil(Math.log2(numParticipants))) / 4;
+        let loserIndex = -1;
+        let losersMatches: Array<match> = [];
+        while (losersMatchesCount > 0) {
+            for (let i = 0; i < losersMatchesCount; i++) {
+                let temp: bslMatch = {
+                    id: winnersMatches.length + i + 1,
+                    round: loserIndex,
+                    matchNum: i,
+                    p1: '',
+                    p2: '',
+                    p1Score: 0,
+                    p2Score: 0,
+                    status: '',
+                    p1Rank: 0,
+                    p2Rank: 0,
+                    p1Seed: 0,
+                    p2Seed: 0,
+                    p1Name: '',
+                    p2Name: '',
+                    p1Country: '',
+                    p2Country: '',
+                    p1Avatar: '',
+                    p2Avatar: ''
+                }
+                losersMatches.push(temp);
+            }
+            if (loserIndex % 2 == 0) {
+                losersMatchesCount = Math.floor(losersMatchesCount / 2);
+            }
+            loserIndex--;
+        }
+        let allMatches = winnersMatches.concat(losersMatches);
+        return allMatches;
     }
 
     async saveQualScore(data: qualsScore) {
@@ -850,7 +926,8 @@ export class tournaments {
         LEFT JOIN qualifier_scores q ON p.userId = q.userId 
         LEFT JOIN pool_link pl ON pl.songHash = q.songHash
         LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
-        WHERE ts.public = 1 AND ts.show_quals = 1 AND p.tournamentId = ?`, [id]);
+        WHERE ts.show_quals = 1 AND p.tournamentId = ?`, [id]);
+        // WHERE ts.public = 1 AND ts.show_quals = 1 AND p.tournamentId = ?`, [id]);
         let scores = [];
         for (const score of qualsScores) {
             if (scores.some(x => x.discordId == score.discordId)) {

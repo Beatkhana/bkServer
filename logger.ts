@@ -21,7 +21,7 @@ export class logger {
     }
 
     async getLogs2(page: any = 0, perPage: any = 25) {
-        const result: any = this.db.paginationQuery('logs', page, perPage, "SELECT logs.*, u.* FROM logs LEFT JOIN users u ON u.discordId = logs.userId");
+        const result: any = this.db.paginationQuery('logs', page, perPage, "SELECT logs.*, u.* FROM logs LEFT JOIN users u ON u.discordId = logs.userId ORDER BY logs.time DESC");
         return result;
     }
 }
