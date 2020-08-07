@@ -908,7 +908,7 @@ export class tournaments {
         data.userId = userInfo[0].discordId;
         const mapPool: any = await this.db.asyncPreparedQuery("SELECT pl.songHash FROM pool_link pl LEFT JOIN map_pools mp ON pl.poolId = mp.id WHERE mp.tournamentId = ? AND is_qualifiers = 1 AND live = 1", [data.tournamentId]);
         // console.log(mapPool.some(x=> x.songHash == data.songHash));
-        if (!mapPool.some(x => x.songHash == data.songHash)) return { error: "invalid song hash" };
+        if (!mapPool.some(x => x.songHash.toLowerCase() == data.songHash.toLowerCase())) return { error: "invalid song hash" };
         data.percentage = +data.score / +data.totalScore;
         if (data.percentage >= 1) return { error: "invalid score" };
         delete data.totalScore;
@@ -926,7 +926,7 @@ export class tournaments {
         LEFT JOIN qualifier_scores q ON p.userId = q.userId 
         LEFT JOIN pool_link pl ON pl.songHash = q.songHash
         LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
-        WHERE ts.show_quals = 1 AND p.tournamentId = ?`, [id]);
+        WHERE ts.show_quals = 1 AND p.tournamentId = ? AND (q.tournamentId IS NULL OR q.tournamentId = ?)`, [id, id]);
         // WHERE ts.public = 1 AND ts.show_quals = 1 AND p.tournamentId = ?`, [id]);
         let scores = [];
         for (const score of qualsScores) {
