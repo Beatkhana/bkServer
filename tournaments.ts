@@ -924,10 +924,10 @@ export class tournaments {
         const qualsScores: any = await this.db.asyncPreparedQuery(`SELECT p.userId as discordId, q.score, q.percentage, pl.*, u.* FROM participants p
         LEFT JOIN users u ON u.discordId = p.userId
         LEFT JOIN qualifier_scores q ON p.userId = q.userId 
-        LEFT JOIN map_pools mp ON mp.tournamentId = p.tournamentId
         LEFT JOIN pool_link pl ON pl.songHash = q.songHash
+        LEFT JOIN map_pools mp ON (mp.tournamentId = p.tournamentId AND mp.id = pl.poolId)
         LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
-        WHERE ts.show_quals = 1 AND p.tournamentId = ? AND mp.live = 1 AND (q.tournamentId IS NULL OR q.tournamentId = ?)`, [id, id]);
+        WHERE ts.show_quals = 1 AND ts.show_quals = 1 AND p.tournamentId = ? AND mp.live = 1 AND (q.tournamentId IS NULL OR q.tournamentId = ?)`, [id, id]);
         // WHERE ts.public = 1 AND ts.show_quals = 1 AND p.tournamentId = ?`, [id]);
         let scores = [];
         for (const score of qualsScores) {
