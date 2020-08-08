@@ -50,7 +50,8 @@ export interface qualsScore {
     songHash: string,
     score: string,
     totalScore: string,
-    percentage?: number
+    percentage?: number,
+    maxScore?: string
 }
 
 export class qualScore {

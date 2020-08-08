@@ -987,11 +987,13 @@ export class tournaments {
         if (!mapPool.some(x => x.songHash.toLowerCase() == data.songHash.toLowerCase())) return { error: "invalid song hash" };
         data.percentage = +data.score / +data.totalScore;
         if (data.percentage >= 1) return { error: "invalid score" };
+        data.maxScore = data.totalScore;
         delete data.totalScore;
         let savedData: any = await this.db.asyncPreparedQuery(`INSERT INTO qualifier_scores SET ?
         ON DUPLICATE KEY UPDATE
         score = GREATEST(score, VALUES(score)),
-        percentage = GREATEST(percentage, VALUES(percentage))`, [data, +data.score, data.percentage]);
+        percentage = GREATEST(percentage, VALUES(percentage)),
+        maxScore = GREATEST(maxScore, VALUES(maxScore))`, [data, +data.score, data.percentage, data.maxScore]);
         if (savedData.insertId == 0) return { error: 'Did not beat score' };
         return { data: "score saved successfully", flag: false };
     }
