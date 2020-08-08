@@ -596,9 +596,9 @@ export class tournaments {
     }
 
     async getMapPools(tournamentId: string, isAuth: boolean = false) {
-        let sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?`;
+        let sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?`;
         if (isAuth) {
-            sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE tournamentId = ?`;
+            sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE tournamentId = ?`;
         }
         const poolsRes: any = await this.db.asyncPreparedQuery(sql, [tournamentId]);
         let mapPools = {};
@@ -615,7 +615,8 @@ export class tournaments {
                         levelAuthor: song.levelAuthor,
                         diff: song.songDiff,
                         key: song.key,
-                        ssLink: song.ssLink
+                        ssLink: song.ssLink,
+                        numNotes: song.numNotes
                     });
             } else {
                 let songs = []
@@ -629,7 +630,8 @@ export class tournaments {
                             levelAuthor: song.levelAuthor,
                             diff: song.songDiff,
                             key: song.key,
-                            ssLink: song.ssLink
+                            ssLink: song.ssLink,
+                            numNotes: song.numNotes
                         }
                     ]
                 }
@@ -699,9 +701,13 @@ export class tournaments {
         // console.log(data);
         rp.get(data.ssLink)
             .then(html => {
-                let hash = cheerio('.box.has-shadow > b', html).text();
-                let diff = cheerio('li.is-active > a > span', html).text();
-                let songInfo = this.getBSData(hash, songInfo => {
+                let hash: string = cheerio('.box.has-shadow > b', html).text();
+                let diff: string = cheerio('li.is-active > a > span', html).text();
+                let diffSearch = diff.toLowerCase();
+                if (diffSearch == 'expert+') diffSearch = 'expertPlus';
+
+                let songInfo = this.getBSData(hash, diffSearch, songInfo => {
+                    console.log(songInfo)
                     songInfo.songDiff = diff;
                     songInfo.ssLink = data.ssLink;
                     let values = [];
@@ -714,6 +720,7 @@ export class tournaments {
                     });
                     return null;
                 });
+                return null;
             })
             .catch(function (err) {
                 return callback({
@@ -735,7 +742,7 @@ export class tournaments {
     }
 
     saveSong(data, callback: Function) {
-        this.db.preparedQuery(`INSERT INTO pool_link (songHash, songName, songAuthor, levelAuthor, \`key\`, songDiff, ssLink, poolId) VALUES ?`, [data], (err, result) => {
+        this.db.preparedQuery(`INSERT INTO pool_link (songHash, songName, songAuthor, levelAuthor, \`key\`, numNotes, songDiff, ssLink, poolId) VALUES ?`, [data], (err, result) => {
             let flag = false;
             if (err) flag = true;
             return callback({
@@ -1059,7 +1066,7 @@ export class tournaments {
         return false
     }
 
-    private getBSData(hash, callback: Function): any {
+    private getBSData(hash, diff, callback: Function): any {
         rp.get('https://beatsaver.com/api/maps/by-hash/' + hash, {
             headers: {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
@@ -1072,10 +1079,12 @@ export class tournaments {
                     songName: res.metadata.songName,
                     songAuthor: res.metadata.songAuthorName,
                     levelAuthor: res.metadata.levelAuthorName,
-                    key: res.key
+                    key: res.key,
+                    numNotes: res.metadata.characteristics.find(x => x.name == 'Standard').difficulties[diff].notes
                 }
-                return callback(info);
-            })
+                callback(info);
+                return null;
+            });
     }
 
     private formatDate(date) {
