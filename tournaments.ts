@@ -669,7 +669,7 @@ export class tournaments {
                 if (diffSearch == 'expert+') diffSearch = 'expertPlus';
 
                 let songInfo = this.getBSData(hash, diffSearch, songInfo => {
-                    console.log(songInfo)
+                    // console.log(songInfo)
                     songInfo.songDiff = diff;
                     songInfo.ssLink = data.ssLink;
                     let values = [];
