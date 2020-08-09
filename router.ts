@@ -525,6 +525,42 @@ router.put(baseUrl + '/tournament/:id/map-pools', function (req, res) {
     }
 });
 
+// Download pool
+router.get(baseUrl + '/download-pool/:id', (req, res) => {
+    if (req.headers.authorization != null) {
+        tournament.checkKey(req.params.id, req.headers.authorization)
+            .then(isAuth => {
+                tournament.downloadPool(req.params.id, isAuth)
+                    .then(response => {
+                        var data = JSON.stringify(response);
+                        res.setHeader('Content-disposition', 'attachment; filename= ' + response.playlistTitle + '.json');
+                        res.setHeader('Content-type', 'application/json');
+                        res.write(data, err => {
+                            res.end();
+                        });
+                    });
+                return null;
+            })
+            .catch((err) => {
+                console.error(err);
+                res.sendStatus(500);
+            });
+    } else {
+        isAdminOwner(req, req.params.id, auth => {
+            tournament.downloadPool(req.params.id, auth)
+                .then(response => {
+                    var data = JSON.stringify(response);
+                    res.setHeader('Content-disposition', 'attachment; filename= ' + response.playlistTitle + '.json');
+                    res.setHeader('Content-type', 'application/json');
+                    res.write(data, err => {
+                        res.end();
+                    });
+                });
+            return null;
+        });
+    }
+});
+
 // Add song
 router.post(baseUrl + '/tournament/:id/addSong', function (req, res) {
     if (req.headers.authorization != null) {

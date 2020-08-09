@@ -431,6 +431,7 @@ export class tournaments {
         });
     }
 
+    // quals seed
     async seedPlayersByQuals(tournamentId: string, cutoff) {
         const pools: any = await this.getMapPools(tournamentId);
         let qualsPool: any = Object.values(pools).find((x: any) => x.is_qualifiers == 1);
@@ -438,6 +439,11 @@ export class tournaments {
         // console.log(qualsScores);
         for (const user of qualsScores) {
             for (const score of user.scores) {
+                if(qualsPool.songs.find(x => x.hash == score.songHash).numNotes != 0) {
+                    score.percentage = score.score / (qualsPool.songs.find(x => x.hash == score.songHash).numNotes*920-7245)
+                }else {
+                    score.percentage = 0;
+                }
                 score.score = Math.round(score.score / 2);
             }
         }
@@ -462,22 +468,6 @@ export class tournaments {
                 return b.avgPercentage - a.avgPercentage;
             }
         });
-        // qualsScores.sort((a, b) => {
-        //     let sumA = this.sumProperty(a.scores, 'score');
-        //     let sumB = this.sumProperty(b.scores, 'score');
-        //     let sumAPer = this.sumProperty(a.scores, 'percentage');
-        //     let sumBPer = this.sumProperty(b.scores, 'percentage');
-        //     a.avgPercentage = isNaN(sumAPer / a.scores.length * 100) ? 0 : (sumAPer / a.scores.length * 100).toFixed(2);
-        //     b.avgPercentage = isNaN(sumBPer / b.scores.length * 100) ? 0 : (sumBPer / b.scores.length * 100).toFixed(2);
-        //     a.scoreSum = sumA;
-        //     b.scoreSum = sumB;
-        //     if (sumB == sumA) {
-        //         if (a.globalRank == 0) return 1;
-        //         if (b.globalRank == 0) return -1;
-        //         return a.globalRank - b.globalRank;
-        //     }
-        //     return sumB - sumA;
-        // });
         for (const user of qualsScores) {
             await this.db.asyncPreparedQuery("UPDATE participants SET seed = 0 WHERE userId = ? AND tournamentId = ?", [user.discordId, tournamentId])
                 .catch(err => {
@@ -653,53 +643,20 @@ export class tournaments {
             }
         }
         return mapPools;
-        // this.db.preparedQuery(sql, [tournamentId], (err, result: any) => {
-        //     let mapPools = {};
-        //     // console.log(result)
-        //     if (result == undefined) return callback({});
-        //     for (const song of result) {
-        //         if (song.poolId in mapPools) {
-        //             mapPools[song.poolId].songs.push(
-        //                 {
-        //                     id: song.songId,
-        //                     hash: song.songHash,
-        //                     name: song.songName,
-        //                     songAuthor: song.songAuthor,
-        //                     levelAuthor: song.levelAuthor,
-        //                     diff: song.songDiff,
-        //                     key: song.key,
-        //                     ssLink: song.ssLink
-        //                 });
-        //         } else {
-        //             let songs = []
-        //             if (song.songId != null) {
-        //                 songs = [
-        //                     {
-        //                         id: song.songId,
-        //                         hash: song.songHash,
-        //                         name: song.songName,
-        //                         songAuthor: song.songAuthor,
-        //                         levelAuthor: song.levelAuthor,
-        //                         diff: song.songDiff,
-        //                         key: song.key,
-        //                         ssLink: song.ssLink
-        //                     }
-        //                 ]
-        //             }
-        //             mapPools[song.poolId] = {
-        //                 id: song.poolId,
-        //                 tournamentId: song.tournamentId,
-        //                 poolName: song.poolName,
-        //                 image: song.image,
-        //                 description: song.description,
-        //                 live: !!+song.live,
-        //                 is_qualifiers: song.is_qualifiers,
-        //                 songs: songs
-        //             }
-        //         }
-        //     }
-        //     return callback(mapPools);
-        // });
+    }
+
+    async downloadPool(id: string, auth: boolean) {
+        let pool: any = await this.db.asyncPreparedQuery(`SELECT map_pools.poolName, map_pools.image, map_pools.description, pool_link.songHash FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE (map_pools.live = ? OR map_pools.live = 1) AND map_pools.id = ?`, [+auth,id]);
+        let curSongs = pool.map(e => { return { hash: e.songHash } });
+        let playlist = {
+            playlistTitle: pool[0].poolName,
+            playlistAuthor: 'BeatKhana!',
+            playlistDescription: pool[0].description,
+            image: pool[0].image,
+            songs: curSongs
+        }
+        
+        return playlist;
     }
 
     addSong(data: any, callback: Function) {
