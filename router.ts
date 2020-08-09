@@ -533,7 +533,7 @@ router.get(baseUrl + '/download-pool/:id', (req, res) => {
                 tournament.downloadPool(req.params.id, isAuth)
                     .then(response => {
                         var data = JSON.stringify(response);
-                        let filename = response.playlistTitle.replace( /[<>:"\/\\|?*]+/g, '' );
+                        let filename = response.playlistTitle.replace( /[<>:"\/\\|?*]+/g, '' ).replace(/ /g, '_');
                         res.setHeader('Content-disposition', `attachment; filename= ${filename}.json`);
                         res.setHeader('Content-type', 'application/json');
                         res.write(data, err => {
@@ -551,7 +551,7 @@ router.get(baseUrl + '/download-pool/:id', (req, res) => {
             tournament.downloadPool(req.params.id, auth)
                 .then(response => {
                     let data = JSON.stringify(response);
-                    let filename = response.playlistTitle.replace( /[<>:"\/\\|?*]+/g, '' );
+                    let filename = response.playlistTitle.replace( /[<>:"\/\\|?*]+/g, '').replace(/ /g, '_');
                     res.setHeader('Content-disposition', `attachment; filename= ${filename}.json`);
                     res.setHeader('Content-type', 'application/json');
                     res.write(data, err => {
