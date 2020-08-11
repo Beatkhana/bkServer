@@ -356,19 +356,31 @@ router.post(baseUrl + '/tournament/:id/signUp', function (req, res) {
 router.get(baseUrl + '/tournament/:id/participants', function (req, res) {
     isAdminOwner(req, req.params.id, isAuth => {
         if (isAuth) {
-            tournament.participants(req.params.id, response => {
-                res.send(response);
-            }, true);
+            // tournament.participants(req.params.id, response => {
+            //     res.send(response);
+            // }, true);
+            tournament.participants(req.params.id, true)
+                .then(response => {
+                    res.send(response);
+                })
             return null;
         } else if (req.session.user != null) {
-            tournament.participants(req.params.id, response => {
-                res.send(response);
-            }, false, req.session.user[0].discordId);
+            tournament.participants(req.params.id, false, req.session.user[0].discordId)
+                .then(response => {
+                    res.send(response);
+                })
+            // tournament.participants(req.params.id, response => {
+            //     res.send(response);
+            // }, false, req.session.user[0].discordId);
             return null;
         } else {
-            tournament.participants(req.params.id, response => {
-                res.send(response);
-            });
+            // tournament.participants(req.params.id, response => {
+            //     res.send(response);
+            // });
+            tournament.participants(req.params.id, false)
+                .then(response => {
+                    res.send(response);
+                })
             return null;
         }
     })
@@ -400,6 +412,7 @@ router.put(baseUrl + '/updateParticipant/:id/:participantId', function (req, res
     })
 });
 
+// Remove participant
 router.post(baseUrl + '/tournament/:id/deleteParticipant', function (req, res) {
     isAdminOwner(req, req.params.id, isAuth => {
         if (isAuth) {
@@ -407,6 +420,20 @@ router.post(baseUrl + '/tournament/:id/deleteParticipant', function (req, res) {
                 log.createLog(req.session.user[0]['discordId'], `Removed user(${req.body.userId}) as a participant on a tournament (${req.params.id})`);
                 res.send(response);
             });
+            return null;
+        } else {
+            res.sendStatus(401)
+            return null;
+        }
+    })
+});
+
+// Eliminate participant - battle royale
+router.post(baseUrl + '/tournament/:id/elimParticipant', function (req, res) {
+    isAdminOwner(req, req.params.id, isAuth => {
+        if (isAuth) {
+            tournament.elimParticipant(req.body.participantId, req.params.id)
+                .then(response => res.send(response));
             return null;
         } else {
             res.sendStatus(401)

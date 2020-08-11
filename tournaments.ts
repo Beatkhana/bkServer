@@ -127,8 +127,10 @@ export class tournaments {
         });
     }
 
-    participants(id, callback: Function, isAuth = false, userId?: string) {
-        const result = this.db.preparedQuery(`SELECT p.id AS participantId,
+    async participants(id, isAuth = false, userId?: string) {
+        const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
+        let battleRoyale = settings[0].state == 'main_stage' && settings[0].type == 'battle_royale';
+        const result = await this.db.asyncPreparedQuery(`SELECT p.id AS participantId,
         CAST(p.userId AS CHAR) as userId,
         p.forfeit,
         p.seed,
@@ -149,9 +151,8 @@ export class tournaments {
         FROM participants p
         LEFT JOIN users u ON u.discordId = p.userId
         LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
-        WHERE p.tournamentId = ? ${isAuth ? '' : 'AND ts.show_signups = 1'}`, [id], (err, result: any) => {
-            return callback(result);
-        });
+        WHERE p.tournamentId = ? ${!battleRoyale ? '' : 'AND p.seed != 0'} ${isAuth ? '' : 'AND ts.show_signups = 1'}`, [id]);
+        return result;
     }
 
     updateParticipant(data: updateParticipant, auth = false, callback: Function) {
@@ -182,6 +183,30 @@ export class tournaments {
                 err: err
             });
         });
+    }
+
+    async elimParticipant(participantId: string, tournamentId: string) {
+        const settings = await this.getSettings(tournamentId);
+        const curParticipants: any = await this.participants(tournamentId, true);
+        if(settings[0].type == 'battle_royale') {
+            let minpos = Math.min.apply(null, curParticipants.map(x => x.position).filter(Boolean));
+            let nextPos = settings[0].quals_cutoff;
+            if( minpos != Infinity) nextPos = minpos - 1;
+
+            try {
+                const result: any = await this.db.asyncPreparedQuery("UPDATE participants SET position = ? WHERE id = ?", [nextPos, participantId]);
+                return {
+                    data: result,
+                    flag: false
+                }
+            } catch (error) {
+                return {
+                    err: error,
+                    flag: true
+                }
+            }
+
+        }
     }
 
     async save(data: any, callback: Function) {
@@ -1049,6 +1074,10 @@ export class tournaments {
                 callback(info);
                 return null;
             });
+    }
+
+    private async getSettings(id: string) {
+        return await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
     }
 
     private formatDate(date) {
