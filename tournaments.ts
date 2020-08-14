@@ -870,6 +870,11 @@ export class tournaments {
     async generateBracket(id: string) {
         const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
         // console.log(settings);
+        let rand = false;
+        if (settings[0].bracket_sort_method == 'random') {
+            settings[0].bracket_sort_method = 'discordId';
+            rand = true;
+        }
         const participants: any = await this.db.asyncPreparedQuery(`SELECT p.id AS participantId,
         CAST(p.userId AS CHAR) as userId,
         p.forfeit,
@@ -888,13 +893,18 @@ export class tournaments {
         FROM participants p
         LEFT JOIN users u ON u.discordId = p.userId
         LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
-        WHERE p.tournamentId = ? ORDER BY ${settings[0].bracket_sort_method}=0, ${settings[0].bracket_sort_method} LIMIT ?`, [id, settings[0].bracket_limit])
+        WHERE p.tournamentId = ? ORDER BY ${settings[0].bracket_sort_method}=0, ${settings[0].bracket_sort_method} ${rand ? '' : 'LIMIT ?'}`, [id, settings[0].bracket_limit])
             .catch(err => {
                 console.error(err);
             });
-        // console.log(participants.length);
+        // console.log(participants);
         // if (participants.length % 8 != 0) throw 'Uneven number of participants';
-
+        if (rand) {
+            this.shuffle(participants);
+        }
+        participants.length = settings[0].bracket_limit;
+        // console.log(participants);
+        
         let matches: any[];
         // console.log(settings)
         if (settings[0].type == 'single_elim') {
@@ -1252,5 +1262,24 @@ export class tournaments {
         return items.reduce(function (a, b) {
             return b[prop] == null ? a : a + b[prop];
         }, 0);
+    }
+
+    private shuffle(array) {
+        let currentIndex = array.length, temporaryValue, randomIndex;
+
+        // While there remain elements to shuffle...
+        while (0 !== currentIndex) {
+
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+
+            // And swap it with the current element.
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+
+        return array;
     }
 }
