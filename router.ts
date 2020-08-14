@@ -168,6 +168,27 @@ router.get(baseUrl + '/tournaments', function (req, res) {
     }
 });
 
+// Get all mini tournaments
+router.get(baseUrl + '/mini-tournaments', function (req, res) {
+    if (req.session.user != null) {
+        hasPerms(req, 2, isAuth => {
+            if (isAuth) {
+                tournament.getActiveMini((result: any) => {
+                    res.send(result);
+                }, -1);
+            } else {
+                tournament.getActiveMini((result: any) => {
+                    res.send(result);
+                }, req.session.user[0]['discordId']);
+            }
+        })
+    } else {
+        tournament.getActiveMini((result: any) => {
+            res.send(result);
+        });
+    }
+});
+
 router.get(baseUrl + '/tournament/archived', function (req, res) {
     tournament.getArchived((result: any) => {
         res.send(result);
@@ -620,6 +641,36 @@ router.post(baseUrl + '/tournament/:id/addSong', function (req, res) {
             }
         });
     }
+});
+
+router.post(baseUrl + '/tournament/:id/addSongByKey', (req, res) => {
+    if (req.headers.authorization != null) {
+        tournament.checkKey(req.params.id, req.headers.authorization)
+            .then(isAuth => {
+                if (isAuth) {
+                    tournament.songByKey(req.body)
+                        .then(response => res.send(response));
+                } else {
+                    res.sendStatus(401);
+                }
+            })
+            .catch((err) => {
+                console.error(err);
+                res.sendStatus(500);
+            });
+    } else {
+        isAdminOwner(req, req.body.tournamentId, auth => {
+            if (auth) {
+                tournament.songByKey(req.body)
+                    .then(response => res.send(response));
+                return null;
+            } else {
+                res.sendStatus(401);
+                return null;
+            }
+        });
+    }
+    return null;
 });
 
 // Delete song from pool

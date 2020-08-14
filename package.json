@@ -9,6 +9,7 @@
         "start": "node dist/server.js"
     },
     "dependencies": {
+        "@types/cheerio": "^0.22.21",
         "@types/express": "^4.17.6",
         "@types/express-session": "^1.17.0",
         "@types/mysql": "^2.15.13",

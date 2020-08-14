@@ -66,7 +66,42 @@ export class tournaments {
         ts.public
         FROM tournaments 
         LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
-        WHERE archived = 0 ${sqlWhere}`, [userId], (err, result: any) => {
+        WHERE archived = 0 AND tournaments.is_mini = 0 ${sqlWhere}`, [userId], (err, result: any) => {
+            return callback(result);
+        });
+    }
+
+    getActiveMini(callback: Function, userId = 0) {
+        let sqlWhere = "";
+        switch (true) {
+            case userId > 0:
+                sqlWhere = `AND (ts.public = 1 OR owner = ?)`;
+                break;
+            case userId < 0:
+                sqlWhere = ``;
+                break;
+            case userId == 0:
+                sqlWhere = `AND ts.public = 1`;
+                break;
+        }
+        const result = this.db.preparedQuery(`SELECT \`tournaments\`.\`id\` as tournamentId,
+        \`tournaments\`.\`name\`,
+        \`tournaments\`.\`image\`,
+        \`tournaments\`.\`date\` as startDate,
+        \`tournaments\`.\`endDate\`,
+        \`tournaments\`.\`discord\`,
+        \`tournaments\`.\`twitchLink\`,
+        \`tournaments\`.\`prize\`,
+        \`tournaments\`.\`info\`,
+        CAST(\`tournaments\`.\`owner\` AS CHAR) as owner,
+        \`tournaments\`.\`archived\`,
+        \`tournaments\`.\`first\`,
+        \`tournaments\`.\`second\`,
+        \`tournaments\`.\`third\`,
+        ts.public
+        FROM tournaments 
+        LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
+        WHERE archived = 0 AND tournaments.is_mini = 1 ${sqlWhere}`, [userId], (err, result: any) => {
             return callback(result);
         });
     }
@@ -105,6 +140,7 @@ export class tournaments {
         \`tournaments\`.\`first\`,
         \`tournaments\`.\`second\`,
         \`tournaments\`.\`third\`,
+        \`tournaments\`.\`is_mini\`,
         ts.id as settingsId,
         ts.public_signups,
         ts.public,
@@ -188,10 +224,10 @@ export class tournaments {
     async elimParticipant(participantId: string, tournamentId: string) {
         const settings = await this.getSettings(tournamentId);
         const curParticipants: any = await this.participants(tournamentId, true);
-        if(settings[0].type == 'battle_royale') {
+        if (settings[0].type == 'battle_royale') {
             let minpos = Math.min.apply(null, curParticipants.map(x => x.position).filter(Boolean));
             let nextPos = settings[0].quals_cutoff;
-            if( minpos != Infinity) nextPos = minpos - 1;
+            if (minpos != Infinity) nextPos = minpos - 1;
 
             try {
                 const result: any = await this.db.asyncPreparedQuery("UPDATE participants SET position = ? WHERE id = ?", [nextPos, participantId]);
@@ -464,9 +500,9 @@ export class tournaments {
         // console.log(qualsScores);
         for (const user of qualsScores) {
             for (const score of user.scores) {
-                if(qualsPool.songs.find(x => x.hash == score.songHash).numNotes != 0) {
-                    score.percentage = score.score / (qualsPool.songs.find(x => x.hash == score.songHash).numNotes*920-7245)
-                }else {
+                if (qualsPool.songs.find(x => x.hash == score.songHash).numNotes != 0) {
+                    score.percentage = score.score / (qualsPool.songs.find(x => x.hash == score.songHash).numNotes * 920 - 7245)
+                } else {
                     score.percentage = 0;
                 }
                 score.score = Math.round(score.score / 2);
@@ -671,7 +707,7 @@ export class tournaments {
     }
 
     async downloadPool(id: string, auth: boolean) {
-        let pool: any = await this.db.asyncPreparedQuery(`SELECT map_pools.poolName, map_pools.image, map_pools.description, pool_link.songHash FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE (map_pools.live = ? OR map_pools.live = 1) AND map_pools.id = ?`, [+auth,id]);
+        let pool: any = await this.db.asyncPreparedQuery(`SELECT map_pools.poolName, map_pools.image, map_pools.description, pool_link.songHash FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE (map_pools.live = ? OR map_pools.live = 1) AND map_pools.id = ?`, [+auth, id]);
         let curSongs = pool.map(e => { return { hash: e.songHash } });
         let playlist = {
             playlistTitle: pool[0].poolName,
@@ -680,7 +716,7 @@ export class tournaments {
             image: pool[0].image,
             songs: curSongs
         }
-        
+
         return playlist;
     }
 
@@ -738,6 +774,97 @@ export class tournaments {
                 err: err
             });
         })
+    }
+
+    async songByKey(data) {
+        let key = data.ssLink.split('beatmap/')[1];
+        let diff = data.diff;
+        let bsData = await rp.get('https://beatsaver.com/api/maps/detail/' + key, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
+            },
+            json: true
+        })
+            .catch(err => console.log(err));
+        let songName = bsData.metadata.songName.replace(" ", "+");
+        let songHash = bsData.hash;
+
+
+
+        let ssData = await rp.get(`https://scoresaber.com/?search=${songName}`)
+            .then(async html => {
+                let $ = cheerio.load(html);
+
+                let defaultLeaderboard = "";
+                let defaultDiff = "";
+
+                let ssLink = "";
+
+                await $("table.ranking tr").each((i, e) => {
+                    // console.log($(e).find('img').attr('src'));
+                    if ($(e).find('img').attr('src')) {
+                        let curHash = $(e).find('img').attr('src').replace("/imports/images/songs/", "").replace(".png", "");
+                        if (curHash.toLowerCase() == songHash.toLowerCase()) {
+                            // songElem = e;
+                            if (defaultLeaderboard == "") {
+                                defaultDiff = $(e).find('td.difficulty>span').text();
+                                defaultLeaderboard = $(e).find('td.song>a').attr('href');
+                            }
+                            if ($(e).find('td.difficulty>span').text().toLowerCase() == diff.toLowerCase()) {
+                                ssLink = $(e).find('td.song>a').attr('href');
+                            }
+                        }
+                    }
+                });
+
+                let response = {
+                    ssLink: ssLink != "" ? ssLink : defaultLeaderboard,
+                    diff: ssLink != "" ? diff : defaultDiff,
+                }
+                return response;
+
+            })
+            .catch(function (err) {
+                console.log(err);
+            });
+
+        let diffSearch = ssData.diff.toLowerCase();
+        if (diffSearch == 'expert+') diffSearch = 'expertPlus';
+        let diffInfo = bsData.metadata.characteristics.find(x => x.name == 'Standard').difficulties[diffSearch];
+        let info = {
+            songHash: bsData.hash.toUpperCase(),
+            songName: bsData.metadata.songName,
+            songAuthor: bsData.metadata.songAuthorName,
+            levelAuthor: bsData.metadata.levelAuthorName,
+            key: bsData.key,
+            numNotes: (diffInfo ? diffInfo.notes : 0),
+            songDiff: ssData.diff,
+            ssLink: `https://scoresaber.com${ssData.ssLink}`,
+            poolId: 0
+        }
+        let values = [];
+        for (const id of data.poolIds) {
+            info.poolId = id;
+            values.push(Object.values(info))
+        }
+        // let res = await this.saveSong(values, res => {
+        //     return res;
+        // });
+        // return res;
+        try {
+            let res = await this.db.asyncPreparedQuery(`INSERT INTO pool_link (songHash, songName, songAuthor, levelAuthor, \`key\`, numNotes, songDiff, ssLink, poolId) VALUES ?`, [values]);
+            return {
+                data: res,
+                flag: false,
+                err: null
+            }
+        } catch (err) {
+            return {
+                data: null,
+                flag: true,
+                err: err
+            }
+        }
     }
 
     async generateBracket(id: string) {
