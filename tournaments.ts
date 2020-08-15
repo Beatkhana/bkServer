@@ -155,7 +155,8 @@ export class tournaments {
         ts.bracket_limit,
         ts.quals_cutoff,
         ts.show_quals,
-        ts.has_quals
+        ts.has_quals,
+        ts.countries
         FROM tournaments 
         LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
         WHERE tournaments.id = ? ${sqlWhere}`, [id, userId], (err, result: any) => {
@@ -558,11 +559,25 @@ export class tournaments {
 
     }
 
-    signUp(data: any, callback: Function) {
-
-        this.db.preparedQuery(`SELECT public_signups FROM tournament_settings WHERE tournamentId = ?`, [data.tournamentId], (err, result: any) => {
+    async signUp(data: any, callback: Function) {
+        // if(settings.countries != '') {
+        //     let countries = settings.countries.toLowerCase().replace(' ', '').split(',');
+        //     if(!countries.includes(user.country.toLowerCase())) {
+        //         // this.canSignup = false;
+        //         callback(401);
+        //         return null;
+        //     }
+        // }
+        this.db.preparedQuery(`SELECT public_signups FROM tournament_settings WHERE tournamentId = ?`, [data.tournamentId], async (err, result: any) => {
             let flag = false;
             if (err) flag = true;
+            const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [data.tournamentId]);
+            let countries = settings[0].countries.toLowerCase().replace(' ', '').split(',');
+            const user: any = await this.db.asyncPreparedQuery(`SELECT * FROM users WHERE discordId = ?`, [data.userId])
+            if (!countries.includes(user[0].country.toLowerCase())) {
+                callback(401);
+                return null;
+            }
             if (result[0].public_signups = 1) {
                 const result = this.db.preparedQuery(`INSERT INTO participants SET ?`, [data], (err, result: any) => {
                     let flag = false;
@@ -1097,7 +1112,7 @@ export class tournaments {
         }
         participants.length = settings[0].bracket_limit;
         await this.db.asyncPreparedQuery("UPDATE participants SET seed = 0 WHERE tournamentId = ?", [id])
-        if(settings[0].bracket_sort_method != 'seed') {
+        if (settings[0].bracket_sort_method != 'seed') {
             let i = 1;
             for (const participant of participants) {
                 await this.db.asyncPreparedQuery(`UPDATE participants SET seed = ? WHERE id = ?`, [i, participant.participantId]);
