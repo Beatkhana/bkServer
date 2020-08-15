@@ -8,7 +8,7 @@ const AWS = require('aws-sdk');
 import * as rp from 'request-promise';
 import cheerio from 'cheerio';
 import { bslMatch, match, qualScore, qualsScore, removeParticipant, tournamentSettings, tournamentUpdate, updateParticipant } from './models/tournament.models';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 
 const ID = 'AKIAJNEXL3RYO3HDJ5EA';
 const SECRET = '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';
@@ -867,6 +867,199 @@ export class tournaments {
         }
     }
 
+    async getBracket(id: string) {
+        const bracketData: any = await this.db.asyncPreparedQuery(`SELECT bracket.*,
+        u1.globalRank as p1Rank,
+        u2.globalRank as p2Rank,
+        u1.name as p1Name,
+        u2.name as p2Name,
+        u1.country as p1Country,
+        u2.country as p2Country,
+        u1.avatar as p1Avatar,
+        u2.avatar as p2Avatar,
+        u1.twitchName as p1Twitch,
+        u2.twitchName as p2Twitch,
+        par1.seed as p1Seed,
+        par2.seed as p2Seed
+        
+        FROM bracket
+        LEFT JOIN users u1 ON bracket.p1 = u1.discordId
+        LEFT JOIN users u2 ON bracket.p2 = u2.discordId
+        LEFT JOIN participants par1 ON (u1.discordId = par1.userId AND bracket.tournamentId = par1.tournamentId)
+        LEFT JOIN participants par2 ON (u2.discordId = par2.userId AND bracket.tournamentId = par2.tournamentId)
+        WHERE bracket.tournamentId = ? `, [id]);
+        return bracketData;
+    }
+
+    async updateBracket(id: string, data: any) {
+        let err = null;
+        if (data.status == 'update') {
+            try {
+                await this.db.asyncPreparedQuery('UPDATE bracket SET p1Score = ?, p2Score = ?, status = "in_progress" WHERE id = ?', [+data.p1Score, +data.p2Score, data.matchId]);
+            } catch (error) {
+                err = error;
+                throw error;
+            }
+            return { flag: !!err, err: err };
+        } else if (data.status == 'complete') {
+            try {
+                await this.db.asyncPreparedQuery('UPDATE bracket SET p1Score = ?, p2Score = ?, status = "complete" WHERE id = ?', [+data.p1Score, +data.p2Score, data.matchId]);
+            } catch (error) {
+                err = error;
+                throw error;
+            }
+
+            const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
+            const bracket = await this.getBracket(id);
+            let thisMatch: bslMatch = bracket.find(x => x.id == data.matchId);
+            let winner = '';
+            let loser = '';
+            if (data.p1Score > data.p2Score) {
+                winner = thisMatch.p1;
+                loser = thisMatch.p2;
+            } else {
+                winner = thisMatch.p2;
+                loser = thisMatch.p1;
+            }
+            if (settings[0].type == 'single_elim') {
+                let winnersRound = thisMatch.round + 1;
+                let maxRound = Math.max.apply(Math, bracket.map(x => x.round))
+                if (winnersRound <= maxRound) {
+                    let winnersMatch = Math.floor(thisMatch.matchNum / 2);
+                    let playerIdentifier = thisMatch.matchNum % 2 == 0 ? 'p1' : 'p2';
+                    let nextMatch = bracket.find(x => x.round == winnersRound && x.matchNum == winnersMatch);
+                    try {
+                        await this.db.asyncPreparedQuery('UPDATE bracket SET ?? = ? WHERE id = ?', [playerIdentifier, winner, nextMatch.id])
+                    } catch (error) {
+                        err = error;
+                        throw error;
+                    }
+                }
+                return { flag: !!err, err: err };
+            } else if (settings[0].type == 'double_elim') {
+
+
+                if (thisMatch.round >= 0) {
+                    // winner
+                    let winnersRound = thisMatch.round + 1;
+                    let maxRound = Math.max.apply(Math, bracket.map(x => x.round));
+                    if (winnersRound < maxRound) {
+                        let winnersMatch = Math.floor(thisMatch.matchNum / 2);
+                        let winnerIdentifier = thisMatch.matchNum % 2 == 0 ? 'p1' : 'p2';
+                        let nextMatch = bracket.find(x => x.round == winnersRound && x.matchNum == winnersMatch);
+                        try {
+                            await this.db.asyncPreparedQuery('UPDATE bracket SET ?? = ? WHERE id = ?', [winnerIdentifier, winner, nextMatch.id])
+                        } catch (error) {
+                            err = error;
+                            throw error;
+                        }
+
+                        // loser
+                        let loserRound = -1;
+                        let loserMatch = Math.floor(thisMatch.matchNum / 2);
+                        let loserIdentifier = thisMatch.matchNum % 2 == 0 ? 'p1' : 'p2';
+                        if (thisMatch.round > 0) {
+                            loserIdentifier = 'p1';
+                            loserRound = thisMatch.round * -2;
+                            if ((thisMatch.round % 3) % 2 == 0) {
+                                loserMatch = thisMatch.matchNum % 2 == 0 ? thisMatch.matchNum + 1 : thisMatch.matchNum - 1;
+                            } else {
+                                loserMatch = bracket.filter(x => x.round == 0).length / Math.pow(2, thisMatch.round) - thisMatch.matchNum - 1
+                            }
+                            if (maxRound - 2 == thisMatch.round) {
+                                loserMatch = 0;
+                            }
+                        }
+                        let loserNextMatch = bracket.find(x => x.round == loserRound && x.matchNum == loserMatch);
+                        try {
+                            await this.db.asyncPreparedQuery('UPDATE bracket SET ?? = ? WHERE id = ?', [loserIdentifier, loser, loserNextMatch.id])
+                        } catch (error) {
+                            err = error;
+                            throw error;
+                        }
+                    } else if (winnersRound == maxRound && data.p1Score < data.p2Score) {
+                        let winnersMatch = 0;
+                        let nextMatch = bracket.find(x => x.round == winnersRound && x.matchNum == winnersMatch);
+                        try {
+                            await this.db.asyncPreparedQuery('UPDATE bracket SET p1 = ?, p2 = ?, bye = 0 WHERE id = ?', [winner, loser, nextMatch.id])
+                        } catch (error) {
+                            err = error;
+                            throw error;
+                        }
+                    } else if (winnersRound == maxRound && data.p1Score > data.p2Score) {
+                        let winnersMatch = 0;
+                        let nextMatch = bracket.find(x => x.round == winnersRound && x.matchNum == winnersMatch);
+                        try {
+                            await this.db.asyncPreparedQuery('UPDATE bracket SET bye = 1 WHERE id = ?', [nextMatch.id])
+                        } catch (error) {
+                            err = error;
+                            throw error;
+                        }
+                    }
+                } else if (thisMatch.round < 0) {
+                    let winnersRound = thisMatch.round - 1;
+                    let minRound = Math.min.apply(Math, bracket.map(x => x.round));
+                    let maxRound = Math.max.apply(Math, bracket.map(x => x.round));
+                    let winnersMatch = 0;
+                    let winnerIdentifier = thisMatch.matchNum % 2 == 0 ? 'p1' : 'p2';
+                    if (winnersRound > minRound) {
+                        winnersMatch = thisMatch.round * -1 % 2 == 1 ? thisMatch.matchNum : Math.floor(thisMatch.matchNum / 2);
+                    } else if (winnersRound == minRound - 1) {
+                        winnersRound = maxRound - 1;
+                        winnersMatch = 0;
+                        winnerIdentifier = 'p2';
+                    }
+                    let nextMatch = bracket.find(x => x.round == winnersRound && x.matchNum == winnersMatch);
+                    if (thisMatch.round * -1 % 2 == 1) winnerIdentifier = 'p2';
+                    try {
+                        await this.db.asyncPreparedQuery('UPDATE bracket SET ?? = ? WHERE id = ?', [winnerIdentifier, winner, nextMatch.id])
+                    } catch (error) {
+                        err = error;
+                        throw error;
+                    }
+                    return { flag: !!err, err: err };
+                }
+
+
+            }
+            return { flag: !!err, err: err };
+        }
+
+        return [];
+    }
+
+    async saveBracket(id: string, data?: any) {
+        let matches: Array<match> = [];
+        // console.log(data);
+        if (data.data == null || (data.data.length == 0 || Object.keys(data.data).length == 0)) {
+            let tempMatches = await this.generateBracket(id);
+            // console.log(tempMatches);
+            for (const match of tempMatches) {
+                matches.push({
+                    tournamentId: id,
+                    round: match.round,
+                    matchNum: match.matchNum,
+                    p1: match.p1,
+                    p2: match.p2,
+                    bye: +match.bye || 0
+                });
+            }
+        }
+        let err = null;
+        let sqlMatches = [];
+        for (const match of matches) {
+            sqlMatches.push(Object.values(match))
+        }
+        try {
+            await this.db.asyncPreparedQuery('DELETE FROM bracket WHERE tournamentId = ?', [id]);
+            await this.db.asyncPreparedQuery('INSERT INTO bracket (tournamentId, round, matchNum, p1, p2, bye) VALUES ?', [sqlMatches])
+        } catch (error) {
+            err = error;
+            throw error;
+        }
+        return { flag: !!err, err: err };
+    }
+
     async generateBracket(id: string) {
         const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
         // console.log(settings);
@@ -903,8 +1096,16 @@ export class tournaments {
             this.shuffle(participants);
         }
         participants.length = settings[0].bracket_limit;
+        await this.db.asyncPreparedQuery("UPDATE participants SET seed = 0 WHERE tournamentId = ?", [id])
+        if(settings[0].bracket_sort_method != 'seed') {
+            let i = 1;
+            for (const participant of participants) {
+                await this.db.asyncPreparedQuery(`UPDATE participants SET seed = ? WHERE id = ?`, [i, participant.participantId]);
+                i++;
+            }
+        }
         // console.log(participants);
-        
+
         let matches: any[];
         // console.log(settings)
         if (settings[0].type == 'single_elim') {
@@ -1022,8 +1223,8 @@ export class tournaments {
                     id: totalMatches + 2,
                     round: i + 1,
                     matchNum: 0,
-                    p1: '',
-                    p2: '',
+                    p1: null,
+                    p2: null,
                     p1Score: 0,
                     p2Score: 0,
                     status: '',
@@ -1041,6 +1242,29 @@ export class tournaments {
                 matches.push(temp);
             }
             totalMatches += Math.pow(2, Math.ceil(Math.log2(numParticipants))) / Math.pow(2, x);
+        }
+        if (settings[0].type == 'double_elim') {
+            let temp: bslMatch = {
+                id: totalMatches + 2,
+                round: rounds + 1,
+                matchNum: 0,
+                p1: null,
+                p2: null,
+                p1Score: 0,
+                p2Score: 0,
+                status: '',
+                p1Rank: 0,
+                p2Rank: 0,
+                p1Seed: 0,
+                p2Seed: 0,
+                p1Name: '',
+                p2Name: '',
+                p1Country: '',
+                p2Country: '',
+                p1Avatar: '',
+                p2Avatar: ''
+            }
+            matches.push(temp);
         }
         return matches;
     }

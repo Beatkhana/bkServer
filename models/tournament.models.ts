@@ -70,10 +70,12 @@ export class qualScore {
 }
 
 export interface match {
+    tournamentId?: string,
     round: number,
     matchNum: number,
     p1: string,
-    p2: string
+    p2: string,
+    bye?: any,
 }
 export interface bslMatch {
     id: number
