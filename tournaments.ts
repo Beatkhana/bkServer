@@ -560,14 +560,6 @@ export class tournaments {
     }
 
     async signUp(data: any, callback: Function) {
-        // if(settings.countries != '') {
-        //     let countries = settings.countries.toLowerCase().replace(' ', '').split(',');
-        //     if(!countries.includes(user.country.toLowerCase())) {
-        //         // this.canSignup = false;
-        //         callback(401);
-        //         return null;
-        //     }
-        // }
         this.db.preparedQuery(`SELECT public_signups FROM tournament_settings WHERE tournamentId = ?`, [data.tournamentId], async (err, result: any) => {
             let flag = false;
             if (err) flag = true;
@@ -1045,9 +1037,22 @@ export class tournaments {
 
     async saveBracket(id: string, data?: any) {
         let matches: Array<match> = [];
-        // console.log(data);
+        console.log(data);
         if (data.data == null || (data.data.length == 0 || Object.keys(data.data).length == 0)) {
             let tempMatches = await this.generateBracket(id);
+            console.log(tempMatches);
+            for (const match of tempMatches) {
+                matches.push({
+                    tournamentId: id,
+                    round: match.round,
+                    matchNum: match.matchNum,
+                    p1: match.p1,
+                    p2: match.p2,
+                    bye: +match.bye || 0
+                });
+            }
+        } else if(data.data.length > 0) {
+            let tempMatches = await this.generateBracket(id,data.data);
             // console.log(tempMatches);
             for (const match of tempMatches) {
                 matches.push({
@@ -1075,7 +1080,7 @@ export class tournaments {
         return { flag: !!err, err: err };
     }
 
-    async generateBracket(id: string) {
+    async generateBracket(id: string, players?: string[]) {
         const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
         // console.log(settings);
         let rand = false;
@@ -1083,36 +1088,42 @@ export class tournaments {
             settings[0].bracket_sort_method = 'discordId';
             rand = true;
         }
-        const participants: any = await this.db.asyncPreparedQuery(`SELECT p.id AS participantId,
-        CAST(p.userId AS CHAR) as userId,
-        p.forfeit,
-        p.seed as seed,
-        CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
-        CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
-        \`u\`.\`name\`,
-        \`u\`.\`twitchName\`,
-        \`u\`.\`avatar\`,
-        \`u\`.\`globalRank\` as globalRank,
-        \`u\`.\`localRank\`,
-        \`u\`.\`country\`,
-        \`u\`.\`tourneyRank\` as tournamentRank,
-        \`u\`.\`TR\`,
-        \`u\`.\`pronoun\`
-        FROM participants p
-        LEFT JOIN users u ON u.discordId = p.userId
-        LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
-        WHERE p.tournamentId = ? ORDER BY ${settings[0].bracket_sort_method}=0, ${settings[0].bracket_sort_method} ${rand ? '' : 'LIMIT ?'}`, [id, settings[0].bracket_limit])
-            .catch(err => {
-                console.error(err);
-            });
-        // console.log(participants);
-        // if (participants.length % 8 != 0) throw 'Uneven number of participants';
+        let participants: any = [];
+        // console.log(players)
+        if (!players) {
+            participants = await this.db.asyncPreparedQuery(`SELECT p.id AS participantId,
+            CAST(p.userId AS CHAR) as userId,
+            p.forfeit,
+            p.seed as seed,
+            CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
+            CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
+            \`u\`.\`name\`,
+            \`u\`.\`twitchName\`,
+            \`u\`.\`avatar\`,
+            \`u\`.\`globalRank\` as globalRank,
+            \`u\`.\`localRank\`,
+            \`u\`.\`country\`,
+            \`u\`.\`tourneyRank\` as tournamentRank,
+            \`u\`.\`TR\`,
+            \`u\`.\`pronoun\`
+            FROM participants p
+            LEFT JOIN users u ON u.discordId = p.userId
+            LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
+            WHERE p.tournamentId = ? ORDER BY ${settings[0].bracket_sort_method}=0, ${settings[0].bracket_sort_method} ${rand ? '' : 'LIMIT ?'}`, [id, settings[0].bracket_limit])
+                .catch(err => {
+                    console.error(err);
+                });
+
+        } else {
+            participants = players;
+        }
+
         if (rand) {
             this.shuffle(participants);
         }
         participants.length = settings[0].bracket_limit;
         await this.db.asyncPreparedQuery("UPDATE participants SET seed = 0 WHERE tournamentId = ?", [id])
-        if (settings[0].bracket_sort_method != 'seed') {
+        if (settings[0].bracket_sort_method != 'seed' && !players) {
             let i = 1;
             for (const participant of participants) {
                 await this.db.asyncPreparedQuery(`UPDATE participants SET seed = ? WHERE id = ?`, [i, participant.participantId]);
@@ -1124,15 +1135,15 @@ export class tournaments {
         let matches: any[];
         // console.log(settings)
         if (settings[0].type == 'single_elim') {
-            matches = await this.winnersRoundMatches(settings, participants);
+            matches = await this.winnersRoundMatches(settings, participants, !!players);
         } else if (settings[0].type == 'double_elim') {
-            matches = await this.doubleElimMatches(settings, participants);
+            matches = await this.doubleElimMatches(settings, participants, !!players);
         }
 
         return matches;
     }
 
-    private async winnersRoundMatches(settings: tournamentSettings, participants: any): Promise<any[]> {
+    private async winnersRoundMatches(settings: tournamentSettings, participants: any, custom = false): Promise<any[]> {
         let numParticipants = participants.length;
         let seeds = this.seeding(numParticipants);
         let matches: Array<match> = [];
@@ -1144,22 +1155,33 @@ export class tournaments {
         let byePlayers = [];
         let roundMatches = Math.pow(2, Math.ceil(Math.log2(numParticipants))) / 2;
         let totalMatches = roundMatches;
-
+        console.log(custom);
         // First Round
         for (let i = 0; i < seeds.length; i += 2) {
             let p1Id: string, p1Name: string, p1Avatar: string = '';
             let isBye = true;
-            if (participants[seeds[i] - 1] != undefined) {
+            if (participants[seeds[i] - 1] != undefined && !custom) {
                 p1Id = participants[seeds[i] - 1].discordId;
                 p1Name = participants[seeds[i] - 1].name;
                 p1Avatar = participants[seeds[i] - 1].avatar;
+            } else if(participants[seeds[i] - 1] != undefined && custom) {
+                p1Id = participants[seeds[i] - 1];
+                p1Name = participants[seeds[i] - 1];
+                p1Avatar = '';
             }
+            console.log(p1Id, p1Name);
+
             let p2Id: string, p2Name: string, p2Avatar: string = '';
-            if (participants[seeds[i + 1] - 1] != undefined) {
+            if (participants[seeds[i + 1] - 1] != undefined && !custom) {
                 p2Id = participants[seeds[i + 1] - 1].discordId;
                 p2Name = participants[seeds[i + 1] - 1].name;
                 p2Avatar = participants[seeds[i + 1] - 1].avatar;
+            } else if(participants[seeds[i + 1] - 1] != undefined && custom) {
+                p2Id = participants[seeds[i + 1] - 1];
+                p2Name = participants[seeds[i + 1] - 1];
+                p2Avatar = '';
             }
+
             if (participants[seeds[i + 1] - 1] != undefined && participants[seeds[i] - 1] != undefined) {
                 isBye = false;
             }
@@ -1200,12 +1222,12 @@ export class tournaments {
                 if (byePlayers.some(x => x.match == totalMatches + j + 1)) {
                     let players = byePlayers.filter(x => x.match == totalMatches + j + 1);
                     // console.log(players);
-                    if (players[0] != undefined) {
+                    if (players[0] != undefined && !custom) {
                         p1Id = participants.find(x => x.discordId == players[0].player).discordId;
                         p1Name = participants.find(x => x.discordId == players[0].player).name;
                         p1Avatar = participants.find(x => x.discordId == players[0].player).avatar;
                     }
-                    if (players[1] != undefined) {
+                    if (players[1] != undefined && !custom) {
                         p2Id = participants.find(x => x.discordId == players[1].player).discordId;
                         p2Name = participants.find(x => x.discordId == players[1].player).name;
                         p2Avatar = participants.find(x => x.discordId == players[1].player).avatar;
@@ -1284,7 +1306,7 @@ export class tournaments {
         return matches;
     }
 
-    private async doubleElimMatches(settings: tournamentSettings, participants: any): Promise<any[]> {
+    private async doubleElimMatches(settings: tournamentSettings, participants: any, custom = false): Promise<any[]> {
         let numParticipants = participants.length;
         let seeds = this.seeding(numParticipants);
         let matches: Array<match> = [];
@@ -1298,7 +1320,7 @@ export class tournaments {
         let totalMatches = roundMatches;
 
         // Winners round
-        let winnersMatches = await this.winnersRoundMatches(settings, participants);
+        let winnersMatches = await this.winnersRoundMatches(settings, participants, custom);
 
 
 
