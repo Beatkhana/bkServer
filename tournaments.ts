@@ -564,9 +564,10 @@ export class tournaments {
             let flag = false;
             if (err) flag = true;
             const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [data.tournamentId]);
-            let countries = settings[0].countries.toLowerCase().replace(' ', '').split(',');
+            let countries = null;
+            if(settings[0].countries != '')  countries = settings[0].countries.toLowerCase().replace(' ', '').split(',');
             const user: any = await this.db.asyncPreparedQuery(`SELECT * FROM users WHERE discordId = ?`, [data.userId])
-            if (!countries.includes(user[0].country.toLowerCase())) {
+            if (countries != null && !countries.includes(user[0].country.toLowerCase())) {
                 callback(401);
                 return null;
             }
