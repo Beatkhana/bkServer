@@ -457,9 +457,6 @@ router.post(baseUrl + '/tournament/:id/signUp', function (req, res) {
 router.get(baseUrl + '/tournament/:id/participants', function (req, res) {
     isAdminOwner(req, req.params.id, isAuth => {
         if (isAuth) {
-            // tournament.participants(req.params.id, response => {
-            //     res.send(response);
-            // }, true);
             tournament.participants(req.params.id, true)
                 .then(response => {
                     res.send(response);
@@ -470,18 +467,28 @@ router.get(baseUrl + '/tournament/:id/participants', function (req, res) {
                 .then(response => {
                     res.send(response);
                 })
-            // tournament.participants(req.params.id, response => {
-            //     res.send(response);
-            // }, false, req.session.user[0].discordId);
             return null;
         } else {
-            // tournament.participants(req.params.id, response => {
-            //     res.send(response);
-            // });
             tournament.participants(req.params.id, false)
                 .then(response => {
                     res.send(response);
                 })
+            return null;
+        }
+    })
+});
+
+// Get all participants
+router.get(baseUrl + '/tournament/:id/allParticipants', function (req, res) {
+    isAdminOwner(req, req.params.id, isAuth => {
+        if (isAuth) {
+            tournament.allParticipants(req.params.id)
+                .then(response => {
+                    res.send(response);
+                })
+            return null;
+        } else {
+            res.sendStatus(401)
             return null;
         }
     })

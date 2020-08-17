@@ -192,6 +192,32 @@ export class tournaments {
         return result;
     }
 
+    async allParticipants(id) {
+        const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
+        const result = await this.db.asyncPreparedQuery(`SELECT p.id AS participantId,
+        CAST(p.userId AS CHAR) as userId,
+        p.forfeit,
+        p.seed,
+        p.position,
+        p.comment,
+        CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
+        CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
+        \`u\`.\`name\`,
+        \`u\`.\`twitchName\`,
+        \`u\`.\`avatar\`,
+        \`u\`.\`globalRank\`,
+        \`u\`.\`localRank\`,
+        \`u\`.\`country\`,
+        \`u\`.\`tourneyRank\`,
+        \`u\`.\`TR\`,
+        \`u\`.\`pronoun\`
+        FROM participants p
+        LEFT JOIN users u ON u.discordId = p.userId
+        LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
+        WHERE p.tournamentId = ?`, [id]);
+        return result;
+    }
+
     updateParticipant(data: updateParticipant, auth = false, callback: Function) {
         let sql = "UPDATE participants SET comment = ? WHERE tournamentId = ? AND userId = ?";
         let params = [data.comment, data.tournamentId, data.discordId];
@@ -498,7 +524,7 @@ export class tournaments {
         const pools: any = await this.getMapPools(tournamentId);
         let qualsPool: any = Object.values(pools).find((x: any) => x.is_qualifiers == 1);
         let qualsScores = await this.getQualsScores(tournamentId);
-        // console.log(qualsScores);
+        console.log(qualsScores);
         for (const user of qualsScores) {
             for (const score of user.scores) {
                 if (qualsPool.songs.find(x => x.hash == score.songHash).numNotes != 0) {
@@ -518,6 +544,8 @@ export class tournaments {
             b.avgPercentage = isNaN(sumBPer / qualsPool.songs.length * 100) ? 0 : (sumBPer / qualsPool.songs.length * 100).toFixed(2);
             a.scoreSum = sumA;
             b.scoreSum = sumB;
+            if (a.forfeit == 1) return 1;
+            if (b.forfeit == 2) return -1;
             if (b.avgPercentage == a.avgPercentage) {
                 if (sumB == sumA) {
                     if (a.globalRank == 0) return 1;
@@ -565,7 +593,7 @@ export class tournaments {
             if (err) flag = true;
             const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [data.tournamentId]);
             let countries = null;
-            if(settings[0].countries != '')  countries = settings[0].countries.toLowerCase().replace(' ', '').split(',');
+            if (settings[0].countries != '') countries = settings[0].countries.toLowerCase().replace(' ', '').split(',');
             const user: any = await this.db.asyncPreparedQuery(`SELECT * FROM users WHERE discordId = ?`, [data.userId])
             if (countries != null && !countries.includes(user[0].country.toLowerCase())) {
                 callback(401);
@@ -1052,8 +1080,8 @@ export class tournaments {
                     bye: +match.bye || 0
                 });
             }
-        } else if(data.data.length > 0) {
-            let tempMatches = await this.generateBracket(id,data.data);
+        } else if (data.data.length > 0) {
+            let tempMatches = await this.generateBracket(id, data.data);
             // console.log(tempMatches);
             for (const match of tempMatches) {
                 matches.push({
@@ -1165,7 +1193,7 @@ export class tournaments {
                 p1Id = participants[seeds[i] - 1].discordId;
                 p1Name = participants[seeds[i] - 1].name;
                 p1Avatar = participants[seeds[i] - 1].avatar;
-            } else if(participants[seeds[i] - 1] != undefined && custom) {
+            } else if (participants[seeds[i] - 1] != undefined && custom) {
                 p1Id = participants[seeds[i] - 1];
                 p1Name = participants[seeds[i] - 1];
                 p1Avatar = '';
@@ -1177,7 +1205,7 @@ export class tournaments {
                 p2Id = participants[seeds[i + 1] - 1].discordId;
                 p2Name = participants[seeds[i + 1] - 1].name;
                 p2Avatar = participants[seeds[i + 1] - 1].avatar;
-            } else if(participants[seeds[i + 1] - 1] != undefined && custom) {
+            } else if (participants[seeds[i + 1] - 1] != undefined && custom) {
                 p2Id = participants[seeds[i + 1] - 1];
                 p2Name = participants[seeds[i + 1] - 1];
                 p2Avatar = '';
@@ -1385,7 +1413,7 @@ export class tournaments {
     }
 
     async getQualsScores(id: string) {
-        const qualsScores: any = await this.db.asyncPreparedQuery(`SELECT p.userId as discordId, q.score, q.percentage, pl.*, u.* FROM participants p
+        const qualsScores: any = await this.db.asyncPreparedQuery(`SELECT p.userId as discordId, p.forfeit, q.score, q.percentage, pl.*, u.* FROM participants p
         LEFT JOIN users u ON u.discordId = p.userId
         LEFT JOIN qualifier_scores q ON p.userId = q.userId 
         LEFT JOIN map_pools mp ON mp.tournamentId = p.tournamentId
@@ -1440,7 +1468,8 @@ export class tournaments {
                     tourneyRank: score.tourneyRank,
                     TR: score.TR,
                     pronoun: score.pronoun,
-                    scores: curScore
+                    forfeit: score.forfeit,
+                    scores: curScore,
                 }
                 scores.push(temp);
             }
