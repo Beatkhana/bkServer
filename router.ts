@@ -220,7 +220,7 @@ router.get(baseUrl + '/tournament/:id', function (req, res) {
 
 // create tournament
 router.post(baseUrl + '/tournament', function (req, res) {
-    hasPerms(req, 1, auth => {
+    hasPerms(req, 3, auth => {
         if (auth) {
             tournament.save(req.body, (response) => {
                 res.send(response);
