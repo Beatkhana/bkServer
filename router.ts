@@ -111,7 +111,7 @@ router.put(baseUrl + '/user/:id', function (req, res) {
 
 router.post(baseUrl + '/newUser', function (req, res) {
     if (req.session.newUsr[0]) {
-        let usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'] };
+        let usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'], refresh_token: req.session.newUsr[0]['refresh_token'], avatar: req.session.newUsr[0]['avatar'], name: req.session.newUsr[0]['name'] };
         user.newUser(usrData, (result) => {
             // req.session.destroy(() => { });
             log.createLog(req.session.newUsr[0]['discordId'], 'Created an account');

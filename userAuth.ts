@@ -42,12 +42,15 @@ export class userAuth {
         data.append('scope', 'identify');
         data.append('code', code);
 
+        let refresh_token: string | null = null;
+
         fetch('https://discord.com/api/oauth2/token', {
             method: 'POST',
             body: data,
         })
             .then(discordRes => discordRes.json())
             .then(info => {
+                refresh_token = info.refresh_token;
                 return info;
             })
             .then(info => fetch('https://discord.com/api/users/@me', {
@@ -57,7 +60,7 @@ export class userAuth {
             }))
             .then(userRes => userRes.json())
             .then(data => {
-                this.checkuser(data.id, (userRes, newUser) => {
+                this.checkuser(data.id, refresh_token, data.avatar, data.username, (userRes, newUser) => {
                     callback(userRes, newUser);
                 });
             })
@@ -66,14 +69,14 @@ export class userAuth {
             });
     }
 
-    checkuser(discordId, callback) {
+    checkuser(discordId, refreshToken: string | null, avatar: string, name: string, callback: Function) {
         if (discordId) {
             const res = this.db.query(`SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, users.*, GROUP_CONCAT(DISTINCT r.roleName SEPARATOR ', ') as roleNames
             FROM users
             LEFT JOIN roleassignment ra ON ra.userId = users.discordId
             LEFT JOIN roles r ON r.roleId = ra.roleId
             WHERE users.discordId = ${discordId}
-            GROUP BY users.discordId`, (err, result: any) => {
+            GROUP BY users.discordId`, async (err, result: any) => {
                 if (result.length > 0) {
                     // console.log(result);
                     result[0].discordId = discordId.toString();
@@ -84,10 +87,20 @@ export class userAuth {
                         result[0].roleIds = [];
                         result[0].roleNames = [];
                     }
+                    if (refreshToken != null) {
+                        try {
+                            await this.db.asyncPreparedQuery('UPDATE users SET refresh_token = ? WHERE discordId = ?', [refreshToken, discordId]);
+                        } catch (error) {
+                            throw error;
+                        }
+                    }
                     callback(result);
                 } else {
                     result = [{
-                        discordId: discordId.toString()
+                        discordId: discordId.toString(),
+                        refresh_token: refreshToken,
+                        avatar: avatar,
+                        name: name
                     }];
                     callback(result, true);
                 }
@@ -103,11 +116,12 @@ export class userAuth {
                 ssId: ssData.playerInfo.playerId,
                 name: ssData.playerInfo.playerName,
                 twitchName: data.links.twitch.split('twitch.tv/')[1],
-                avatar: ssData.playerInfo.avatar,
+                avatar: data.avatar,
                 globalRank: ssData.playerInfo.rank,
                 localRank: ssData.playerInfo.countryRank,
                 country: ssData.playerInfo.country,
-                pronoun: data.links.pronoun
+                pronoun: data.links.pronoun,
+                refresh_token: data.refresh_token
             };
             // console.log(user);
             const result = this.db.preparedQuery(`INSERT INTO users SET ?`, [user], (err, result: any) => {

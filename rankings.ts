@@ -70,7 +70,7 @@ export class rankings {
     }
 
     getUser(userId:string, callback:Function) {
-        this.db.preparedQuery(`SELECT u.*, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u
+        this.db.preparedQuery(`SELECT u.discordId, u.ssId, u.name, u.twitchName, u.avatar, u.globalRank, u.localRank, u.country, u.tourneyRank, u.TR, u.pronoun, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u
         LEFT JOIN participants p ON p.userId = u.discordId
         LEFT JOIN tournaments t ON p.tournamentId = t.id
         LEFT JOIN tournament_settings ts ON p.tournamentId = ts.tournamentId
@@ -82,7 +82,7 @@ export class rankings {
     }
 
     getUserSS(userId:string, callback:Function) {
-        this.db.preparedQuery(`SELECT u.*, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u
+        this.db.preparedQuery(`SELECT u.discordId, u.ssId, u.name, u.twitchName, u.avatar, u.globalRank, u.localRank, u.country, u.tourneyRank, u.TR, u.pronoun, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u
         LEFT JOIN participants p ON p.userId = u.discordId
         LEFT JOIN tournaments t ON p.tournamentId = t.id
         WHERE u.ssId = ?
