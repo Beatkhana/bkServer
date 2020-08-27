@@ -327,8 +327,8 @@ export class tournaments {
             delete data.imgName;
 
             try {
-                data.date = this.formatDate(data.date);
-                data.endDate = this.formatDate(data.endDate);
+                data.date = this.formatDate2(data.date);
+                data.endDate = this.formatDate2(data.endDate);
             } catch (err) {
                 return callback({
                     flag: true,
@@ -474,10 +474,9 @@ export class tournaments {
 
         if (!imgErr) {
             delete data.tournament.imgName;
-
             try {
-                data.tournament.date = this.formatDate(data.tournament.date);
-                data.tournament.endDate = this.formatDate(data.tournament.endDate);
+                data.tournament.date = this.formatDate2(data.tournament.date);
+                data.tournament.endDate = this.formatDate2(data.tournament.endDate);
             } catch (err) {
                 return callback({
                     flag: true,
@@ -1520,6 +1519,10 @@ export class tournaments {
             day = '0' + day;
 
         return [year, month, day].join('-');
+    }
+    private formatDate2(date) {
+        var d = new Date(date);
+        return d.toISOString().slice(0, 19).replace('T', ' ');
     }
 
 
