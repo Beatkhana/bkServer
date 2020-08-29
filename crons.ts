@@ -99,6 +99,8 @@ export class crons {
                     .catch((error: any) => {
                         throw error;
                     });
+                // console.log(response);
+                // console.log(user)
                 try {
                     await db.asyncPreparedQuery('UPDATE users SET name = ?, avatar = ?, refresh_token = ? WHERE discordId = ?', [response.username, response.avatar, refresh_token, user.discordId]);
                 } catch (error) {
