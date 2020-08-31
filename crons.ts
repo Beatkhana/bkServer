@@ -10,7 +10,7 @@ const fetch = require('node-fetch');
 const FormData = require('form-data');
 
 export class crons {
-    
+
     static updateSSData() {
         let db = new database();
         let uA = new userAuth();
@@ -20,9 +20,9 @@ export class crons {
             let completed = 0;
             for (const user of res) {
                 uA.getSSData(user.ssId, (data) => {
-                    if(data) {
+                    if (data) {
                         let info = {};
-                        if(data.playerInfo.banned == 1) {
+                        if (data.playerInfo.banned == 1) {
                             info = {
                                 ssId: data.playerInfo.playerId,
                                 country: data.playerInfo.country,
@@ -37,11 +37,11 @@ export class crons {
                                 // country: data.playerInfo.country,
                             };
                         }
-    
+
                         db.preparedQuery('UPDATE users SET ? WHERE discordId = ?', [info, user.discordId], (err, res) => {
-                            if(!err) {
+                            if (!err) {
                                 completed += 1;
-                            }else {
+                            } else {
                                 console.log(err)
                             }
                         })
@@ -53,7 +53,7 @@ export class crons {
         });
 
         function delay(ms: number) {
-            return new Promise( resolve => setTimeout(resolve, ms) );
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
     }
 
@@ -87,6 +87,7 @@ export class crons {
                     .then((response: any) => response.json())
                     .then((info: any) => {
                         refresh_token = info.refresh_token;
+                        console.log(info);
                         return info;
                     })
                     .then((info: any) => fetch('https://discord.com/api/users/@me', {
@@ -95,16 +96,19 @@ export class crons {
                         },
                     }))
                     .then((userRes: any) => userRes.json())
-                    .then((userRes: any) => userRes)
+                    .then((userRes: any) => {
+                        console.log(userRes);
+                        return userRes;
+                    })
                     .catch((error: any) => {
-                        throw error;
+                        console.log(error);
                     });
                 // console.log(response);
                 // console.log(user)
                 try {
                     await db.asyncPreparedQuery('UPDATE users SET name = ?, avatar = ?, refresh_token = ? WHERE discordId = ?', [response.username, response.avatar, refresh_token, user.discordId]);
                 } catch (error) {
-                    throw error;
+                    console.log(error);
                 }
             }
         }

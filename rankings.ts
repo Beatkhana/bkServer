@@ -50,7 +50,7 @@ export class rankings {
         FROM users
         LEFT JOIN roleassignment ra ON ra.userId = users.discordId
         LEFT JOIN roles r ON r.roleId = ra.roleId
-        WHERE r.roleId = 1 OR r.roleId = 2
+        WHERE r.roleId = 1 OR r.roleId = 2 OR r.roleId = 6
         GROUP BY users.discordId`,(err, result: any) => {
             result.map(e => {
                 e.roleIds = e.roleIds.split(', ').map(x=>+x);
