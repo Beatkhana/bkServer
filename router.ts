@@ -150,7 +150,7 @@ router.get(baseUrl + '/logout', function (req, res) {
 // Get all tournaments
 router.get(baseUrl + '/tournaments', function (req, res) {
     if (req.session.user != null) {
-        hasPerms(req, 2, isAuth => {
+        hasPerms(req, 3, isAuth => {
             if (isAuth) {
                 tournament.getActive((result: any) => {
                     res.send(result);
@@ -798,9 +798,11 @@ router.post(baseUrl + '/tournament/:id/deleteSong', function (req, res) {
 
 // Calendar events
 router.get(baseUrl + '/events', function (req, res) {
-    tournament.events((result: any) => {
-        res.send(result);
-    });
+    hasPerms(req, 3, auth => {
+        tournament.events((result: any) => {
+            res.send(result);
+        }, auth);
+    })
 });
 
 router.get(baseUrl + '/rankings', function (req, res) {

@@ -66,6 +66,7 @@ export class database {
                 err = error;
                 connection.release();
                 // if (error) throw error;
+                // console.log(query.sql)
                 return callback(err, result);
             });
         });

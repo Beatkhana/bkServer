@@ -653,8 +653,8 @@ export class tournaments {
         });
     }
 
-    events(callback: Function) {
-        const result = this.db.query(`SELECT tournaments.id as tournamentId, tournaments.name, tournaments.date as startDate, tournaments.endDate FROM tournaments LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id WHERE ts.public = 1 ORDER BY date`, (err, result: any) => {
+    events(callback: Function, isAuth = false) {
+        const result = this.db.query(`SELECT tournaments.id as tournamentId, tournaments.name, tournaments.date as startDate, tournaments.endDate FROM tournaments LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id WHERE (ts.public = ${+!isAuth} OR ts.public = 1) ORDER BY date`, (err, result: any) => {
             return callback(result);
         });
     }
