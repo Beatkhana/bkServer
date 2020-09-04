@@ -156,7 +156,9 @@ export class tournaments {
         ts.quals_cutoff,
         ts.show_quals,
         ts.has_quals,
-        ts.countries
+        ts.countries,
+        ts.sort_method,
+        ts.standard_cutoff
         FROM tournaments 
         LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
         WHERE tournaments.id = ? ${sqlWhere}`, [id, userId], (err, result: any) => {
@@ -506,6 +508,16 @@ export class tournaments {
                     flag: true
                 })
             }
+        } else if (data.settings.state == 'main_stage' && curSettings[0].state == "awaiting_start") {
+            if (data.settings.type == 'battle_royale') {
+                let seeding: any = await this.seedPlayers(data.tournamentId, data.settings.standard_cutoff, 'date');
+                if (!seeding) {
+                    return callback({
+                        err: 'error creating seeds',
+                        flag: true
+                    })
+                }
+            }
         }
         const result = this.db.preparedQuery(`UPDATE tournament_settings SET ? WHERE ?? = ?`, [data.settings, 'id', data.settingsId], (err, result: any) => {
             let flag = false;
@@ -516,6 +528,34 @@ export class tournaments {
                 err: err
             });
         });
+    }
+
+    // non quals seed
+    private async seedPlayers(tournamentId: string, cutoff, method: string) {
+        if(method == 'date') {
+            let updateErr = false;
+            let participants: any = await this.allParticipants(tournamentId);
+            participants.sort((a,b) => a.participantId - b.participantId);
+            let qualified = participants.slice(0, cutoff+1);
+            for (const user of participants) {
+                await this.db.asyncPreparedQuery("UPDATE participants SET seed = 0, position = 0 WHERE userId = ? AND tournamentId = ?", [user.userId, tournamentId])
+                    .catch(err => {
+                        console.error(err);
+                        updateErr = true;
+                    });
+            }
+            console.log(qualified.entries());
+            for (let i = 0; i < qualified.length; i++) {
+                const user = qualified[i];
+                console.log(i, user.userId, tournamentId)
+                await this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [i, user.userId, tournamentId])
+                    .catch(err => {
+                        console.error(err);
+                        updateErr = true;
+                    });
+            }
+            return !updateErr;
+        }
     }
 
     // quals seed
