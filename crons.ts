@@ -105,7 +105,7 @@ export class crons {
                     });
                 // console.log(response);
                 // console.log(user)
-                if(refresh_token != "") {
+                if(refresh_token != "" && (response.username != '' || response.username != null)) {
                     try {
                         await db.asyncPreparedQuery('UPDATE users SET name = ?, avatar = ?, refresh_token = ? WHERE discordId = ?', [response.username, response.avatar, refresh_token, user.discordId]);
                     } catch (error) {
