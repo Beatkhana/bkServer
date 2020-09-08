@@ -83,7 +83,7 @@ cron.schedule("0 * * * *", () => {
     crons.updateSSData();
 });
 
-cron.schedule("*/1 * * * *", () => { 
+cron.schedule("*/5 * * * *", () => { 
     console.log("Running Cron: Discord users update");
     crons.updateUsersDiscord();
 });
