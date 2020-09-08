@@ -39,6 +39,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.crons = void 0;
 var database_1 = require("./database");
 var userAuth_1 = require("./userAuth");
+var CLIENT_ID = '721696709331386398';
+var CLIENT_SECRET = 'LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6';
+var env = process.env.NODE_ENV || 'production';
+var fetch = require('node-fetch');
+var FormData = require('form-data');
 var crons = /** @class */ (function () {
     function crons() {
     }
@@ -69,7 +74,7 @@ var crons = /** @class */ (function () {
                                                     info = {
                                                         ssId: data.playerInfo.playerId,
                                                         // name: data.playerInfo.playerName,
-                                                        avatar: data.playerInfo.avatar,
+                                                        // avatar: data.playerInfo.avatar,
                                                         globalRank: data.playerInfo.rank,
                                                         localRank: data.playerInfo.countryRank,
                                                     };
@@ -112,6 +117,97 @@ var crons = /** @class */ (function () {
         function delay(ms) {
             return new Promise(function (resolve) { return setTimeout(resolve, ms); });
         }
+    };
+    crons.updateUsersDiscord = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var db, users, _loop_2, _i, users_1, user;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        db = new database_1.database();
+                        return [4 /*yield*/, db.asyncPreparedQuery('SELECT * FROM users')];
+                    case 1:
+                        users = _a.sent();
+                        _loop_2 = function (user) {
+                            var data, redirect, refresh_token_1, response, error_1;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        if (!(user.refresh_token != null || user.refresh_token != '')) return [3 /*break*/, 5];
+                                        data = new FormData();
+                                        data.append('client_id', CLIENT_ID);
+                                        data.append('client_secret', CLIENT_SECRET);
+                                        data.append('grant_type', 'refresh_token');
+                                        redirect = "";
+                                        if (env == 'production') {
+                                            redirect = 'https://beatkhana.com/api/discordAuth';
+                                        }
+                                        else {
+                                            redirect = 'http://localhost:4200/api/discordAuth';
+                                        }
+                                        data.append('redirect_uri', redirect);
+                                        data.append('scope', 'identify');
+                                        data.append('refresh_token', user.refresh_token);
+                                        refresh_token_1 = '';
+                                        return [4 /*yield*/, fetch('https://discord.com/api/oauth2/token', {
+                                                method: 'POST',
+                                                body: data,
+                                            })
+                                                .then(function (response) { return response.json(); })
+                                                .then(function (info) {
+                                                refresh_token_1 = info.refresh_token;
+                                                // console.log(info);
+                                                return info;
+                                            })
+                                                .then(function (info) { return fetch('https://discord.com/api/users/@me', {
+                                                headers: {
+                                                    authorization: info.token_type + " " + info.access_token,
+                                                },
+                                            }); })
+                                                .then(function (userRes) { return userRes.json(); })
+                                                .then(function (userRes) {
+                                                // console.log(userRes);
+                                                return userRes;
+                                            })
+                                                .catch(function (error) {
+                                                console.log(error);
+                                            })];
+                                    case 1:
+                                        response = _a.sent();
+                                        if (!(refresh_token_1 != "" && (response.username != '' || response.username != null))) return [3 /*break*/, 5];
+                                        _a.label = 2;
+                                    case 2:
+                                        _a.trys.push([2, 4, , 5]);
+                                        return [4 /*yield*/, db.asyncPreparedQuery('UPDATE users SET name = ?, avatar = ?, refresh_token = ? WHERE discordId = ?', [response.username, response.avatar, refresh_token_1, user.discordId])];
+                                    case 3:
+                                        _a.sent();
+                                        return [3 /*break*/, 5];
+                                    case 4:
+                                        error_1 = _a.sent();
+                                        console.log(error_1);
+                                        return [3 /*break*/, 5];
+                                    case 5: return [2 /*return*/];
+                                }
+                            });
+                        };
+                        _i = 0, users_1 = users;
+                        _a.label = 2;
+                    case 2:
+                        if (!(_i < users_1.length)) return [3 /*break*/, 5];
+                        user = users_1[_i];
+                        return [5 /*yield**/, _loop_2(user)];
+                    case 3:
+                        _a.sent();
+                        _a.label = 4;
+                    case 4:
+                        _i++;
+                        return [3 /*break*/, 2];
+                    case 5:
+                        console.log('Discord update complete');
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
     return crons;
 }());

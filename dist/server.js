@@ -34,7 +34,7 @@ app.use(session({
     saveUninitialized: false,
     secret: 'jfgdasjkfdau',
     store: new MemoryStore({
-        checkPeriod: 86400000 // prune expired entries every 24h
+        checkPeriod: 86400000 // prune expired entries every week
     }),
     cookie: {
         maxAge: 604800000,
@@ -70,7 +70,11 @@ app.listen(PORT, function () {
     console.log('Running in ' + env + ' mode');
 });
 // Crons???
-cron.schedule("0,30 * * * *", function () {
+cron.schedule("0 * * * *", function () {
     console.log("Running Cron: Update users");
     crons_1.crons.updateSSData();
+});
+cron.schedule("*/5 * * * *", function () {
+    console.log("Running Cron: Discord users update");
+    crons_1.crons.updateUsersDiscord();
 });

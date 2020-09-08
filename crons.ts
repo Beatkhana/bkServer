@@ -61,7 +61,7 @@ export class crons {
         let db = new database();
         const users: any = await db.asyncPreparedQuery('SELECT * FROM users');
         for (const user of users) {
-            if (user.refresh_token != null || user.refresh_token != '') {
+            if (!(user.refresh_token == null || user.refresh_token == '')) {
                 let data = new FormData();
                 data.append('client_id', CLIENT_ID);
                 data.append('client_secret', CLIENT_SECRET);
@@ -74,6 +74,7 @@ export class crons {
                 } else {
                     redirect = 'http://localhost:4200/api/discordAuth';
                 }
+                // console.log(user);
                 data.append('redirect_uri', redirect);
                 data.append('scope', 'identify');
                 data.append('refresh_token', user.refresh_token);
@@ -105,7 +106,7 @@ export class crons {
                     });
                 // console.log(response);
                 // console.log(user)
-                if(refresh_token != "" && (response.username != '' || response.username != null)) {
+                if(refresh_token != "" && !(response.username == '' || response.username == null)) {
                     try {
                         await db.asyncPreparedQuery('UPDATE users SET name = ?, avatar = ?, refresh_token = ? WHERE discordId = ?', [response.username, response.avatar, refresh_token, user.discordId]);
                     } catch (error) {
