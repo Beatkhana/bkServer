@@ -61,7 +61,7 @@ export class crons {
         let db = new database();
         const users: any = await db.asyncPreparedQuery('SELECT * FROM users');
         for (const user of users) {
-            if (user.refresh_token != null) {
+            if (user.refresh_token != null || user.refresh_token != '') {
                 let data = new FormData();
                 data.append('client_id', CLIENT_ID);
                 data.append('client_secret', CLIENT_SECRET);
