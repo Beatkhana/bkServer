@@ -782,10 +782,11 @@ export class tournaments {
     }
 
     async downloadPool(id: string, auth: boolean) {
-        let pool: any = await this.db.asyncPreparedQuery(`SELECT map_pools.poolName, map_pools.image, map_pools.description, pool_link.songHash FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE (map_pools.live = ? OR map_pools.live = 1) AND map_pools.id = ?`, [+auth, id]);
+        let pool: any = await this.db.asyncPreparedQuery(`SELECT map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, pool_link.songHash FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE (map_pools.live = ? OR map_pools.live = 1) AND map_pools.id = ?`, [+auth, id]);
+        let tournamentName = await this.db.asyncPreparedQuery(`SELECT name FROM tournaments WHERE id = ?`, [pool[0].tournamentId]);
         let curSongs = pool.map(e => { return { hash: e.songHash } });
         let playlist = {
-            playlistTitle: pool[0].poolName,
+            playlistTitle: `${tournamentName[0].name}_${pool[0].poolName}`,
             playlistAuthor: 'BeatKhana!',
             playlistDescription: pool[0].description,
             image: pool[0].image,
