@@ -41,7 +41,7 @@ export class database {
                 host: "localhost",
                 user: "dan",
                 password: "test",
-                database: "heroku_11100f74419df40",
+                database: "bk",
                 connectionLimit: 10,
                 charset: 'utf8mb4',
                 timezone: 'utc'
@@ -82,6 +82,15 @@ export class database {
                 // console.log(query.sql);
                 // if (error) throw error;
                 return callback(error, result);
+            });
+        });
+    }
+
+    async aQuery(sql: string, params: any[] = []) {
+        return new Promise<any[]>((resolve, reject) => {
+            this.con.query(sql, params, (err: any, result: any, fields: any) => {
+                if (err) reject(err);
+                resolve(result);
             });
         });
     }

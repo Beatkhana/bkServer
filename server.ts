@@ -1,4 +1,6 @@
 import express from 'express';
+import { debugLogger } from './controllers/debugLogger.controller';
+import { wss } from './controllers/event.controller';
 
 const router = require('./router')
 const app = express();
@@ -11,6 +13,8 @@ const cron = require('node-cron');
 
 // const cronJobs = require('./crons')
 import {crons} from './crons';
+import { bracketRouter } from './routers/bracket.router';
+new debugLogger();
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -19,13 +23,12 @@ app.use((req, res, next) => {
     if ('OPTIONS' === req.method) {
         res.sendStatus(200);
     } else {
-        console.log(`${req.ip} ${req.method} ${req.url}`);
+        console.debug(`${req.method} ${req.url}`);
         next();
     }
 });
 
 app.use(compression());
-// app.use(express.json());
 app.use(express.json({ limit: '50mb' }));
 
 app.use(session({
@@ -57,6 +60,7 @@ app.use((err, req, res, next) => {
     }
 });
 
+app.use('/api', bracketRouter);
 app.use('/', router);
 
 const env = process.env.NODE_ENV || 'production';
@@ -72,10 +76,23 @@ app.get('*', (req, res) => {
 
 const PORT = +process.env.PORT || 8080;
 
-app.listen(PORT, () => {
-    console.log("Server now listening on " + PORT);
-    console.log('Running in ' + env + ' mode')
+
+let server = app.listen(PORT, () => {
+    console.info("Server now listening on " + PORT);
+    console.info('Running in ' + env + ' mode')
 });
+// allow websocket connections
+server.on('upgrade', (request: any, socket: any, head: any) => {
+    wss.handleUpgrade(request, socket, head, (socket: any) => {
+        wss.emit('connection', socket, request);
+    });
+});
+
+
+// app.listen(PORT, () => {
+//     console.log("Server now listening on " + PORT);
+//     console.log('Running in ' + env + ' mode')
+// });
 
 // Crons???
 cron.schedule("0 * * * *", () => { 

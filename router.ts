@@ -5,6 +5,7 @@ import { rankings } from './rankings';
 import { logger } from './logger';
 
 import * as apiAuth from 'api-key-auth'
+import { bracketController } from './controllers/bracket.controller';
 // import e from 'express';
 
 const tournament = new tournaments();
@@ -314,58 +315,52 @@ router.get(baseUrl + '/tournament/:id/bracketTest', function (req, res) {
 });
 
 //get bracket
-router.get(baseUrl + '/tournament/:id/bracket', function (req, res) {
-    tournament.getBracket(req.params.id)
-        .then(response => {
-            res.send(response);
-        })
-        .catch((err) => {
-            console.error(err);
-            res.sendStatus(500);
-        })
-});
+// router.get(baseUrl + '/tournament/:id/bracket', async function (req, res) {
+//     let bracketCon = new bracketController();
+//     return res.send( await bracketCon.getBracket({req:req, res: res}));
+// });
 
 // Update Match
-router.put(baseUrl + '/tournament/:id/bracket/:matchId', function (req, res) {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(isAuth => {
-                if (isAuth) {
-                    tournament.updateBracket(req.params.id, req.body)
-                        .then(response => {
-                            res.send(response);
-                        })
-                        .catch((err) => {
-                            console.error(err);
-                            res.sendStatus(500);
-                        })
-                } else {
-                    res.sendStatus(401);
-                }
-            })
-            .catch((err) => {
-                console.error(err);
-                res.sendStatus(500);
-            });
-    } else {
-        isAdminOwner(req, req.params.id, auth => {
-            if (auth) {
-                tournament.updateBracket(req.params.id, req.body)
-                    .then(response => {
-                        res.send(response);
-                    })
-                    .catch((err) => {
-                        console.error(err);
-                        res.sendStatus(500);
-                    })
-            } else {
-                res.sendStatus(401);
-                return null;
-            }
-        });
-    }
+// router.put(baseUrl + '/tournament/:id/bracket/:matchId', function (req, res) {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 if (isAuth) {
+//                     tournament.updateBracket(req.params.id, req.body)
+//                         .then(response => {
+//                             res.send(response);
+//                         })
+//                         .catch((err) => {
+//                             console.error(err);
+//                             res.sendStatus(500);
+//                         })
+//                 } else {
+//                     res.sendStatus(401);
+//                 }
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.params.id, auth => {
+//             if (auth) {
+//                 tournament.updateBracket(req.params.id, req.body)
+//                     .then(response => {
+//                         res.send(response);
+//                     })
+//                     .catch((err) => {
+//                         console.error(err);
+//                         res.sendStatus(500);
+//                     })
+//             } else {
+//                 res.sendStatus(401);
+//                 return null;
+//             }
+//         });
+//     }
 
-});
+// });
 
 // generate bracket
 router.post(baseUrl + '/tournament/:id/generateBracket', (req, res) => {

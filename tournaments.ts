@@ -1109,7 +1109,7 @@ export class tournaments {
         console.log(data);
         if (data.data == null || (data.data.length == 0 || Object.keys(data.data).length == 0)) {
             let tempMatches = await this.generateBracket(id);
-            console.log(tempMatches);
+            // console.log(tempMatches);
             for (const match of tempMatches) {
                 matches.push({
                     tournamentId: id,
