@@ -5,7 +5,8 @@ export interface bracketMatch {
     tournamentId: number,
     round: number,
     p1: matchPlayer,
-    p2: matchPlayer
+    p2: matchPlayer,
+    bye: boolean
 }
 
 export interface matchPlayer {

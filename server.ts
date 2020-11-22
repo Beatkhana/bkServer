@@ -95,7 +95,7 @@ server.on('upgrade', (request: any, socket: any, head: any) => {
 // });
 
 // Crons???
-cron.schedule("0 * * * *", () => { 
+cron.schedule("22 * * * *", () => { 
     console.log("Running Cron: Update users");
     crons.updateSSData();
 });

@@ -23,7 +23,7 @@ export class crons {
                     uA.getSSData(user.ssId, (data) => {
                         if (data) {
                             let info = {};
-                            if (data.playerInfo.banned == 1) {
+                            if (data?.playerInfo?.banned == 1) {
                                 info = {
                                     ssId: data.playerInfo.playerId,
                                     country: data.playerInfo.country,

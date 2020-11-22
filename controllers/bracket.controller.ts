@@ -230,7 +230,8 @@ export class bracketController extends controller {
                     twitch: row.p2Twitch,
                     rank: row.p2GlobalRank,
                 },
-                round: row.round
+                round: row.round,
+                bye: row.bye
             }
             matches.push(match);
         }
@@ -313,7 +314,8 @@ export class bracketController extends controller {
                 twitch: row.p2Twitch,
                 rank: row.p2GlobalRank,
             },
-            round: row.round
+            round: row.round,
+            bye: row.bye
         }
         return match;
     }
