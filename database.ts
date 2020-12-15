@@ -79,8 +79,6 @@ export class database {
             var query = connection.query(sql, params, function (error, results, fields) {
                 result = results;
                 connection.release();
-                // console.log(query.sql);
-                // if (error) throw error;
                 return callback(error, result);
             });
         });

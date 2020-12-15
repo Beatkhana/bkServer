@@ -89,6 +89,11 @@ export class authController extends controller {
         return owner.length == 1;
     }
 
+    public async validKey(): Promise<boolean> {
+        let key = await this.db.aQuery("SELECT * FROM api_keys WHERE tournamentId = ? AND api_key = ?", [this.tourneyId, this.apiKey]);
+        return key.length == 1;
+    }
+
 }
 
 export function auth() {

@@ -1,13 +1,19 @@
 import * as express from 'express'
 import { database } from '../database';
+import { settings } from '../models/settings.model';
 import { emitter } from './event.controller';
 
-export class controller {
+export abstract class controller {
 
     protected env = process.env.NODE_ENV || 'production';
     protected db = new database();
 
     protected emitter = emitter;
+
+    protected async getSettings(id: string | number): Promise<settings> {
+        const set: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
+        return set[0];
+    }
 
     public static jsonResponse(
         res: express.Response, code: number, message: string

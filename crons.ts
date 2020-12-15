@@ -38,7 +38,7 @@ export class crons {
                                     // country: data.playerInfo.country,
                                 };
                             }
-    
+
                             db.preparedQuery('UPDATE users SET ? WHERE discordId = ?', [info, user.discordId], (err, res) => {
                                 if (!err) {
                                     completed += 1;
@@ -66,58 +66,63 @@ export class crons {
         let db = new database();
         const users: any = await db.asyncPreparedQuery('SELECT * FROM users');
         for (const user of users) {
-            if (!(user.refresh_token == null || user.refresh_token == '')) {
-                let data = new FormData();
-                data.append('client_id', CLIENT_ID);
-                data.append('client_secret', CLIENT_SECRET);
+            try {
+                if (!(user.refresh_token == null || user.refresh_token == '')) {
+                    let data = new FormData();
+                    data.append('client_id', CLIENT_ID);
+                    data.append('client_secret', CLIENT_SECRET);
 
-                data.append('grant_type', 'refresh_token');
+                    data.append('grant_type', 'refresh_token');
 
-                let redirect = "";
-                if (env == 'production') {
-                    redirect = 'https://beatkhana.com/api/discordAuth';
-                } else {
-                    redirect = 'http://localhost:4200/api/discordAuth';
-                }
-                // console.log(user);
-                data.append('redirect_uri', redirect);
-                data.append('scope', 'identify');
-                data.append('refresh_token', user.refresh_token);
-
-                let refresh_token = '';
-
-                let response = await fetch('https://discord.com/api/oauth2/token', {
-                    method: 'POST',
-                    body: data,
-                })
-                    .then((response: any) => response.json())
-                    .then((info: any) => {
-                        refresh_token = info.refresh_token;
-                        // console.log(info);
-                        return info;
-                    })
-                    .then((info: any) => fetch('https://discord.com/api/users/@me', {
-                        headers: {
-                            authorization: `${info.token_type} ${info.access_token}`,
-                        },
-                    }))
-                    .then((userRes: any) => userRes.json())
-                    .then((userRes: any) => {
-                        // console.log(userRes);
-                        return userRes;
-                    })
-                    .catch((error: any) => {
-                        console.log(error);
-                    });
-                // console.log(response);
-                // console.log(user)
-                if(refresh_token != "" && !(response.username == '' || response.username == null)) {
-                    try {
-                        await db.asyncPreparedQuery('UPDATE users SET name = ?, avatar = ?, refresh_token = ? WHERE discordId = ?', [response.username, response.avatar, refresh_token, user.discordId]);
-                    } catch (error) {
-                        console.log(error);
+                    let redirect = "";
+                    if (env == 'production') {
+                        redirect = 'https://beatkhana.com/api/discordAuth';
+                    } else {
+                        redirect = 'http://localhost:4200/api/discordAuth';
                     }
+                    // console.log(user);
+                    data.append('redirect_uri', redirect);
+                    data.append('scope', 'identify');
+                    data.append('refresh_token', user.refresh_token);
+
+                    let refresh_token = '';
+
+                    let response = await fetch('https://discord.com/api/oauth2/token', {
+                        method: 'POST',
+                        body: data,
+                    })
+                        .then((response: any) => response.json())
+                        .then((info: any) => {
+                            refresh_token = info.refresh_token;
+                            // console.log(info);
+                            return info;
+                        })
+                        .then((info: any) => fetch('https://discord.com/api/users/@me', {
+                            headers: {
+                                authorization: `${info.token_type} ${info.access_token}`,
+                            },
+                        }))
+                        .then((userRes: any) => userRes.json())
+                        .then((userRes: any) => {
+                            // console.log(userRes);
+                            return userRes;
+                        })
+                        .catch((error: any) => {
+                            console.log(error);
+                        });
+                    // console.log(response);
+                    // console.log(user)
+                    if (refresh_token != "" && !(response.username == '' || response.username == null)) {
+                        try {
+                            await db.asyncPreparedQuery('UPDATE users SET name = ?, avatar = ?, refresh_token = ? WHERE discordId = ?', [response.username, response.avatar, refresh_token, user.discordId]);
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+
                 }
+            } catch (error) {
+                console.error(error);
             }
         }
         console.log('Discord update complete');

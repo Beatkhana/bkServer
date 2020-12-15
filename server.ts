@@ -14,6 +14,7 @@ const cron = require('node-cron');
 // const cronJobs = require('./crons')
 import {crons} from './crons';
 import { bracketRouter } from './routers/bracket.router';
+import { tournamentListRouter } from './routers/tournamentList.router';
 new debugLogger();
 
 app.use((req, res, next) => {
@@ -61,6 +62,7 @@ app.use((err, req, res, next) => {
 });
 
 app.use('/api', bracketRouter);
+app.use('/api', tournamentListRouter);
 app.use('/', router);
 
 const env = process.env.NODE_ENV || 'production';
@@ -95,7 +97,7 @@ server.on('upgrade', (request: any, socket: any, head: any) => {
 // });
 
 // Crons???
-cron.schedule("22 * * * *", () => { 
+cron.schedule("0 * * * *", () => { 
     console.log("Running Cron: Update users");
     crons.updateSSData();
 });

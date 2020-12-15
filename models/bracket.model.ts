@@ -6,7 +6,8 @@ export interface bracketMatch {
     round: number,
     p1: matchPlayer,
     p2: matchPlayer,
-    bye: boolean
+    bye: boolean,
+    time: string
 }
 
 export interface matchPlayer {

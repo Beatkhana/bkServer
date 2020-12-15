@@ -1,8 +1,8 @@
 import express from "express";
 import { bracketMatch } from "../models/bracket.model";
 import { authRequest } from "../models/models";
-import { bslMatch } from "../models/tournament.models";
-import { auth } from "./auth.controller";
+import { bslMatch, match, tournamentSettings } from "../models/tournament.models";
+import { auth, authController } from "./auth.controller";
 import { controller } from "./controller";
 
 export class bracketController extends controller {
@@ -25,12 +25,383 @@ export class bracketController extends controller {
         }
     }
 
+    async scheduleMatch(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!(await auth.admin || await auth.owner || await auth.validKey)) return this.unauthorized(res);
+        let time = new Date(req.body.matchTime);
+        let timeString = time.toISOString().slice(0, 19).replace('T', ' ');
+        try {
+            await this.db.aQuery('UPDATE bracket SET time = ? WHERE id = ?', [timeString, req.params.id]);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+
+    async saveBracket(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        let id = req.params.id;
+        let data = req.body;
+        if (!(await auth.admin || await auth.owner || await auth.validKey)) return this.unauthorized(res);
+        let matches: Array<match> = [];
+        console.log(data);
+
+        if (data.customPlayers?.length > 0) {
+            let tempMatches = await this.generateBracket(id, data.customPlayers);
+            for (const match of tempMatches) {
+                matches.push({
+                    tournamentId: id,
+                    round: match.round,
+                    matchNum: match.matchNum,
+                    p1: match.p1,
+                    p2: match.p2,
+                    bye: +match.bye || 0
+                });
+            }
+        } else if (data.players?.length > 0) {
+            // custom players but with users
+            let tempMatches = await this.generateBracket(id, null, data.players);
+            for (const match of tempMatches) {
+                matches.push({
+                    tournamentId: id,
+                    round: match.round,
+                    matchNum: match.matchNum,
+                    p1: match.p1,
+                    p2: match.p2,
+                    bye: +match.bye || 0
+                });
+            }
+        }else {
+            let tempMatches = await this.generateBracket(id);
+            for (const match of tempMatches) {
+                matches.push({
+                    tournamentId: id,
+                    round: match.round,
+                    matchNum: match.matchNum,
+                    p1: match.p1,
+                    p2: match.p2,
+                    bye: +match.bye || 0
+                });
+            }
+        }
+        let sqlMatches = [];
+        for (const match of matches) {
+            sqlMatches.push(Object.values(match))
+        }
+        try {
+            await this.db.asyncPreparedQuery('DELETE FROM bracket WHERE tournamentId = ?', [id]);
+            await this.db.asyncPreparedQuery('INSERT INTO bracket (tournamentId, round, matchNum, p1, p2, bye) VALUES ?', [sqlMatches])
+        } catch (error) {
+            return this.fail(res, error);
+        }
+        return this.ok(res);
+    }
+
+    async generateBracket(id: string, players?: string[], users?: string[]) {
+        // const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
+        let settings = await this.getSettings(id);
+        let rand = false;
+        if (settings.bracket_sort_method == 'random') {
+            settings.bracket_sort_method = 'discordId';
+            rand = true;
+        }
+        let participants: any = [];
+        if (!players && !users) {
+            participants = await this.db.asyncPreparedQuery(`SELECT p.id AS participantId,
+            CAST(p.userId AS CHAR) as userId,
+            p.forfeit,
+            p.seed as seed,
+            CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
+            CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
+            \`u\`.\`name\`,
+            \`u\`.\`twitchName\`,
+            \`u\`.\`avatar\`,
+            \`u\`.\`globalRank\` as globalRank,
+            \`u\`.\`localRank\`,
+            \`u\`.\`country\`,
+            \`u\`.\`tourneyRank\` as tournamentRank,
+            \`u\`.\`TR\`,
+            \`u\`.\`pronoun\`
+            FROM participants p
+            LEFT JOIN users u ON u.discordId = p.userId
+            LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
+            WHERE p.tournamentId = ? ORDER BY ${settings.bracket_sort_method}=0, ${settings.bracket_sort_method} ${rand ? '' : 'LIMIT ?'}`, [id, settings.bracket_limit])
+            .catch(err => {
+                console.error(err);
+            });
+            
+        } else if (players && !users) {
+            participants = players;
+        } else if (!players && users) {
+            participants = await this.db.asyncPreparedQuery(`SELECT 
+            CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
+            CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
+            \`u\`.\`name\`,
+            \`u\`.\`twitchName\`,
+            \`u\`.\`avatar\`,
+            \`u\`.\`globalRank\` as globalRank,
+            \`u\`.\`localRank\`,
+            \`u\`.\`country\`,
+            \`u\`.\`tourneyRank\` as tournamentRank,
+            \`u\`.\`TR\`,
+            \`u\`.\`pronoun\`
+            FROM users u
+            WHERE u.discordId IN (?) ORDER BY ${settings.bracket_sort_method} = 0, ${settings.bracket_sort_method} ${rand ? '' : 'LIMIT ?'}`, [users, settings.bracket_limit])
+                .catch(err => {
+                    console.error(err);
+                });
+
+            console.log(participants)
+        }
+
+        if (rand) {
+            this.shuffle(participants);
+        }
+
+        if(participants.length > settings.bracket_limit) participants.length = settings.bracket_limit;
+
+        await this.db.asyncPreparedQuery("UPDATE participants SET seed = 0 WHERE tournamentId = ?", [id])
+        if (settings.bracket_sort_method != 'seed' && !players) {
+            let i = 1;
+            for (const participant of participants) {
+                await this.db.asyncPreparedQuery(`UPDATE participants SET seed = ? WHERE id = ?`, [i, participant.participantId]);
+                i++;
+            }
+        }
+
+        let matches: any[];
+        if (settings.type == 'single_elim') {
+            matches = await this.winnersRoundMatches(settings, participants, !!players);
+        } else if (settings.type == 'double_elim') {
+            matches = await this.doubleElimMatches(settings, participants, !!players);
+        }
+
+        return matches;
+    }
+
+    private async winnersRoundMatches(settings: tournamentSettings, participants: any, custom = false): Promise<any[]> {
+        let numParticipants = participants.length;
+        let seeds = this.seeding(numParticipants);
+        let matches: Array<match> = [];
+
+        let rounds = Math.log2(numParticipants);
+        let byes = Math.pow(2, Math.ceil(Math.log2(numParticipants))) - numParticipants;
+        let numMatches = numParticipants - 1;
+
+        let byePlayers = [];
+        let roundMatches = Math.pow(2, Math.ceil(Math.log2(numParticipants))) / 2;
+        let totalMatches = roundMatches;
+        // console.log(custom);
+        // First Round
+        for (let i = 0; i < seeds.length; i += 2) {
+            let p1Id: string, p1Name: string, p1Avatar: string = '';
+            let isBye = true;
+            if (participants[seeds[i] - 1] != undefined && !custom) {
+                p1Id = participants[seeds[i] - 1].discordId;
+                p1Name = participants[seeds[i] - 1].name;
+                p1Avatar = participants[seeds[i] - 1].avatar;
+            } else if (participants[seeds[i] - 1] != undefined && custom) {
+                p1Id = participants[seeds[i] - 1];
+                p1Name = participants[seeds[i] - 1];
+                p1Avatar = '';
+            }
+            // console.log(p1Id, p1Name);
+
+            let p2Id: string, p2Name: string, p2Avatar: string = '';
+            if (participants[seeds[i + 1] - 1] != undefined && !custom) {
+                p2Id = participants[seeds[i + 1] - 1].discordId;
+                p2Name = participants[seeds[i + 1] - 1].name;
+                p2Avatar = participants[seeds[i + 1] - 1].avatar;
+            } else if (participants[seeds[i + 1] - 1] != undefined && custom) {
+                p2Id = participants[seeds[i + 1] - 1];
+                p2Name = participants[seeds[i + 1] - 1];
+                p2Avatar = '';
+            }
+
+            if (participants[seeds[i + 1] - 1] != undefined && participants[seeds[i] - 1] != undefined) {
+                isBye = false;
+            }
+            if (isBye) {
+                let nextMatch = Math.floor((i / 2) / 2) + roundMatches + 1;
+                byePlayers.push({ match: nextMatch, player: p1Id != "" ? p1Id : p2Id });
+            }
+            let temp: bslMatch = {
+                id: i / 2 + 1,
+                round: 0,
+                matchNum: i / 2,
+                p1: p1Id,
+                p2: p2Id,
+                p1Score: 0,
+                p2Score: 0,
+                status: '',
+                p1Rank: 0,
+                p2Rank: 0,
+                p1Seed: seeds[i],
+                p2Seed: seeds[i + 1],
+                p1Name: p1Name,
+                p2Name: p2Name,
+                p1Country: '',
+                p2Country: '',
+                p1Avatar: p1Avatar,
+                p2Avatar: p2Avatar,
+                bye: isBye
+            }
+            matches.push(temp);
+        }
+        // console.log(byePlayers);
+        for (let i = 1; i < rounds; i++) {
+            let x = i + 1;
+            roundMatches = Math.pow(2, Math.ceil(Math.log2(numParticipants))) / Math.pow(2, x);
+            for (let j = 0; j < roundMatches; j++) {
+                let p1Id: string, p1Name: string, p1Avatar: string = '';
+                let p2Id: string, p2Name: string, p2Avatar: string = '';
+                if (byePlayers.some(x => x.match == totalMatches + j + 1)) {
+                    let players = byePlayers.filter(x => x.match == totalMatches + j + 1);
+                    // console.log(players);
+                    if (players[0] != undefined && !custom) {
+                        p1Id = participants.find(x => x.discordId == players[0].player).discordId;
+                        p1Name = participants.find(x => x.discordId == players[0].player).name;
+                        p1Avatar = participants.find(x => x.discordId == players[0].player).avatar;
+                    }
+                    if (players[1] != undefined && !custom) {
+                        p2Id = participants.find(x => x.discordId == players[1].player).discordId;
+                        p2Name = participants.find(x => x.discordId == players[1].player).name;
+                        p2Avatar = participants.find(x => x.discordId == players[1].player).avatar;
+                    }
+                }
+                let temp: bslMatch = {
+                    id: totalMatches + j + 1,
+                    round: i,
+                    matchNum: j,
+                    p1: p1Id,
+                    p2: p2Id,
+                    p1Score: 0,
+                    p2Score: 0,
+                    status: '',
+                    p1Rank: 0,
+                    p2Rank: 0,
+                    p1Seed: seeds[i],
+                    p2Seed: seeds[i + 1],
+                    p1Name: p1Name,
+                    p2Name: p2Name,
+                    p1Country: '',
+                    p2Country: '',
+                    p1Avatar: p1Avatar,
+                    p2Avatar: p2Avatar,
+                }
+                matches.push(temp);
+            }
+            if (settings.type == 'double_elim' && roundMatches == 1) {
+                let temp: bslMatch = {
+                    id: totalMatches + 2,
+                    round: i + 1,
+                    matchNum: 0,
+                    p1: null,
+                    p2: null,
+                    p1Score: 0,
+                    p2Score: 0,
+                    status: '',
+                    p1Rank: 0,
+                    p2Rank: 0,
+                    p1Seed: 0,
+                    p2Seed: 0,
+                    p1Name: '',
+                    p2Name: '',
+                    p1Country: '',
+                    p2Country: '',
+                    p1Avatar: '',
+                    p2Avatar: ''
+                }
+                matches.push(temp);
+            }
+            totalMatches += Math.pow(2, Math.ceil(Math.log2(numParticipants))) / Math.pow(2, x);
+        }
+        if (settings.type == 'double_elim') {
+            let temp: bslMatch = {
+                id: totalMatches + 2,
+                round: rounds + 1,
+                matchNum: 0,
+                p1: null,
+                p2: null,
+                p1Score: 0,
+                p2Score: 0,
+                status: '',
+                p1Rank: 0,
+                p2Rank: 0,
+                p1Seed: 0,
+                p2Seed: 0,
+                p1Name: '',
+                p2Name: '',
+                p1Country: '',
+                p2Country: '',
+                p1Avatar: '',
+                p2Avatar: ''
+            }
+            matches.push(temp);
+        }
+        return matches;
+    }
+
+    private async doubleElimMatches(settings: tournamentSettings, participants: any, custom = false): Promise<any[]> {
+        let numParticipants = participants.length;
+        let seeds = this.seeding(numParticipants);
+        let matches: Array<match> = [];
+
+        let rounds = Math.log2(numParticipants);
+        let byes = Math.pow(2, Math.ceil(Math.log2(numParticipants))) - numParticipants;
+        let numMatches = numParticipants - 1;
+
+        let byePlayers = [];
+        let roundMatches = Math.pow(2, Math.ceil(Math.log2(numParticipants))) / 2;
+        let totalMatches = roundMatches;
+
+        // Winners round
+        let winnersMatches = await this.winnersRoundMatches(settings, participants, custom);
+
+
+
+        let losersMatchesCount = Math.pow(2, Math.ceil(Math.log2(numParticipants))) / 4;
+        let loserIndex = -1;
+        let losersMatches: Array<match> = [];
+        while (losersMatchesCount > 0) {
+            for (let i = 0; i < losersMatchesCount; i++) {
+                let temp: bslMatch = {
+                    id: winnersMatches.length + i + 1,
+                    round: loserIndex,
+                    matchNum: i,
+                    p1: null,
+                    p2: null,
+                    p1Score: 0,
+                    p2Score: 0,
+                    status: '',
+                    p1Rank: 0,
+                    p2Rank: 0,
+                    p1Seed: 0,
+                    p2Seed: 0,
+                    p1Name: '',
+                    p2Name: '',
+                    p1Country: '',
+                    p2Country: '',
+                    p1Avatar: '',
+                    p2Avatar: ''
+                }
+                losersMatches.push(temp);
+            }
+            if (loserIndex % 2 == 0) {
+                losersMatchesCount = Math.floor(losersMatchesCount / 2);
+            }
+            loserIndex--;
+        }
+        let allMatches = winnersMatches.concat(losersMatches);
+        return allMatches;
+    }
+
     @auth()
     async updateBracket(args: authRequest) {
         let { req, res, auth } = args;
         let id = req.params.tourneyId;
         let data = req.body;
-        let isAuth = await auth.admin() || await auth.owner();
+        let isAuth = await auth.admin() || await auth.owner() || await auth.validKey();
         if (!isAuth) return this.unauthorized(res);
         if (data.status == 'update') {
             try {
@@ -48,7 +419,8 @@ export class bracketController extends controller {
                 return this.fail(res, error);
             }
 
-            const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
+            // const settings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
+            const settings: any = await this.getSettings(id);
             const bracket = await this.bracketDataOld(id);
             let thisMatch: bslMatch = bracket.find(x => x.id == data.matchId);
             let winner = '';
@@ -60,7 +432,7 @@ export class bracketController extends controller {
                 winner = thisMatch.p2;
                 loser = thisMatch.p1;
             }
-            if (settings[0].type == 'single_elim') {
+            if (settings.type == 'single_elim') {
                 let winnersRound = thisMatch.round + 1;
                 let maxRound = Math.max.apply(Math, bracket.map(x => x.round))
                 if (winnersRound <= maxRound) {
@@ -79,7 +451,7 @@ export class bracketController extends controller {
                 let tmpMatch = await this.bracketMatchData(req.params.tourneyId, data.matchId);
                 this.emitter.emit('bracketMatch', tmpMatch);
                 return this.ok(res);
-            } else if (settings[0].type == 'double_elim') {
+            } else if (settings.type == 'double_elim') {
 
 
                 if (thisMatch.round >= 0) {
@@ -216,7 +588,7 @@ export class bracketController extends controller {
                     seed: row.p1Seed,
                     forfeit: row.p1Forfeit,
                     twitch: row.p1Twitch,
-                    rank: row.p1GlobalRank,
+                    rank: row.p1Rank,
                 },
                 p2: {
                     id: row.p2,
@@ -228,10 +600,11 @@ export class bracketController extends controller {
                     seed: row.p2Seed,
                     forfeit: row.p2Forfeit,
                     twitch: row.p2Twitch,
-                    rank: row.p2GlobalRank,
+                    rank: row.p2Rank,
                 },
                 round: row.round,
-                bye: row.bye
+                bye: row.bye,
+                time: row.time
             }
             matches.push(match);
         }
@@ -315,9 +688,40 @@ export class bracketController extends controller {
                 rank: row.p2GlobalRank,
             },
             round: row.round,
-            bye: row.bye
+            bye: row.bye,
+            time: row.time
         }
         return match;
+    }
+
+    private seeding(numPlayers: number): Array<number> {
+        const nextPlayer = (player) => {
+            let out = [];
+            let length = player.length * 2 + 1;
+            for (const value of player) {
+                out.push(value);
+                out.push(length - value);
+            }
+            return out;
+        }
+        let rounds = Math.log(numPlayers) / Math.log(2) - 1;
+        let players = [1, 2];
+        for (let i = 0; i < rounds; i++) {
+            players = nextPlayer(players);
+        }
+        return players;
+    }
+
+    private shuffle(array) {
+        let currentIndex = array.length, temporaryValue, randomIndex;
+        while (0 !== currentIndex) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+        return array;
     }
 
 }

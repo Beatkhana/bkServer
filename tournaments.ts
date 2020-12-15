@@ -108,7 +108,7 @@ export class tournaments {
 
     getArchived(callback: Function) {
         var data: any = [];
-        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id as tournamentId, name, image, \`date\` as startDate, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 1", (err, result: any) => {
+        const result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id as tournamentId, name, image, \`date\` as startDate, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 1 ORDER BY endDate DESC", (err, result: any) => {
             return callback(result);
         });
     }
@@ -158,7 +158,8 @@ export class tournaments {
         ts.has_quals,
         ts.countries,
         ts.sort_method,
-        ts.standard_cutoff
+        ts.standard_cutoff,
+        ts.ta_url
         FROM tournaments 
         LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id 
         WHERE tournaments.id = ? ${sqlWhere}`, [id, userId], (err, result: any) => {
@@ -281,6 +282,7 @@ export class tournaments {
         let imgName = data.imgName;
         imgName = imgName.toLowerCase();
         imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
+        // imgName = 
         let savePath = this.env == 'development' ? '../app/src/assets/tournamentImages/' : __dirname + '/public/assets/tournamentImages/';
 
         let imgErr = false;
@@ -350,7 +352,7 @@ export class tournaments {
                             flag: flag,
                             err: err
                         });
-                    })
+                    });
                 } else {
                     return callback({
                         data: result,

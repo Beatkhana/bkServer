@@ -138,8 +138,8 @@ export class userAuth {
 
     getSSData(id, callback: Function) {
         request(`https://new.scoresaber.com/api/player/${id}/basic`, { json: true }, (err, res, body) => {
-            if (err) { return console.log(err); }
-            callback(body);
+            if (err) { console.log(err); return null }
+            return callback(body);
         });
     }
 
