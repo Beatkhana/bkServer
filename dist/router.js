@@ -194,11 +194,11 @@ router.get(baseUrl + '/mini-tournaments', function (req, res) {
         });
     }
 });
-router.get(baseUrl + '/tournament/archived', function (req, res) {
-    tournament.getArchived(function (result) {
-        res.send(result);
-    });
-});
+// router.get(baseUrl + '/tournament/archived', function (req, res) {
+//     tournament.getArchived((result: any) => {
+//         res.send(result);
+//     });
+// });
 // Get tournament
 router.get(baseUrl + '/tournament/:id', function (req, res) {
     if (req.session.user != null) {
@@ -317,102 +317,90 @@ router.get(baseUrl + '/tournament/:id/bracketTest', function (req, res) {
     });
 });
 //get bracket
-router.get(baseUrl + '/tournament/:id/bracket', function (req, res) {
-    tournament.getBracket(req.params.id)
-        .then(function (response) {
-        res.send(response);
-    })
-        .catch(function (err) {
-        console.error(err);
-        res.sendStatus(500);
-    });
-});
+// router.get(baseUrl + '/tournament/:id/bracket', async function (req, res) {
+//     let bracketCon = new bracketController();
+//     return res.send( await bracketCon.getBracket({req:req, res: res}));
+// });
 // Update Match
-router.put(baseUrl + '/tournament/:id/bracket/:matchId', function (req, res) {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(function (isAuth) {
-            if (isAuth) {
-                tournament.updateBracket(req.params.id, req.body)
-                    .then(function (response) {
-                    res.send(response);
-                })
-                    .catch(function (err) {
-                    console.error(err);
-                    res.sendStatus(500);
-                });
-            }
-            else {
-                res.sendStatus(401);
-            }
-        })
-            .catch(function (err) {
-            console.error(err);
-            res.sendStatus(500);
-        });
-    }
-    else {
-        isAdminOwner(req, req.params.id, function (auth) {
-            if (auth) {
-                tournament.updateBracket(req.params.id, req.body)
-                    .then(function (response) {
-                    res.send(response);
-                })
-                    .catch(function (err) {
-                    console.error(err);
-                    res.sendStatus(500);
-                });
-            }
-            else {
-                res.sendStatus(401);
-                return null;
-            }
-        });
-    }
-});
+// router.put(baseUrl + '/tournament/:id/bracket/:matchId', function (req, res) {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 if (isAuth) {
+//                     tournament.updateBracket(req.params.id, req.body)
+//                         .then(response => {
+//                             res.send(response);
+//                         })
+//                         .catch((err) => {
+//                             console.error(err);
+//                             res.sendStatus(500);
+//                         })
+//                 } else {
+//                     res.sendStatus(401);
+//                 }
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.params.id, auth => {
+//             if (auth) {
+//                 tournament.updateBracket(req.params.id, req.body)
+//                     .then(response => {
+//                         res.send(response);
+//                     })
+//                     .catch((err) => {
+//                         console.error(err);
+//                         res.sendStatus(500);
+//                     })
+//             } else {
+//                 res.sendStatus(401);
+//                 return null;
+//             }
+//         });
+//     }
+// });
 // generate bracket
-router.post(baseUrl + '/tournament/:id/generateBracket', function (req, res) {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(function (isAuth) {
-            if (isAuth) {
-                tournament.saveBracket(req.params.id, req.body)
-                    .then(function (response) {
-                    res.send(response);
-                })
-                    .catch(function (err) {
-                    console.error(err);
-                    res.sendStatus(500);
-                });
-            }
-            else {
-                res.sendStatus(401);
-            }
-        })
-            .catch(function (err) {
-            console.error(err);
-            res.sendStatus(500);
-        });
-    }
-    else {
-        isAdminOwner(req, req.params.id, function (auth) {
-            if (auth) {
-                tournament.saveBracket(req.params.id, req.body)
-                    .then(function (response) {
-                    res.send(response);
-                })
-                    .catch(function (err) {
-                    console.error(err);
-                    res.sendStatus(500);
-                });
-            }
-            else {
-                res.sendStatus(401);
-                return null;
-            }
-        });
-    }
-});
+// router.post(baseUrl + '/tournament/:id/generateBracket', (req, res) => {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 if (isAuth) {
+//                     tournament.saveBracket(req.params.id, req.body)
+//                         .then(response => {
+//                             res.send(response);
+//                         })
+//                         .catch((err) => {
+//                             console.error(err);
+//                             res.sendStatus(500);
+//                         })
+//                 } else {
+//                     res.sendStatus(401);
+//                 }
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.params.id, auth => {
+//             if (auth) {
+//                 tournament.saveBracket(req.params.id, req.body)
+//                     .then(response => {
+//                         res.send(response);
+//                     })
+//                     .catch((err) => {
+//                         console.error(err);
+//                         res.sendStatus(500);
+//                     })
+//             } else {
+//                 res.sendStatus(401);
+//                 return null;
+//             }
+//         });
+//     }
+// });
 // Update tournament settings
 router.put(baseUrl + '/tournament/:id/settings', function (req, res) {
     isAdminOwner(req, req.params.id, function (auth) {

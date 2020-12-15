@@ -169,9 +169,10 @@ var userAuth = /** @class */ (function () {
     userAuth.prototype.getSSData = function (id, callback) {
         request("https://new.scoresaber.com/api/player/" + id + "/basic", { json: true }, function (err, res, body) {
             if (err) {
-                return console.log(err);
+                console.log(err);
+                return null;
             }
-            callback(body);
+            return callback(body);
         });
     };
     userAuth.prototype.update = function (id, data, callback) {

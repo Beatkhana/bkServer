@@ -4,6 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = __importDefault(require("express"));
+var debugLogger_controller_1 = require("./controllers/debugLogger.controller");
+var event_controller_1 = require("./controllers/event.controller");
 var router = require('./router');
 var app = express_1.default();
 var path = require('path');
@@ -13,6 +15,9 @@ var MemoryStore = require('memorystore')(session);
 var cron = require('node-cron');
 // const cronJobs = require('./crons')
 var crons_1 = require("./crons");
+var bracket_router_1 = require("./routers/bracket.router");
+var tournamentList_router_1 = require("./routers/tournamentList.router");
+new debugLogger_controller_1.debugLogger();
 app.use(function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -21,12 +26,11 @@ app.use(function (req, res, next) {
         res.sendStatus(200);
     }
     else {
-        console.log(req.ip + " " + req.method + " " + req.url);
+        console.debug(req.method + " " + req.url);
         next();
     }
 });
 app.use(compression());
-// app.use(express.json());
 app.use(express_1.default.json({ limit: '50mb' }));
 app.use(session({
     name: 'uId',
@@ -55,6 +59,8 @@ app.use(function (err, req, res, next) {
             });
     }
 });
+app.use('/api', bracket_router_1.bracketRouter);
+app.use('/api', tournamentList_router_1.tournamentListRouter);
 app.use('/', router);
 var env = process.env.NODE_ENV || 'production';
 var mainDir = env == 'development' ? 'dist/public' : 'public';
@@ -65,10 +71,20 @@ app.get('*', function (req, res) {
     res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 var PORT = +process.env.PORT || 8080;
-app.listen(PORT, function () {
-    console.log("Server now listening on " + PORT);
-    console.log('Running in ' + env + ' mode');
+var server = app.listen(PORT, function () {
+    console.info("Server now listening on " + PORT);
+    console.info('Running in ' + env + ' mode');
 });
+// allow websocket connections
+server.on('upgrade', function (request, socket, head) {
+    event_controller_1.wss.handleUpgrade(request, socket, head, function (socket) {
+        event_controller_1.wss.emit('connection', socket, request);
+    });
+});
+// app.listen(PORT, () => {
+//     console.log("Server now listening on " + PORT);
+//     console.log('Running in ' + env + ' mode')
+// });
 // Crons???
 cron.schedule("0 * * * *", function () {
     console.log("Running Cron: Update users");

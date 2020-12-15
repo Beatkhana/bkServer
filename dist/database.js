@@ -79,7 +79,7 @@ var database = /** @class */ (function () {
                 host: "localhost",
                 user: "dan",
                 password: "test",
-                database: "heroku_11100f74419df40",
+                database: "bk",
                 connectionLimit: 10,
                 charset: 'utf8mb4',
                 timezone: 'utc'
@@ -117,9 +117,22 @@ var database = /** @class */ (function () {
             var query = connection.query(sql, params, function (error, results, fields) {
                 result = results;
                 connection.release();
-                // console.log(query.sql);
-                // if (error) throw error;
                 return callback(error, result);
+            });
+        });
+    };
+    database.prototype.aQuery = function (sql, params) {
+        if (params === void 0) { params = []; }
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        _this.con.query(sql, params, function (err, result, fields) {
+                            if (err)
+                                reject(err);
+                            resolve(result);
+                        });
+                    })];
             });
         });
     };

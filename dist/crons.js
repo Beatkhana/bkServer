@@ -49,71 +49,78 @@ var crons = /** @class */ (function () {
     }
     crons.updateSSData = function () {
         var _this = this;
-        var db = new database_1.database();
-        var uA = new userAuth_1.userAuth();
-        db.query("SELECT CAST(discordId AS CHAR) as discordId, CAST(ssId AS CHAR) as ssId FROM users", function (err, res) { return __awaiter(_this, void 0, void 0, function () {
-            var completed, _loop_1, _i, res_1, user;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        completed = 0;
-                        _loop_1 = function (user) {
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        uA.getSSData(user.ssId, function (data) {
-                                            if (data) {
-                                                var info = {};
-                                                if (data.playerInfo.banned == 1) {
-                                                    info = {
-                                                        ssId: data.playerInfo.playerId,
-                                                        country: data.playerInfo.country,
-                                                    };
-                                                }
-                                                else {
-                                                    info = {
-                                                        ssId: data.playerInfo.playerId,
-                                                        // name: data.playerInfo.playerName,
-                                                        // avatar: data.playerInfo.avatar,
-                                                        globalRank: data.playerInfo.rank,
-                                                        localRank: data.playerInfo.countryRank,
-                                                    };
-                                                }
-                                                db.preparedQuery('UPDATE users SET ? WHERE discordId = ?', [info, user.discordId], function (err, res) {
-                                                    if (!err) {
-                                                        completed += 1;
+        try {
+            var db_1 = new database_1.database();
+            var uA_1 = new userAuth_1.userAuth();
+            db_1.query("SELECT CAST(discordId AS CHAR) as discordId, CAST(ssId AS CHAR) as ssId FROM users", function (err, res) { return __awaiter(_this, void 0, void 0, function () {
+                var completed, _loop_1, _i, res_1, user;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            completed = 0;
+                            _loop_1 = function (user) {
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            uA_1.getSSData(user.ssId, function (data) {
+                                                var _a;
+                                                if (data) {
+                                                    var info = {};
+                                                    if (((_a = data === null || data === void 0 ? void 0 : data.playerInfo) === null || _a === void 0 ? void 0 : _a.banned) == 1) {
+                                                        info = {
+                                                            ssId: data.playerInfo.playerId,
+                                                            country: data.playerInfo.country,
+                                                        };
                                                     }
                                                     else {
-                                                        console.log(err);
+                                                        info = {
+                                                            ssId: data.playerInfo.playerId,
+                                                            // name: data.playerInfo.playerName,
+                                                            // avatar: data.playerInfo.avatar,
+                                                            globalRank: data.playerInfo.rank,
+                                                            localRank: data.playerInfo.countryRank,
+                                                        };
                                                     }
-                                                });
-                                            }
-                                        });
-                                        return [4 /*yield*/, delay(1000)];
-                                    case 1:
-                                        _a.sent();
-                                        return [2 /*return*/];
-                                }
-                            });
-                        };
-                        _i = 0, res_1 = res;
-                        _a.label = 1;
-                    case 1:
-                        if (!(_i < res_1.length)) return [3 /*break*/, 4];
-                        user = res_1[_i];
-                        return [5 /*yield**/, _loop_1(user)];
-                    case 2:
-                        _a.sent();
-                        _a.label = 3;
-                    case 3:
-                        _i++;
-                        return [3 /*break*/, 1];
-                    case 4:
-                        console.log("Cron completed: Updated " + completed + "/" + res.length + " users");
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+                                                    db_1.preparedQuery('UPDATE users SET ? WHERE discordId = ?', [info, user.discordId], function (err, res) {
+                                                        if (!err) {
+                                                            completed += 1;
+                                                        }
+                                                        else {
+                                                            console.log(err);
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                            return [4 /*yield*/, delay(1000)];
+                                        case 1:
+                                            _a.sent();
+                                            return [2 /*return*/];
+                                    }
+                                });
+                            };
+                            _i = 0, res_1 = res;
+                            _a.label = 1;
+                        case 1:
+                            if (!(_i < res_1.length)) return [3 /*break*/, 4];
+                            user = res_1[_i];
+                            return [5 /*yield**/, _loop_1(user)];
+                        case 2:
+                            _a.sent();
+                            _a.label = 3;
+                        case 3:
+                            _i++;
+                            return [3 /*break*/, 1];
+                        case 4:
+                            console.log("Cron completed: Updated " + completed + "/" + res.length + " users");
+                            return [2 /*return*/];
+                    }
+                });
+            }); });
+        }
+        catch (error) {
+            console.error(error);
+            return false;
+        }
         function delay(ms) {
             return new Promise(function (resolve) { return setTimeout(resolve, ms); });
         }
@@ -129,11 +136,12 @@ var crons = /** @class */ (function () {
                     case 1:
                         users = _a.sent();
                         _loop_2 = function (user) {
-                            var data, redirect, refresh_token_1, response, error_1;
+                            var data, redirect, refresh_token_1, response, error_1, error_2;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
-                                        if (!(user.refresh_token != null || user.refresh_token != '')) return [3 /*break*/, 5];
+                                        _a.trys.push([0, 6, , 7]);
+                                        if (!!(user.refresh_token == null || user.refresh_token == '')) return [3 /*break*/, 5];
                                         data = new FormData();
                                         data.append('client_id', CLIENT_ID);
                                         data.append('client_secret', CLIENT_SECRET);
@@ -145,6 +153,7 @@ var crons = /** @class */ (function () {
                                         else {
                                             redirect = 'http://localhost:4200/api/discordAuth';
                                         }
+                                        // console.log(user);
                                         data.append('redirect_uri', redirect);
                                         data.append('scope', 'identify');
                                         data.append('refresh_token', user.refresh_token);
@@ -174,7 +183,7 @@ var crons = /** @class */ (function () {
                                             })];
                                     case 1:
                                         response = _a.sent();
-                                        if (!(refresh_token_1 != "" && (response.username != '' || response.username != null))) return [3 /*break*/, 5];
+                                        if (!(refresh_token_1 != "" && !(response.username == '' || response.username == null))) return [3 /*break*/, 5];
                                         _a.label = 2;
                                     case 2:
                                         _a.trys.push([2, 4, , 5]);
@@ -186,7 +195,12 @@ var crons = /** @class */ (function () {
                                         error_1 = _a.sent();
                                         console.log(error_1);
                                         return [3 /*break*/, 5];
-                                    case 5: return [2 /*return*/];
+                                    case 5: return [3 /*break*/, 7];
+                                    case 6:
+                                        error_2 = _a.sent();
+                                        console.error(error_2);
+                                        return [3 /*break*/, 7];
+                                    case 7: return [2 /*return*/];
                                 }
                             });
                         };

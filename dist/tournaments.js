@@ -126,7 +126,7 @@ var tournaments = /** @class */ (function () {
     };
     tournaments.prototype.getArchived = function (callback) {
         var data = [];
-        var result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id as tournamentId, name, image, \`date\` as startDate, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 1", function (err, result) {
+        var result = this.db.query("SELECT CAST(owner AS CHAR) as owner, id as tournamentId, name, image, \`date\` as startDate, endDate, discord, twitchLink, prize, info, archived, \`first\`, \`second\`, third FROM tournaments WHERE archived = 1 ORDER BY endDate DESC", function (err, result) {
             return callback(result);
         });
     };
@@ -144,7 +144,7 @@ var tournaments = /** @class */ (function () {
                 sqlWhere = "AND ts.public = 1";
                 break;
         }
-        var result = this.db.preparedQuery("SELECT `tournaments`.`id` as tournamentId,\n        `tournaments`.`name`,\n        `tournaments`.`image`,\n        `tournaments`.`date` as startDate,\n        `tournaments`.`endDate`,\n        `tournaments`.`discord`,\n        `tournaments`.`twitchLink`,\n        `tournaments`.`prize`,\n        `tournaments`.`info`,\n        CAST(`tournaments`.`owner` AS CHAR) as owner,\n        `tournaments`.`archived`,\n        `tournaments`.`first`,\n        `tournaments`.`second`,\n        `tournaments`.`third`,\n        `tournaments`.`is_mini`,\n        ts.id as settingsId,\n        ts.public_signups,\n        ts.public,\n        ts.state,\n        ts.type,\n        ts.has_bracket,\n        ts.has_map_pool,\n        ts.signup_comment,\n        ts.comment_required,\n        ts.show_signups,\n        ts.bracket_sort_method,\n        ts.bracket_limit,\n        ts.quals_cutoff,\n        ts.show_quals,\n        ts.has_quals,\n        ts.countries,\n        ts.sort_method,\n        ts.standard_cutoff\n        FROM tournaments \n        LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id \n        WHERE tournaments.id = ? " + sqlWhere, [id, userId], function (err, result) {
+        var result = this.db.preparedQuery("SELECT `tournaments`.`id` as tournamentId,\n        `tournaments`.`name`,\n        `tournaments`.`image`,\n        `tournaments`.`date` as startDate,\n        `tournaments`.`endDate`,\n        `tournaments`.`discord`,\n        `tournaments`.`twitchLink`,\n        `tournaments`.`prize`,\n        `tournaments`.`info`,\n        CAST(`tournaments`.`owner` AS CHAR) as owner,\n        `tournaments`.`archived`,\n        `tournaments`.`first`,\n        `tournaments`.`second`,\n        `tournaments`.`third`,\n        `tournaments`.`is_mini`,\n        ts.id as settingsId,\n        ts.public_signups,\n        ts.public,\n        ts.state,\n        ts.type,\n        ts.has_bracket,\n        ts.has_map_pool,\n        ts.signup_comment,\n        ts.comment_required,\n        ts.show_signups,\n        ts.bracket_sort_method,\n        ts.bracket_limit,\n        ts.quals_cutoff,\n        ts.show_quals,\n        ts.has_quals,\n        ts.countries,\n        ts.sort_method,\n        ts.standard_cutoff,\n        ts.ta_url\n        FROM tournaments \n        LEFT JOIN tournament_settings ts ON ts.tournamentId = tournaments.id \n        WHERE tournaments.id = ? " + sqlWhere, [id, userId], function (err, result) {
             return callback(result);
         });
     };
@@ -926,15 +926,18 @@ var tournaments = /** @class */ (function () {
     };
     tournaments.prototype.downloadPool = function (id, auth) {
         return __awaiter(this, void 0, void 0, function () {
-            var pool, curSongs, playlist;
+            var pool, tournamentName, curSongs, playlist;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.db.asyncPreparedQuery("SELECT map_pools.poolName, map_pools.image, map_pools.description, pool_link.songHash FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE (map_pools.live = ? OR map_pools.live = 1) AND map_pools.id = ?", [+auth, id])];
+                    case 0: return [4 /*yield*/, this.db.asyncPreparedQuery("SELECT map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, pool_link.songHash FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE (map_pools.live = ? OR map_pools.live = 1) AND map_pools.id = ?", [+auth, id])];
                     case 1:
                         pool = _a.sent();
+                        return [4 /*yield*/, this.db.asyncPreparedQuery("SELECT name FROM tournaments WHERE id = ?", [pool[0].tournamentId])];
+                    case 2:
+                        tournamentName = _a.sent();
                         curSongs = pool.map(function (e) { return { hash: e.songHash }; });
                         playlist = {
-                            playlistTitle: pool[0].poolName,
+                            playlistTitle: tournamentName[0].name + "_" + pool[0].poolName,
                             playlistAuthor: 'BeatKhana!',
                             playlistDescription: pool[0].description,
                             image: pool[0].image,
@@ -1319,7 +1322,7 @@ var tournaments = /** @class */ (function () {
                         return [4 /*yield*/, this.generateBracket(id)];
                     case 1:
                         tempMatches = _c.sent();
-                        console.log(tempMatches);
+                        // console.log(tempMatches);
                         for (_i = 0, tempMatches_1 = tempMatches; _i < tempMatches_1.length; _i++) {
                             match = tempMatches_1[_i];
                             matches.push({
