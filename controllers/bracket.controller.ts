@@ -71,7 +71,7 @@ export class bracketController extends controller {
                     bye: +match.bye || 0
                 });
             }
-        }else {
+        } else {
             let tempMatches = await this.generateBracket(id);
             for (const match of tempMatches) {
                 matches.push({
@@ -126,14 +126,14 @@ export class bracketController extends controller {
             LEFT JOIN users u ON u.discordId = p.userId
             LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
             WHERE p.tournamentId = ? ORDER BY ${settings.bracket_sort_method}=0, ${settings.bracket_sort_method} ${rand ? '' : 'LIMIT ?'}`, [id, settings.bracket_limit])
-            .catch(err => {
-                console.error(err);
-            });
-            
+                .catch(err => {
+                    console.error(err);
+                });
+
         } else if (players && !users) {
             participants = players;
         } else if (!players && users) {
-            participants = await this.db.asyncPreparedQuery(`SELECT 
+            let temp = await this.db.asyncPreparedQuery(`SELECT 
             CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
             CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
             \`u\`.\`name\`,
@@ -150,7 +150,7 @@ export class bracketController extends controller {
                 .catch(err => {
                     console.error(err);
                 });
-
+            participants = this.mapOrder(temp, users, "discordId");
             console.log(participants)
         }
 
@@ -158,7 +158,7 @@ export class bracketController extends controller {
             this.shuffle(participants);
         }
 
-        if(participants.length > settings.bracket_limit) participants.length = settings.bracket_limit;
+        if (participants.length > settings.bracket_limit) participants.length = settings.bracket_limit;
 
         await this.db.asyncPreparedQuery("UPDATE participants SET seed = 0 WHERE tournamentId = ?", [id])
         if (settings.bracket_sort_method != 'seed' && !players) {
@@ -723,5 +723,17 @@ export class bracketController extends controller {
         }
         return array;
     }
+
+    private mapOrder(array, order, key) {
+        array.sort(function (a, b) {
+            var A = a[key], B = b[key];
+            if (order.indexOf(A) > order.indexOf(B)) {
+                return 1;
+            } else {
+                return -1;
+            }
+        });
+        return array;
+    };
 
 }
