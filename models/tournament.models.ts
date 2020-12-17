@@ -75,7 +75,7 @@ export interface match {
     matchNum: number,
     p1: string,
     p2: string,
-    bye?: any,
+    bye?: any
 }
 export interface bslMatch {
     id: number
@@ -96,5 +96,5 @@ export interface bslMatch {
     p2Country: string,
     p1Avatar: string,
     p2Avatar: string,
-    bye?: boolean,
+    bye?: boolean
 }

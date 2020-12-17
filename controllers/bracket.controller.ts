@@ -38,6 +38,18 @@ export class bracketController extends controller {
         }
     }
 
+    async setBestOf(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!(await auth.admin || await auth.owner || await auth.validKey)) return this.unauthorized(res);
+        if (!req.body.best_of) return this.clientError(res, "Please provide a valid best of value");
+        try {
+            await this.db.aQuery('UPDATE bracket SET best_of = ? WHERE id = ?', [req.body.best_of, req.params.id]);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+
     async saveBracket(req: express.Request, res: express.Response) {
         let auth = new authController(req);
         let id = req.params.id;
@@ -151,7 +163,7 @@ export class bracketController extends controller {
                     console.error(err);
                 });
             participants = this.mapOrder(temp, users, "discordId");
-            console.log(participants)
+            // console.log(participants)
         }
 
         if (rand) {
@@ -287,7 +299,7 @@ export class bracketController extends controller {
                     p1Country: '',
                     p2Country: '',
                     p1Avatar: p1Avatar,
-                    p2Avatar: p2Avatar,
+                    p2Avatar: p2Avatar
                 }
                 matches.push(temp);
             }
@@ -604,7 +616,8 @@ export class bracketController extends controller {
                 },
                 round: row.round,
                 bye: row.bye,
-                time: row.time
+                time: row.time,
+                best_of: row.best_of
             }
             matches.push(match);
         }
@@ -689,7 +702,8 @@ export class bracketController extends controller {
             },
             round: row.round,
             bye: row.bye,
-            time: row.time
+            time: row.time,
+            best_of: row.best_of
         }
         return match;
     }

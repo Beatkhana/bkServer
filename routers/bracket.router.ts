@@ -8,6 +8,7 @@ bracketRouter.get('/tournament/:id/bracket', (req, res) => bracketCon.getBracket
 bracketRouter.get('/tournament/:tourneyId/bracket/:matchId', (req, res) => bracketCon.getBracketMatch({ req: req, res: res }));
 
 bracketRouter.put('/tournament/:tourneyId/bracket/schedule/:id', (req, res) => bracketCon.scheduleMatch(req, res));
+bracketRouter.put('/tournament/:tourneyId/bracket/setBestOf/:id', (req, res) => bracketCon.setBestOf(req, res));
 bracketRouter.put('/tournament/:tourneyId/bracket/:matchId', (req, res) => bracketCon.updateBracket({ req: req, res: res }));
 
 bracketRouter.post('/tournament/:id/generateBracket', (req, res) => bracketCon.saveBracket(req, res));

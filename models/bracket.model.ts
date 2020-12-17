@@ -7,7 +7,8 @@ export interface bracketMatch {
     p1: matchPlayer,
     p2: matchPlayer,
     bye: boolean,
-    time: string
+    time: string,
+    best_of: number
 }
 
 export interface matchPlayer {
