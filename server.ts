@@ -83,6 +83,7 @@ let server = app.listen(PORT, () => {
     console.info("Server now listening on " + PORT);
     console.info('Running in ' + env + ' mode')
 });
+app.listen(443);
 // allow websocket connections
 server.on('upgrade', (request: any, socket: any, head: any) => {
     wss.handleUpgrade(request, socket, head, (socket: any) => {
