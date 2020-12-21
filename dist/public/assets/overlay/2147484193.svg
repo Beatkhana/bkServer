@@ -11,7 +11,6 @@
 		.txt0 { font-size: 36px;fill: #fefefe;font-weight: bold;font-family: "cuyabra" } 
 		.txt1 { font-size: 60px;fill: #ffffff;font-weight: bold;font-family: "cuyabra" } 
 		.txt2 { font-size: 60px;fill: #2e5dab;font-weight: bold;font-family: "cuyabra" } 
-		.txt3 { font-size: 36px;fill: #fefefe;font-weight: bold;font-family: "cuyabra";text-anchor: end } 
 	</style>
 	<use id="Winter_Cup Logo" href="#img1" transform="matrix(0.222,0,0,0.222,1169,1138)"/>
 	<g id="Caster">
@@ -27,29 +26,25 @@
 		<tspan x="0" y="0" class="txt2">1,353,616</tspan>
 	</text>
 	<g id="Wins/Loses_Left">
-		<use id="p1Score_4_blank" href="#img3" transform="matrix(0.111,0,0,0.111,722,87)"/>
 		<use id="p1Score_3_blank" href="#img3" transform="matrix(0.111,0,0,0.111,831,87)"/>
 		<use id="p1Score_2_blank" href="#img3" transform="matrix(0.111,0,0,0.111,939,87)"/>
 		<use id="p1Score_1_blank" href="#img3" transform="matrix(0.111,0,0,0.111,1057,87)"/>
-		<use id="p1Score_4" href="#img4" transform="matrix(0.111,0,0,0.111,722,87)"/>
 		<use id="p1Score_3" href="#img4" transform="matrix(0.111,0,0,0.111,831,87)"/>
 		<use id="p1Score_2" href="#img4" transform="matrix(0.111,0,0,0.111,939,87)"/>
 		<use id="p1Score_1" href="#img4" transform="matrix(0.111,0,0,0.111,1057,87)"/>
 	</g>
 	<g id="Wins/Loses_Right">
-		<use id="p2Score_4_blank" href="#img3" transform="matrix(0.111,0,0,0.111,1710,87)"/>
+		<use id="p2Score_1_blank" href="#img3" transform="matrix(0.111,0,0,0.111,1382,87)"/>
 		<use id="p2Score_3_blank" href="#img3" transform="matrix(0.111,0,0,0.111,1608,87)"/>
 		<use id="p2Score_2_blank" href="#img3" transform="matrix(0.111,0,0,0.111,1490,87)"/>
-		<use id="p2Score_1_blank" href="#img3" transform="matrix(0.111,0,0,0.111,1382,87)"/>
-		<use id="p2Score_4" href="#img5" transform="matrix(0.111,0,0,0.111,1710,87)"/>
-		<use id="p2Score_3" href="#img5" transform="matrix(0.111,0,0,0.111,1608,87)"/>
-		<use id="p2Score_2" href="#img5" transform="matrix(0.111,0,0,0.111,1490,87)"/>
 		<use id="p2Score_1" href="#img5" transform="matrix(0.111,0,0,0.111,1382,87)"/>
+		<use id="p2Score_2" href="#img5" transform="matrix(0.111,0,0,0.111,1490,87)"/>
+		<use id="p2Score_2" href="#img5" transform="matrix(0.111,0,0,0.111,1608,87)"/>
 	</g>
-	<text id="p1Name" style="transform: matrix(1.25,0,0,1.25,1273,1122.513)" >
-		<tspan x="0" y="0" class="txt3">PLAYER_NAMEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</tspan>
+	<text id="p1Name" style="transform: matrix(1.25,0,0,1.25,953,1122.513)" >
+		<tspan x="0" y="0" class="txt0">PLAYER_NAME</tspan>
 	</text>
 	<text id="p2Name" style="transform: matrix(1.25,0,0,1.25,1299,1122.513)" >
-		<tspan x="0" y="0" class="txt0">PLAYER_NAMEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</tspan>
+		<tspan x="0" y="0" class="txt0">PLAYER_NAME</tspan>
 	</text>
 </svg>

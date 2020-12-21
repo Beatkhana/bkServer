@@ -286,45 +286,6 @@ export class tournaments {
         let savePath = this.env == 'development' ? '../app/src/assets/tournamentImages/' : __dirname + '/public/assets/tournamentImages/';
 
         let imgErr = false;
-        // sharp
-        const buf = await Buffer.from(base64Img, 'base64');
-        const webpData = await sharp(buf)
-            .resize({ width: 550 })
-            .webp({ lossless: true, quality: 50 })
-            .toBuffer()
-            .then(buffer => {
-                let params = {
-                    Bucket: BUCKET_NAME,
-                    Key: imgName, // File name you want to save as in S3
-                    Body: buffer,
-                    ACL: 'public-read'
-                };
-                s3.upload(params, (err, data) => {
-                    if (err) {
-                        console.log(err)
-                        imgErr = true;
-                    }
-                    console.log(`File uploaded successfully. ${data.Location}`);
-                });
-            })
-        // const fileContent = fs.readFileSync(savePath + imgName);
-        // const params = {
-        //     Bucket: BUCKET_NAME,
-        //     Key: imgName, // File name you want to save as in S3
-        //     Body: fileContent,
-        //     ACL: 'public-read'
-        // };
-        // let s3Img = await new Promise<string>((resolve, reject) => {
-        //     s3.upload(params, (err, data) => {
-        //         if (err) {
-        //             console.log(err)
-        //             imgErr = true;
-        //         }
-        //         console.log(`File uploaded successfully. ${data.Location}`);
-        //         resolve(data.Location);
-        //     });
-        // });
-        // const s3Img = await 
 
         if (!imgErr) {
             data.image = imgName;
@@ -340,10 +301,19 @@ export class tournaments {
                 });
             }
 
-            const result = this.db.preparedQuery(`INSERT INTO tournaments SET ?`, [data], (err, result: any) => {
+            const result = this.db.preparedQuery(`INSERT INTO tournaments SET ?`, [data], async (err, result: any) => {
                 let flag = false;
                 if (err) flag = true;
                 if (!err) {
+                    const buf = await Buffer.from(base64Img, 'base64');
+                    const webpData = await sharp(buf)
+                        .resize({ width: 550 })
+                        .webp({ lossless: true, quality: 50 })
+                        .toBuffer()
+
+                    // console.debug(savePath+data.id+'.webp');
+                    await sharp(webpData)
+                        .toFile(savePath + result.insertId + '.webp');
                     this.db.preparedQuery('INSERT INTO tournament_settings SET tournamentId = ?', [result.insertId], (err, result2: any) => {
                         let flag = false;
                         if (err) flag = true;
@@ -390,89 +360,15 @@ export class tournaments {
             imgName = imgName.toLowerCase();
             imgName = imgName.replace(/\s/g, "");
             imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
-            let savePath = this.env == 'development' ? '../app/src/assets/tournamentImages/' : __dirname + '/public/assets/tournamentImages/';
-            // // sharp
+            let savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname + '/public/assets/images/';
+            // sharp
             const buf = await Buffer.from(base64Img, 'base64');
-
-            // jimp.read(buf, (err, image) => {
-            //     if (err) throw err;
-            //     else {
-            //         image.resize(550, jimp.AUTO)
-            //             .quality(50)
-            //     }
-            // })
-
-            // jimp.read(buf)
-            //     .then(image => {
-            //         image.resize(550, jimp.AUTO)
-            //             .quality(50)
-            //             .write(savePath + imgName);
-            //     })
-            //     .catch(err => {
-            //         imgErr = true;
-            //         return callback({
-            //             flag: true,
-            //             err: err
-            //         });
-            //     })
             const webpData = await sharp(buf)
                 .resize({ width: 550 })
                 .webp({ lossless: true, quality: 50 })
                 .toBuffer()
-                .then(buffer => {
-                    let params = {
-                        Bucket: BUCKET_NAME,
-                        Key: imgName, // File name you want to save as in S3
-                        Body: buffer,
-                        ACL: 'public-read'
-                    };
-                    s3.upload(params, (err, data) => {
-                        if (err) {
-                            console.log(err)
-                            imgErr = true;
-                        }
-                        console.log(`File uploaded successfully. ${data.Location}`);
-                    });
-                })
-
-            // await sharp(webpData)
-            //     .toFile(savePath + imgName)
-
-            //     // .then(info => { console.log(info) })
-            //     .catch(err => {
-            //         imgErr = true;
-            //         return callback({
-            //             flag: true,
-            //             err: err
-            //         });
-            //     });
-            // await sharp(webpData)
-            //     .toFile(savePath + imgName)
-            //     .catch(err => {
-            //         imgErr = true;
-            //         return callback({
-            //             flag: true,
-            //             err: err
-            //         });
-            //     });
-            // const fileContent = fs.readFileSync(savePath + imgName);
-            // const params = {
-            //     Bucket: BUCKET_NAME,
-            //     Key: imgName, // File name you want to save as in S3
-            //     Body: fileContent,
-            //     ACL: 'public-read'
-            // };
-            // let s3Img = await new Promise<string>((resolve, reject) => {
-            //     s3.upload(params, (err, data) => {
-            //         if (err) {
-            //             console.log(err)
-            //             imgErr = true;
-            //         }
-            //         console.log(`File uploaded successfully. ${data.Location}`);
-            //         resolve(data.Location);
-            //     });
-            // });
-            // console.log(location);
+            await sharp(webpData)
+                .toFile(savePath + data.id + '.webp');
             data.tournament.image = imgName;
         }
 
@@ -534,11 +430,11 @@ export class tournaments {
 
     // non quals seed
     private async seedPlayers(tournamentId: string, cutoff, method: string) {
-        if(method == 'date') {
+        if (method == 'date') {
             let updateErr = false;
             let participants: any = await this.allParticipants(tournamentId);
-            participants.sort((a,b) => a.participantId - b.participantId);
-            let qualified = participants.slice(0, cutoff+1);
+            participants.sort((a, b) => a.participantId - b.participantId);
+            let qualified = participants.slice(0, cutoff + 1);
             for (const user of participants) {
                 await this.db.asyncPreparedQuery("UPDATE participants SET seed = 0, position = 0 WHERE userId = ? AND tournamentId = ?", [user.userId, tournamentId])
                     .catch(err => {
