@@ -20,11 +20,20 @@ export class database {
             //     charset: 'utf8mb4',
             //     timezone: 'utc'
             // });
+            // this.con = mysql.createPool({
+            //     host: "213.190.6.106",
+            //     user: "u826845424_bkLive",
+            //     password: "5%Gy88OoPje5",
+            //     database: "u826845424_bkLive",
+            //     connectionLimit: 10,
+            //     charset: 'utf8mb4',
+            //     timezone: 'utc'
+            // });
             this.con = mysql.createPool({
-                host: "213.190.6.106",
-                user: "u826845424_bkLive",
-                password: "5%Gy88OoPje5",
-                database: "u826845424_bkLive",
+                host: "localhost",
+                user: "dan",
+                password: "root",
+                database: "bk",
                 connectionLimit: 10,
                 charset: 'utf8mb4',
                 timezone: 'utc'

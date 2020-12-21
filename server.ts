@@ -27,7 +27,7 @@ app.use((req, res, next) => {
     if ('OPTIONS' === req.method) {
         res.sendStatus(200);
     } else {
-        console.debug(`${req.method} ${req.url}`);
+        if (env != 'production') console.debug(`${req.method} ${req.url}`);
         next();
     }
 });
