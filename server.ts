@@ -12,12 +12,15 @@ var MemoryStore = require('memorystore')(session)
 const cron = require('node-cron');
 
 // const cronJobs = require('./crons')
-import {crons} from './crons';
+import { crons } from './crons';
 import { bracketRouter } from './routers/bracket.router';
 import { tournamentListRouter } from './routers/tournamentList.router';
 new debugLogger();
 
+let validHosts = ['localhost', 'bk.dannypoke03.me', 'beatkhana.com'];
+
 app.use((req, res, next) => {
+    if (!validHosts.includes(req.get("host").split(':')[0])) return res.sendStatus(404);
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     res.header('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
@@ -83,7 +86,6 @@ let server = app.listen(PORT, () => {
     console.info("Server now listening on " + PORT);
     console.info('Running in ' + env + ' mode')
 });
-app.listen(443);
 // allow websocket connections
 server.on('upgrade', (request: any, socket: any, head: any) => {
     wss.handleUpgrade(request, socket, head, (socket: any) => {
@@ -98,12 +100,12 @@ server.on('upgrade', (request: any, socket: any, head: any) => {
 // });
 
 // Crons???
-cron.schedule("0 * * * *", () => { 
+cron.schedule("0 * * * *", () => {
     console.log("Running Cron: Update users");
     crons.updateSSData();
 });
 
-cron.schedule("*/5 * * * *", () => { 
+cron.schedule("*/5 * * * *", () => {
     console.log("Running Cron: Discord users update");
     crons.updateUsersDiscord();
 });
