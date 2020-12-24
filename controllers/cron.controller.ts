@@ -48,7 +48,7 @@ export class cronController extends controller {
                 })
                     .then((response: any) => response.json())
                     .then((info: any) => {
-                        // console.log(info);
+                        console.log(info);
                         if (info.error) {
                             throw new Error(info.error);
                         }
