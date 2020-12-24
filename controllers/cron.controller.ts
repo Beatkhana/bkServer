@@ -48,8 +48,10 @@ export class cronController extends controller {
                 })
                     .then((response: any) => response.json())
                     .then((info: any) => {
-                        console.log(info);
+                        // console.log(info);
                         if (info.error) {
+                            // remove refresh token if invalid
+                            this.db.aQuery('UPDATE users SET refresh_token = NULL WHERE discordId = ?', [user.discordId]);
                             throw new Error(info.error);
                         }
                         refresh_token = info.refresh_token;
