@@ -1,4 +1,5 @@
 import express from 'express';
+import { cronController } from './controllers/cron.controller';
 import { debugLogger } from './controllers/debugLogger.controller';
 import { wss } from './controllers/event.controller';
 
@@ -15,6 +16,7 @@ const cron = require('node-cron');
 import { crons } from './crons';
 import { bracketRouter } from './routers/bracket.router';
 import { tournamentListRouter } from './routers/tournamentList.router';
+import { userRouter } from './routers/user.router';
 new debugLogger();
 
 let validHosts = ['localhost', 'bk.dannypoke03.me', 'beatkhana.com'];
@@ -66,6 +68,7 @@ app.use((err, req, res, next) => {
 
 app.use('/api', bracketRouter);
 app.use('/api', tournamentListRouter);
+app.use('/api', userRouter);
 app.use('/', router);
 
 const env = process.env.NODE_ENV || 'production';
@@ -100,12 +103,14 @@ server.on('upgrade', (request: any, socket: any, head: any) => {
 // });
 
 // Crons???
-cron.schedule("0 * * * *", () => {
-    console.log("Running Cron: Update users");
-    crons.updateSSData();
-});
+let cronCon: cronController = new cronController();
+cronCon.setCrons();
+// cron.schedule("0 * * * *", () => {
+//     console.log("Running Cron: Update users");
+//     crons.updateSSData();
+// });
 
-cron.schedule("*/5 * * * *", () => {
-    console.log("Running Cron: Discord users update");
-    crons.updateUsersDiscord();
-});
+// cron.schedule("*/5 * * * *", () => {
+//     console.log("Running Cron: Discord users update");
+//     crons.updateUsersDiscord();
+// });

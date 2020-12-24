@@ -8,6 +8,9 @@ export abstract class controller {
     protected env = process.env.NODE_ENV || 'production';
     protected db = new database();
 
+    protected CLIENT_ID = '721696709331386398';
+    protected CLIENT_SECRET = 'LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6';
+
     protected emitter = emitter;
 
     protected async getSettings(id: string | number): Promise<settings> {
@@ -63,7 +66,7 @@ export abstract class controller {
     }
 
     public fail(res: express.Response, error: Error | string) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({
             message: error.toString()
         })

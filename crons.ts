@@ -30,11 +30,11 @@ export class crons {
                                 };
                             } else {
                                 info = {
-                                    ssId: data.playerInfo.playerId,
+                                    ssId: data.playerInfo?.playerId,
                                     // name: data.playerInfo.playerName,
                                     // avatar: data.playerInfo.avatar,
-                                    globalRank: data.playerInfo.rank,
-                                    localRank: data.playerInfo.countryRank,
+                                    globalRank: data.playerInfo?.rank,
+                                    localRank: data.playerInfo?.countryRank,
                                     // country: data.playerInfo.country,
                                 };
                             }

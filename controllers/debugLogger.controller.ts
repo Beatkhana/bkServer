@@ -1,7 +1,6 @@
 const env = process.env.NODE_ENV || 'production';
 export class debugLogger {
 
-
     constructor() {
         this.setColors();
     }

@@ -283,7 +283,7 @@ export class tournaments {
         imgName = imgName.toLowerCase();
         imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
         // imgName = 
-        let savePath = this.env == 'development' ? '../app/src/assets/tournamentImages/' : __dirname + '/public/assets/tournamentImages/';
+        let savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname + '/public/assets/images/';
 
         let imgErr = false;
 

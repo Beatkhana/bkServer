@@ -1,6 +1,3 @@
-// import { User } from "../models/user.models";
-// import { mapPoolRouter } from "../routers/mapPool.router";
-// import database from "../services/db.service";
 import * as express from 'express';
 import { authRequest } from '../models/models';
 
@@ -34,7 +31,7 @@ export class authController extends controller {
         return user[0];
     }
 
-    private async getRoles() {
+    async getRoles() {
         if(this.userId != null) {
             let roleIds: any = await this.db.aQuery('SELECT roleId FROM roleassignment WHERE userId = ?', [this.userId]);
             roleIds = roleIds.map(x => +x.roleId);
