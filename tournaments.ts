@@ -312,8 +312,10 @@ export class tournaments {
                         .toBuffer()
 
                     // console.debug(savePath+data.id+'.webp');
+                    let hash = this.randHash(15);
                     await sharp(webpData)
-                        .toFile(savePath + result.insertId + '.webp');
+                        .toFile(savePath + `${result.insertId}_${hash}.webp`);
+                    await this.db.aQuery('UPDATE tournaments SET image = ? WHERE id = ?', [`${result.insertId}_${hash}.webp`, result.insertId]);
                     this.db.preparedQuery('INSERT INTO tournament_settings SET tournamentId = ?', [result.insertId], (err, result2: any) => {
                         let flag = false;
                         if (err) flag = true;
@@ -367,9 +369,10 @@ export class tournaments {
                 .resize({ width: 550 })
                 .webp({ lossless: true, quality: 50 })
                 .toBuffer()
+            let hash = this.randHash(15);
             await sharp(webpData)
-                .toFile(savePath + data.id + '.webp');
-            data.tournament.image = imgName;
+                .toFile(savePath + `${data.id}_${hash}.webp`);
+            data.tournament.image = `${data.id}_${hash}.webp`;
         }
 
         if (!imgErr) {
@@ -1514,5 +1517,15 @@ export class tournaments {
         }
 
         return array;
+    }
+
+    private randHash(length) {
+        var result = '';
+        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+        var charactersLength = characters.length;
+        for (var i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
     }
 }

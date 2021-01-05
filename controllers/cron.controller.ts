@@ -112,6 +112,7 @@ export class cronController extends controller {
                 if (ssData.playerInfo.badges.length > 0) {
                     for (const badge of ssData.playerInfo.badges) {
                         let imgName = badge.image.split('.')[0];
+                        if (['ranker', 'supporter'].includes(imgName)) continue;
                         if (!badgeLabels.includes(imgName)) {
                             // console.log(badge);
                             let info = await fetch(`https://new.scoresaber.com/api/static/badges/${badge.image}`);
