@@ -12,5 +12,6 @@ bracketRouter.put('/tournament/:tourneyId/bracket/setBestOf/:id', (req, res) => 
 bracketRouter.put('/tournament/:tourneyId/bracket/:matchId', (req, res) => bracketCon.updateBracket({ req: req, res: res }));
 
 bracketRouter.post('/tournament/:id/generateBracket', (req, res) => bracketCon.saveBracket(req, res));
+bracketRouter.post('/tournament/:id/overlay', (req, res) => bracketCon.saveOverlay(req, res));
 
 export { bracketRouter }

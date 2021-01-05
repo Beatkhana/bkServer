@@ -139,6 +139,7 @@ export class userController extends controller {
         INNER JOIN tournament_settings ts ON p.tournamentId = ts.tournamentId AND ts.public = 1
         WHERE p.userId = ?`, [id]);
         let user = userData2[0];
+        if (!user) return null;
         user.tournaments = tournaments.map(x => x.name);
         user.badges = badges;
         return user;

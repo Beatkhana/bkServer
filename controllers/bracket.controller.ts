@@ -4,6 +4,8 @@ import { authRequest } from "../models/models";
 import { bslMatch, match, tournamentSettings } from "../models/tournament.models";
 import { auth, authController } from "./auth.controller";
 import { controller } from "./controller";
+import sharp from 'sharp';
+const fs = require('fs');
 
 export class bracketController extends controller {
 
@@ -44,6 +46,29 @@ export class bracketController extends controller {
         if (!req.body.best_of) return this.clientError(res, "Please provide a valid best of value");
         try {
             await this.db.aQuery('UPDATE bracket SET best_of = ? WHERE id = ?', [req.body.best_of, req.params.id]);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+
+    async saveOverlay(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!(await auth.admin() || await auth.owner() || await auth.validKey())) return this.unauthorized(res);
+        if (!req.body.img) return this.clientError(res, "Please provide a valid best of value");
+        try {
+            console.log(req.body.img);
+            let savePath = this.env == 'development' ? '../app/src/assets/overlay/' : __dirname + '/public/assets/overlay/';
+            // let base64Img = req.body.img.split(';base64,').pop();
+            // const buf = await Buffer.from(base64Img, 'base64');
+            // const webpData = await sharp(buf)
+            //     .toFile(savePath+req.params.id+'.svg');
+
+            fs.writeFile(savePath+req.params.id+'.svg', req.body.img, function (err) {
+                if (err) return console.log(err);
+                // console.log('Hello World > helloworld.txt');
+              });
+            // await this.db.aQuery('UPDATE bracket SET best_of = ? WHERE id = ?', [req.body.best_of, req.params.id]);
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);
