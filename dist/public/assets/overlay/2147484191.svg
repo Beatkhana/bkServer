@@ -14,15 +14,15 @@
 	</style>
 	<use id="Winter_Cup Logo" href="#img1" transform="matrix(0.222,0,0,0.222,1169,1138)"/>
 	<g id="Caster">
-		<use id="Caster's Box" href="#img2" x="70" y="1166" />
-		<text id="Caster’s Box" style="transform: matrix(1.35,0,0,1.35,108,1181.445)" >
+		<use id="Caster's Box" href="#img2" x="70" y="1166"/>
+		<text id="Caster’s Box" style="transform: matrix(1.35,0,0,1.35,108,1181.445)">
 			<tspan x="0" y="0" class="txt0">Caster’s Box</tspan>
 		</text>
 	</g>
-	<text id="p1LiveScore" style="transform: matrix(1.778,0,0,1.722,671.852,1282.736)" >
+	<text id="p1LiveScore" style="transform: matrix(1.778,0,0,1.722,671.852,1282.736)">
 		<tspan x="0" y="0" class="txt1">1,353,616</tspan>
 	</text>
-	<text id="p2LiveScore" style="transform: matrix(1.778,0,0,1.722,1420.852,1282.736)" >
+	<text id="p2LiveScore" style="transform: matrix(1.778,0,0,1.722,1420.852,1282.736)">
 		<tspan x="0" y="0" class="txt2">1,353,616</tspan>
 	</text>
 	<g id="Wins/Loses_Left">
@@ -41,10 +41,10 @@
 		<use id="p2Score_2" href="#img5" transform="matrix(0.111,0,0,0.111,1490,87)"/>
 		<use id="p2Score_2" href="#img5" transform="matrix(0.111,0,0,0.111,1608,87)"/>
 	</g>
-	<text id="p1Name" style="transform: matrix(1.25,0,0,1.25,953,1122.513)" >
+	<text id="p1Name" style="transform: matrix(1.25,0,0,1.25,953,1122.513)">
 		<tspan x="0" y="0" class="txt0">PLAYER_NAME</tspan>
 	</text>
-	<text id="p2Name" style="transform: matrix(1.25,0,0,1.25,1299,1122.513)" >
+	<text id="p2Name" style="transform: matrix(1.25,0,0,1.25,1299,1122.513)">
 		<tspan x="0" y="0" class="txt0">PLAYER_NAME</tspan>
 	</text>
 </svg>
