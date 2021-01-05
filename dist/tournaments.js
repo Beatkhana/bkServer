@@ -252,98 +252,56 @@ var tournaments = /** @class */ (function () {
     };
     tournaments.prototype.save = function (data, callback) {
         return __awaiter(this, void 0, void 0, function () {
-            var base64String, base64Img, imgName, savePath, imgErr, buf, webpData, result;
+            var base64String, base64Img, imgName, savePath, imgErr, result;
             var _this = this;
             return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        base64String = data.image;
-                        base64Img = base64String.split(';base64,').pop();
-                        imgName = data.imgName;
-                        imgName = imgName.toLowerCase();
-                        imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
-                        savePath = this.env == 'development' ? '../app/src/assets/tournamentImages/' : __dirname + '/public/assets/tournamentImages/';
-                        imgErr = false;
-                        return [4 /*yield*/, Buffer.from(base64Img, 'base64')];
-                    case 1:
-                        buf = _a.sent();
-                        return [4 /*yield*/, sharp_1.default(buf)
-                                .resize({ width: 550 })
-                                .webp({ lossless: true, quality: 50 })
-                                .toBuffer()
-                                .then(function (buffer) {
-                                var params = {
-                                    Bucket: BUCKET_NAME,
-                                    Key: imgName,
-                                    Body: buffer,
-                                    ACL: 'public-read'
-                                };
-                                s3.upload(params, function (err, data) {
-                                    if (err) {
-                                        console.log(err);
-                                        imgErr = true;
-                                    }
-                                    console.log("File uploaded successfully. " + data.Location);
-                                });
-                            })
-                            // const fileContent = fs.readFileSync(savePath + imgName);
-                            // const params = {
-                            //     Bucket: BUCKET_NAME,
-                            //     Key: imgName, // File name you want to save as in S3
-                            //     Body: fileContent,
-                            //     ACL: 'public-read'
-                            // };
-                            // let s3Img = await new Promise<string>((resolve, reject) => {
-                            //     s3.upload(params, (err, data) => {
-                            //         if (err) {
-                            //             console.log(err)
-                            //             imgErr = true;
-                            //         }
-                            //         console.log(`File uploaded successfully. ${data.Location}`);
-                            //         resolve(data.Location);
-                            //     });
-                            // });
-                            // const s3Img = await 
-                        ];
-                    case 2:
-                        webpData = _a.sent();
-                        // const fileContent = fs.readFileSync(savePath + imgName);
-                        // const params = {
-                        //     Bucket: BUCKET_NAME,
-                        //     Key: imgName, // File name you want to save as in S3
-                        //     Body: fileContent,
-                        //     ACL: 'public-read'
-                        // };
-                        // let s3Img = await new Promise<string>((resolve, reject) => {
-                        //     s3.upload(params, (err, data) => {
-                        //         if (err) {
-                        //             console.log(err)
-                        //             imgErr = true;
-                        //         }
-                        //         console.log(`File uploaded successfully. ${data.Location}`);
-                        //         resolve(data.Location);
-                        //     });
-                        // });
-                        // const s3Img = await 
-                        if (!imgErr) {
-                            data.image = imgName;
-                            delete data.imgName;
-                            try {
-                                data.date = this.formatDate2(data.date);
-                                data.endDate = this.formatDate2(data.endDate);
-                            }
-                            catch (err) {
-                                return [2 /*return*/, callback({
-                                        flag: true,
-                                        err: err
-                                    })];
-                            }
-                            result = this.db.preparedQuery("INSERT INTO tournaments SET ?", [data], function (err, result) {
-                                var flag = false;
-                                if (err)
-                                    flag = true;
-                                if (!err) {
-                                    _this.db.preparedQuery('INSERT INTO tournament_settings SET tournamentId = ?', [result.insertId], function (err, result2) {
+                base64String = data.image;
+                base64Img = base64String.split(';base64,').pop();
+                imgName = data.imgName;
+                imgName = imgName.toLowerCase();
+                imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
+                savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname + '/public/assets/images/';
+                imgErr = false;
+                if (!imgErr) {
+                    data.image = imgName;
+                    delete data.imgName;
+                    try {
+                        data.date = this.formatDate2(data.date);
+                        data.endDate = this.formatDate2(data.endDate);
+                    }
+                    catch (err) {
+                        return [2 /*return*/, callback({
+                                flag: true,
+                                err: err
+                            })];
+                    }
+                    result = this.db.preparedQuery("INSERT INTO tournaments SET ?", [data], function (err, result) { return __awaiter(_this, void 0, void 0, function () {
+                        var flag, buf, webpData;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    flag = false;
+                                    if (err)
+                                        flag = true;
+                                    if (!!err) return [3 /*break*/, 4];
+                                    return [4 /*yield*/, Buffer.from(base64Img, 'base64')];
+                                case 1:
+                                    buf = _a.sent();
+                                    return [4 /*yield*/, sharp_1.default(buf)
+                                            .resize({ width: 550 })
+                                            .webp({ lossless: true, quality: 50 })
+                                            .toBuffer()
+                                        // console.debug(savePath+data.id+'.webp');
+                                    ];
+                                case 2:
+                                    webpData = _a.sent();
+                                    // console.debug(savePath+data.id+'.webp');
+                                    return [4 /*yield*/, sharp_1.default(webpData)
+                                            .toFile(savePath + result.insertId + '.webp')];
+                                case 3:
+                                    // console.debug(savePath+data.id+'.webp');
+                                    _a.sent();
+                                    this.db.preparedQuery('INSERT INTO tournament_settings SET tournamentId = ?', [result.insertId], function (err, result2) {
                                         var flag = false;
                                         if (err)
                                             flag = true;
@@ -353,18 +311,18 @@ var tournaments = /** @class */ (function () {
                                             err: err
                                         });
                                     });
-                                }
-                                else {
-                                    return callback({
+                                    return [3 /*break*/, 5];
+                                case 4: return [2 /*return*/, callback({
                                         data: result,
                                         flag: flag,
                                         err: err
-                                    });
-                                }
-                            });
-                        }
-                        return [2 /*return*/];
+                                    })];
+                                case 5: return [2 /*return*/];
+                            }
+                        });
+                    }); });
                 }
+                return [2 /*return*/];
             });
         });
     };
@@ -388,116 +346,30 @@ var tournaments = /** @class */ (function () {
                     case 0:
                         imgErr = false;
                         imgName = data.tournament.image;
-                        if (!this.isBase64(data.tournament.image)) return [3 /*break*/, 3];
+                        if (!this.isBase64(data.tournament.image)) return [3 /*break*/, 4];
                         base64String = data.tournament.image;
                         base64Img = base64String.split(';base64,').pop();
                         imgName = data.tournament.imgName;
                         imgName = imgName.toLowerCase();
                         imgName = imgName.replace(/\s/g, "");
                         imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
-                        savePath = this.env == 'development' ? '../app/src/assets/tournamentImages/' : __dirname + '/public/assets/tournamentImages/';
+                        savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname + '/public/assets/images/';
                         return [4 /*yield*/, Buffer.from(base64Img, 'base64')];
                     case 1:
                         buf = _a.sent();
                         return [4 /*yield*/, sharp_1.default(buf)
                                 .resize({ width: 550 })
                                 .webp({ lossless: true, quality: 50 })
-                                .toBuffer()
-                                .then(function (buffer) {
-                                var params = {
-                                    Bucket: BUCKET_NAME,
-                                    Key: imgName,
-                                    Body: buffer,
-                                    ACL: 'public-read'
-                                };
-                                s3.upload(params, function (err, data) {
-                                    if (err) {
-                                        console.log(err);
-                                        imgErr = true;
-                                    }
-                                    console.log("File uploaded successfully. " + data.Location);
-                                });
-                            })
-                            // await sharp(webpData)
-                            //     .toFile(savePath + imgName)
-                            //     // .then(info => { console.log(info) })
-                            //     .catch(err => {
-                            //         imgErr = true;
-                            //         return callback({
-                            //             flag: true,
-                            //             err: err
-                            //         });
-                            //     });
-                            // await sharp(webpData)
-                            //     .toFile(savePath + imgName)
-                            //     .catch(err => {
-                            //         imgErr = true;
-                            //         return callback({
-                            //             flag: true,
-                            //             err: err
-                            //         });
-                            //     });
-                            // const fileContent = fs.readFileSync(savePath + imgName);
-                            // const params = {
-                            //     Bucket: BUCKET_NAME,
-                            //     Key: imgName, // File name you want to save as in S3
-                            //     Body: fileContent,
-                            //     ACL: 'public-read'
-                            // };
-                            // let s3Img = await new Promise<string>((resolve, reject) => {
-                            //     s3.upload(params, (err, data) => {
-                            //         if (err) {
-                            //             console.log(err)
-                            //             imgErr = true;
-                            //         }
-                            //         console.log(`File uploaded successfully. ${data.Location}`);
-                            //         resolve(data.Location);
-                            //     });
-                            // });
-                            // console.log(location);
-                        ];
+                                .toBuffer()];
                     case 2:
                         webpData = _a.sent();
-                        // await sharp(webpData)
-                        //     .toFile(savePath + imgName)
-                        //     // .then(info => { console.log(info) })
-                        //     .catch(err => {
-                        //         imgErr = true;
-                        //         return callback({
-                        //             flag: true,
-                        //             err: err
-                        //         });
-                        //     });
-                        // await sharp(webpData)
-                        //     .toFile(savePath + imgName)
-                        //     .catch(err => {
-                        //         imgErr = true;
-                        //         return callback({
-                        //             flag: true,
-                        //             err: err
-                        //         });
-                        //     });
-                        // const fileContent = fs.readFileSync(savePath + imgName);
-                        // const params = {
-                        //     Bucket: BUCKET_NAME,
-                        //     Key: imgName, // File name you want to save as in S3
-                        //     Body: fileContent,
-                        //     ACL: 'public-read'
-                        // };
-                        // let s3Img = await new Promise<string>((resolve, reject) => {
-                        //     s3.upload(params, (err, data) => {
-                        //         if (err) {
-                        //             console.log(err)
-                        //             imgErr = true;
-                        //         }
-                        //         console.log(`File uploaded successfully. ${data.Location}`);
-                        //         resolve(data.Location);
-                        //     });
-                        // });
-                        // console.log(location);
-                        data.tournament.image = imgName;
-                        _a.label = 3;
+                        return [4 /*yield*/, sharp_1.default(webpData)
+                                .toFile(savePath + data.id + '.webp')];
                     case 3:
+                        _a.sent();
+                        data.tournament.image = imgName;
+                        _a.label = 4;
+                    case 4:
                         if (!imgErr) {
                             delete data.tournament.imgName;
                             try {

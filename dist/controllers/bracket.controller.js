@@ -107,18 +107,18 @@ var bracketController = /** @class */ (function (_super) {
                 switch (_c.label) {
                     case 0:
                         auth = new auth_controller_1.authController(req);
-                        return [4 /*yield*/, auth.admin];
+                        return [4 /*yield*/, auth.admin()];
                     case 1:
                         _b = (_c.sent());
                         if (_b) return [3 /*break*/, 3];
-                        return [4 /*yield*/, auth.owner];
+                        return [4 /*yield*/, auth.owner()];
                     case 2:
                         _b = (_c.sent());
                         _c.label = 3;
                     case 3:
                         _a = _b;
                         if (_a) return [3 /*break*/, 5];
-                        return [4 /*yield*/, auth.validKey];
+                        return [4 /*yield*/, auth.validKey()];
                     case 4:
                         _a = (_c.sent());
                         _c.label = 5;
@@ -142,28 +142,70 @@ var bracketController = /** @class */ (function (_super) {
             });
         });
     };
+    bracketController.prototype.setBestOf = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var auth, _a, _b, error_2;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        auth = new auth_controller_1.authController(req);
+                        return [4 /*yield*/, auth.admin()];
+                    case 1:
+                        _b = (_c.sent());
+                        if (_b) return [3 /*break*/, 3];
+                        return [4 /*yield*/, auth.owner()];
+                    case 2:
+                        _b = (_c.sent());
+                        _c.label = 3;
+                    case 3:
+                        _a = _b;
+                        if (_a) return [3 /*break*/, 5];
+                        return [4 /*yield*/, auth.validKey()];
+                    case 4:
+                        _a = (_c.sent());
+                        _c.label = 5;
+                    case 5:
+                        if (!(_a))
+                            return [2 /*return*/, this.unauthorized(res)];
+                        if (!req.body.best_of)
+                            return [2 /*return*/, this.clientError(res, "Please provide a valid best of value")];
+                        _c.label = 6;
+                    case 6:
+                        _c.trys.push([6, 8, , 9]);
+                        return [4 /*yield*/, this.db.aQuery('UPDATE bracket SET best_of = ? WHERE id = ?', [req.body.best_of, req.params.id])];
+                    case 7:
+                        _c.sent();
+                        return [2 /*return*/, this.ok(res)];
+                    case 8:
+                        error_2 = _c.sent();
+                        return [2 /*return*/, this.fail(res, error_2)];
+                    case 9: return [2 /*return*/];
+                }
+            });
+        });
+    };
     bracketController.prototype.saveBracket = function (req, res) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var auth, id, data, _c, _d, matches, tempMatches, _i, tempMatches_1, match, tempMatches, _e, tempMatches_2, match, tempMatches, _f, tempMatches_3, match, sqlMatches, _g, matches_1, match, error_2;
+            var auth, id, data, _c, _d, matches, tempMatches, _i, tempMatches_1, match, tempMatches, _e, tempMatches_2, match, tempMatches, _f, tempMatches_3, match, sqlMatches, _g, matches_1, match, error_3;
             return __generator(this, function (_h) {
                 switch (_h.label) {
                     case 0:
                         auth = new auth_controller_1.authController(req);
                         id = req.params.id;
                         data = req.body;
-                        return [4 /*yield*/, auth.admin];
+                        return [4 /*yield*/, auth.admin()];
                     case 1:
                         _d = (_h.sent());
                         if (_d) return [3 /*break*/, 3];
-                        return [4 /*yield*/, auth.owner];
+                        return [4 /*yield*/, auth.owner()];
                     case 2:
                         _d = (_h.sent());
                         _h.label = 3;
                     case 3:
                         _c = _d;
                         if (_c) return [3 /*break*/, 5];
-                        return [4 /*yield*/, auth.validKey];
+                        return [4 /*yield*/, auth.validKey()];
                     case 4:
                         _c = (_h.sent());
                         _h.label = 5;
@@ -237,8 +279,8 @@ var bracketController = /** @class */ (function (_super) {
                         _h.sent();
                         return [3 /*break*/, 16];
                     case 15:
-                        error_2 = _h.sent();
-                        return [2 /*return*/, this.fail(res, error_2)];
+                        error_3 = _h.sent();
+                        return [2 /*return*/, this.fail(res, error_3)];
                     case 16: return [2 /*return*/, this.ok(res)];
                 }
             });
@@ -246,7 +288,7 @@ var bracketController = /** @class */ (function (_super) {
     };
     bracketController.prototype.generateBracket = function (id, players, users) {
         return __awaiter(this, void 0, void 0, function () {
-            var settings, rand, participants, i, _i, participants_1, participant, matches;
+            var settings, rand, participants, temp, i, _i, participants_1, participant, matches;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.getSettings(id)];
@@ -277,8 +319,8 @@ var bracketController = /** @class */ (function (_super) {
                                 console.error(err);
                             })];
                     case 5:
-                        participants = _a.sent();
-                        console.log(participants);
+                        temp = _a.sent();
+                        participants = this.mapOrder(temp, users, "discordId");
                         _a.label = 6;
                     case 6:
                         if (rand) {
@@ -430,7 +472,7 @@ var bracketController = /** @class */ (function (_super) {
                             p1Country: '',
                             p2Country: '',
                             p1Avatar: p1Avatar,
-                            p2Avatar: p2Avatar,
+                            p2Avatar: p2Avatar
                         };
                         matches.push(temp);
                     };
@@ -548,7 +590,7 @@ var bracketController = /** @class */ (function (_super) {
     };
     bracketController.prototype.updateBracket = function (args) {
         return __awaiter(this, void 0, void 0, function () {
-            var req, res, auth, id, data, isAuth, _a, _b, error_3, tmpMatch, error_4, settings, bracket, thisMatch, winner, loser, winnersRound_1, maxRound, winnersMatch_1, playerIdentifier, nextMatch, tmpMatch_1, error_5, tmpMatch_2, winnersRound_2, maxRound, winnersMatch_2, winnerIdentifier, nextMatch, tmpMatch_3, error_6, loserRound_1, loserMatch_1, loserIdentifier, loserNextMatch, tmpMatch_4, error_7, winnersMatch_3, nextMatch, tmpMatch_5, error_8, winnersMatch_4, nextMatch, tmpMatch_6, error_9, winnersRound_3, minRound, maxRound, winnersMatch_5, winnerIdentifier, nextMatch, error_10, tmpMatch_7, tmpMatch;
+            var req, res, auth, id, data, isAuth, _a, _b, error_4, tmpMatch, error_5, settings, bracket, thisMatch, winner, loser, winnersRound_1, maxRound, winnersMatch_1, playerIdentifier, nextMatch, tmpMatch_1, error_6, tmpMatch_2, winnersRound_2, maxRound, winnersMatch_2, winnerIdentifier, nextMatch, tmpMatch_3, error_7, loserRound_1, loserMatch_1, loserIdentifier, loserNextMatch, tmpMatch_4, error_8, winnersMatch_3, nextMatch, tmpMatch_5, error_9, winnersMatch_4, nextMatch, tmpMatch_6, error_10, winnersRound_3, minRound, maxRound, winnersMatch_5, winnerIdentifier, nextMatch, error_11, tmpMatch_7, tmpMatch;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -583,8 +625,8 @@ var bracketController = /** @class */ (function (_super) {
                         _c.sent();
                         return [3 /*break*/, 9];
                     case 8:
-                        error_3 = _c.sent();
-                        return [2 /*return*/, this.fail(res, error_3)];
+                        error_4 = _c.sent();
+                        return [2 /*return*/, this.fail(res, error_4)];
                     case 9: return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, data.matchId)];
                     case 10:
                         tmpMatch = _c.sent();
@@ -600,8 +642,8 @@ var bracketController = /** @class */ (function (_super) {
                         _c.sent();
                         return [3 /*break*/, 15];
                     case 14:
-                        error_4 = _c.sent();
-                        return [2 /*return*/, this.fail(res, error_4)];
+                        error_5 = _c.sent();
+                        return [2 /*return*/, this.fail(res, error_5)];
                     case 15: return [4 /*yield*/, this.getSettings(id)];
                     case 16:
                         settings = _c.sent();
@@ -638,8 +680,8 @@ var bracketController = /** @class */ (function (_super) {
                         this.emitter.emit('bracketMatch', tmpMatch_1);
                         return [3 /*break*/, 22];
                     case 21:
-                        error_5 = _c.sent();
-                        return [2 /*return*/, this.fail(res, error_5)];
+                        error_6 = _c.sent();
+                        return [2 /*return*/, this.fail(res, error_6)];
                     case 22: return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, data.matchId)];
                     case 23:
                         tmpMatch_2 = _c.sent();
@@ -666,8 +708,8 @@ var bracketController = /** @class */ (function (_super) {
                         this.emitter.emit('bracketMatch', tmpMatch_3);
                         return [3 /*break*/, 29];
                     case 28:
-                        error_6 = _c.sent();
-                        return [2 /*return*/, this.fail(res, error_6)];
+                        error_7 = _c.sent();
+                        return [2 /*return*/, this.fail(res, error_7)];
                     case 29:
                         loserRound_1 = -1;
                         loserMatch_1 = Math.floor(thisMatch.matchNum / 2);
@@ -698,8 +740,8 @@ var bracketController = /** @class */ (function (_super) {
                         this.emitter.emit('bracketMatch', tmpMatch_4);
                         return [3 /*break*/, 34];
                     case 33:
-                        error_7 = _c.sent();
-                        return [2 /*return*/, this.fail(res, error_7)];
+                        error_8 = _c.sent();
+                        return [2 /*return*/, this.fail(res, error_8)];
                     case 34: return [3 /*break*/, 46];
                     case 35:
                         if (!(winnersRound_2 == maxRound && data.p1Score < data.p2Score)) return [3 /*break*/, 41];
@@ -717,8 +759,8 @@ var bracketController = /** @class */ (function (_super) {
                         this.emitter.emit('bracketMatch', tmpMatch_5);
                         return [3 /*break*/, 40];
                     case 39:
-                        error_8 = _c.sent();
-                        return [2 /*return*/, this.fail(res, error_8)];
+                        error_9 = _c.sent();
+                        return [2 /*return*/, this.fail(res, error_9)];
                     case 40: return [3 /*break*/, 46];
                     case 41:
                         if (!(winnersRound_2 == maxRound && data.p1Score > data.p2Score)) return [3 /*break*/, 46];
@@ -736,8 +778,8 @@ var bracketController = /** @class */ (function (_super) {
                         this.emitter.emit('bracketMatch', tmpMatch_6);
                         return [3 /*break*/, 46];
                     case 45:
-                        error_9 = _c.sent();
-                        return [2 /*return*/, this.fail(res, error_9)];
+                        error_10 = _c.sent();
+                        return [2 /*return*/, this.fail(res, error_10)];
                     case 46: return [3 /*break*/, 53];
                     case 47:
                         if (!(thisMatch.round < 0)) return [3 /*break*/, 53];
@@ -765,8 +807,8 @@ var bracketController = /** @class */ (function (_super) {
                         _c.sent();
                         return [3 /*break*/, 51];
                     case 50:
-                        error_10 = _c.sent();
-                        return [2 /*return*/, this.fail(res, error_10)];
+                        error_11 = _c.sent();
+                        return [2 /*return*/, this.fail(res, error_11)];
                     case 51: return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, data.matchId)];
                     case 52:
                         tmpMatch_7 = _c.sent();
@@ -825,7 +867,8 @@ var bracketController = /** @class */ (function (_super) {
                                 },
                                 round: row.round,
                                 bye: row.bye,
-                                time: row.time
+                                time: row.time,
+                                best_of: row.best_of
                             };
                             matches.push(match);
                         }
@@ -839,7 +882,7 @@ var bracketController = /** @class */ (function (_super) {
             var bracketData;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.db.aQuery("SELECT bracket.*,\n        u1.globalRank as p1Rank,\n        u2.globalRank as p2Rank,\n        u1.name as p1Name,\n        u2.name as p2Name,\n        u1.country as p1Country,\n        u2.country as p2Country,\n        u1.avatar as p1Avatar,\n        u2.avatar as p2Avatar,\n        u1.twitchName as p1Twitch,\n        u2.twitchName as p2Twitch,\n        par1.seed as p1Seed,\n        par2.seed as p2Seed\n        \n        FROM bracket\n        LEFT JOIN users u1 ON bracket.p1 = u1.discordId\n        LEFT JOIN users u2 ON bracket.p2 = u2.discordId\n        LEFT JOIN participants par1 ON (u1.discordId = par1.userId AND bracket.tournamentId = par1.tournamentId)\n        LEFT JOIN participants par2 ON (u2.discordId = par2.userId AND bracket.tournamentId = par2.tournamentId)\n        WHERE bracket.tournamentId = ? ", [id])];
+                    case 0: return [4 /*yield*/, this.db.aQuery("SELECT bracket.*,\n        u1.globalRank as p1Rank,\n        u2.globalRank as p2Rank,\n        u1.ssId as p1ssId,\n        u2.ssId as p2ssId,\n        u1.name as p1Name,\n        u2.name as p2Name,\n        u1.country as p1Country,\n        u2.country as p2Country,\n        u1.avatar as p1Avatar,\n        u2.avatar as p2Avatar,\n        u1.twitchName as p1Twitch,\n        u2.twitchName as p2Twitch,\n        par1.seed as p1Seed,\n        par2.seed as p2Seed\n        \n        FROM bracket\n        LEFT JOIN users u1 ON bracket.p1 = u1.discordId\n        LEFT JOIN users u2 ON bracket.p2 = u2.discordId\n        LEFT JOIN participants par1 ON (u1.discordId = par1.userId AND bracket.tournamentId = par1.tournamentId)\n        LEFT JOIN participants par2 ON (u2.discordId = par2.userId AND bracket.tournamentId = par2.tournamentId)\n        WHERE bracket.tournamentId = ? ", [id])];
                     case 1:
                         bracketData = _a.sent();
                         return [2 /*return*/, bracketData];
@@ -853,7 +896,7 @@ var bracketController = /** @class */ (function (_super) {
             var matchData, row, match;
             return __generator(this, function (_c) {
                 switch (_c.label) {
-                    case 0: return [4 /*yield*/, this.db.aQuery("SELECT bracket.*,\n        u1.globalRank as p1GlobalRank,\n        u2.globalRank as p2GlobalRank,\n        u1.name as p1Name,\n        u2.name as p2Name,\n        u1.country as p1Country,\n        u2.country as p2Country,\n        u1.avatar as p1Avatar,\n        u2.avatar as p2Avatar,\n        u1.twitchName as p1Twitch,\n        u2.twitchName as p2Twitch,\n        par1.seed as p1Seed,\n        par2.seed as p2Seed\n        \n        FROM bracket\n        LEFT JOIN users u1 ON bracket.p1 = u1.discordId\n        LEFT JOIN users u2 ON bracket.p2 = u2.discordId\n        LEFT JOIN participants par1 ON (u1.discordId = par1.userId AND bracket.tournamentId = par1.tournamentId)\n        LEFT JOIN participants par2 ON (u2.discordId = par2.userId AND bracket.tournamentId = par2.tournamentId)\n        WHERE bracket.id = ? AND bracket.tournamentId = ?", [matchId, tourneyId])];
+                    case 0: return [4 /*yield*/, this.db.aQuery("SELECT bracket.*,\n        u1.globalRank as p1GlobalRank,\n        u2.globalRank as p2GlobalRank,\n        u1.ssId as p1ssId,\n        u2.ssId as p2ssId,\n        u1.name as p1Name,\n        u2.name as p2Name,\n        u1.country as p1Country,\n        u2.country as p2Country,\n        u1.avatar as p1Avatar,\n        u2.avatar as p2Avatar,\n        u1.twitchName as p1Twitch,\n        u2.twitchName as p2Twitch,\n        par1.seed as p1Seed,\n        par2.seed as p2Seed\n        \n        FROM bracket\n        LEFT JOIN users u1 ON bracket.p1 = u1.discordId\n        LEFT JOIN users u2 ON bracket.p2 = u2.discordId\n        LEFT JOIN participants par1 ON (u1.discordId = par1.userId AND bracket.tournamentId = par1.tournamentId)\n        LEFT JOIN participants par2 ON (u2.discordId = par2.userId AND bracket.tournamentId = par2.tournamentId)\n        WHERE bracket.id = ? AND bracket.tournamentId = ?", [matchId, tourneyId])];
                     case 1:
                         matchData = _c.sent();
                         if (matchData.length < 1)
@@ -890,7 +933,8 @@ var bracketController = /** @class */ (function (_super) {
                             },
                             round: row.round,
                             bye: row.bye,
-                            time: row.time
+                            time: row.time,
+                            best_of: row.best_of
                         };
                         return [2 /*return*/, match];
                 }
@@ -926,6 +970,19 @@ var bracketController = /** @class */ (function (_super) {
         }
         return array;
     };
+    bracketController.prototype.mapOrder = function (array, order, key) {
+        array.sort(function (a, b) {
+            var A = a[key], B = b[key];
+            if (order.indexOf(A) > order.indexOf(B)) {
+                return 1;
+            }
+            else {
+                return -1;
+            }
+        });
+        return array;
+    };
+    ;
     __decorate([
         auth_controller_1.auth()
     ], bracketController.prototype, "getBracket", null);

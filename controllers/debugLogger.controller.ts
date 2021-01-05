@@ -22,12 +22,12 @@ export class debugLogger {
             error.apply(console, args);
         };
 
-        const log = console.log;
+        // const log = console.log;
 
-        console.log = function () {
-            let args: [any, ...any[]] = ['[LOG]', ...Array.from(arguments)];
-            log.apply(console, args);
-        };
+        // console.log = function () {
+        //     let args: [any, ...any[]] = ['[LOG]', ...Array.from(arguments)];
+        //     log.apply(console, args);
+        // };
 
         const info = console.info;
 

@@ -43,6 +43,8 @@ var controller = /** @class */ (function () {
     function controller() {
         this.env = process.env.NODE_ENV || 'production';
         this.db = new database_1.database();
+        this.CLIENT_ID = '721696709331386398';
+        this.CLIENT_SECRET = 'LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6';
         this.emitter = event_controller_1.emitter;
     }
     controller.prototype.getSettings = function (id) {
@@ -95,7 +97,7 @@ var controller = /** @class */ (function () {
         return controller.jsonResponse(res, 400, 'TODO');
     };
     controller.prototype.fail = function (res, error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({
             message: error.toString()
         });

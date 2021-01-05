@@ -1,7 +1,10 @@
 import * as cron from 'node-cron';
-import { User } from '../models/user.model';
+import { ssResponse } from '../models/scoresaber.model';
+import { badge, User } from '../models/user.model';
 import { controller } from './controller';
 import { userController } from './user.controller';
+import sharp from 'sharp';
+import { AnyLengthString } from 'aws-sdk/clients/comprehendmedical';
 
 const FormData = require('form-data');
 const fetch = require('node-fetch');
@@ -69,7 +72,7 @@ export class cronController extends controller {
                         // throw error;
                     });
                 // console.log(response)
-                if(response?.username != null) {
+                if (response?.username != null) {
                     try {
                         updated++;
                         await this.db.aQuery('UPDATE users SET name = ?, avatar = ?, refresh_token = ? WHERE discordId = ?', [response.username, response.avatar, refresh_token, user.discordId]);
@@ -85,11 +88,16 @@ export class cronController extends controller {
 
     private async updateUsersSS() {
         const users: User[] = await this.db.aQuery('SELECT * FROM users');
+        let curBadges: badge[] = await this.db.aQuery(`SELECT * FROM badges`);
+        let badgeAssignment = await this.db.aQuery(`SELECT * FROM badge_assignment`);
+        let badgeLabels = curBadges.map(x => x.image);
         let updated = 0;
+        // let ssData: ssResponse = await userController.getSSData("76561198333869741");
+
         for (const user of users) {
-            let ssData: any = await userController.getSSData(user.ssId);
+            let ssData: ssResponse = await userController.getSSData(user.ssId);
             // console.log(ssData)
-            if(ssData != null && ssData.playerInfo.banned != 1) {
+            if (ssData != null && ssData?.playerInfo?.banned != 1) {
                 let info = {
                     globalRank: ssData.playerInfo.rank,
                     localRank: ssData.playerInfo.countryRank
@@ -100,6 +108,48 @@ export class cronController extends controller {
                 } catch (error) {
                     console.error(error);
                     // throw error;
+                }
+                if (ssData.playerInfo.badges.length > 0) {
+                    for (const badge of ssData.playerInfo.badges) {
+                        let imgName = badge.image.split('.')[0];
+                        if (!badgeLabels.includes(imgName)) {
+                            // console.log(badge);
+                            let info = await fetch(`https://new.scoresaber.com/api/static/badges/${badge.image}`);
+                            let buff = await info.buffer();
+                            let savePath = this.env == 'development' ? '../app/src/assets/badges/' : __dirname + '/public/assets/badges/';
+                            const webpData = await sharp(buff)
+                                .resize({ width: 80, height: 30 })
+                                .png()
+                                .toBuffer();
+
+                            await sharp(webpData)
+                                .toFile(savePath + imgName + '.png');
+                            try {
+                                let result: any = await this.db.aQuery(`INSERT INTO badges (image, description) VALUES (?)`, [[imgName, badge.description]]);
+                                curBadges.push({
+                                    id: result.insertId,
+                                    image: imgName,
+                                    description: badge.description
+                                });
+                                badgeLabels.push(imgName);
+                            } catch (error) {
+                                console.error(error);
+                            }
+                        }
+                        let curBadge = curBadges.find(x => x.image == imgName);
+                        if (!badgeAssignment.find(x => x.badgeId == curBadge.id)) {
+                            try {
+                                let result: any = await this.db.aQuery(`INSERT INTO badge_assignment (badgeId, userId) VALUES (?)`, [[curBadge.id,user.discordId]]);
+                                badgeAssignment.push({
+                                    id: result.insertId,
+                                    badgeId: curBadge.id,
+                                    userId: user.discordId
+                                });
+                            } catch (error) {
+                                console.log(error);
+                            }
+                        }
+                    }
                 }
             }
         }

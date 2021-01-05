@@ -48,33 +48,17 @@ var database = /** @class */ (function () {
         var env = process.env.NODE_ENV || 'production';
         // console.log(env);
         if (env == 'production') {
-            // this.con = mysql.createPool({
-            //     host: "us-cdbr-east-02.cleardb.com",
-            //     user: "bdaa6c4e2efd54",
-            //     password: "f84071f4",
-            //     database: "heroku_da687e9a34aa489",
-            //     connectionLimit: 10,
-            //     charset: 'utf8mb4',
-            //     timezone: 'utc'
-            // });
             this.con = mysql_1.default.createPool({
-                host: "213.190.6.106",
-                user: "u826845424_bkLive",
-                password: "5%Gy88OoPje5",
-                database: "u826845424_bkLive",
+                host: "localhost",
+                user: "dan",
+                password: "root",
+                database: "bk",
                 connectionLimit: 10,
                 charset: 'utf8mb4',
                 timezone: 'utc'
             });
         }
         else {
-            // this.con = mysql.createPool({
-            //     host: "us-cdbr-east-05.cleardb.net",
-            //     user: "bf459e897fa39a",
-            //     password: "88303776",
-            //     database: "heroku_11100f74419df40",
-            //     connectionLimit: 10
-            // });
             this.con = mysql_1.default.createPool({
                 host: "localhost",
                 user: "dan",
@@ -84,15 +68,6 @@ var database = /** @class */ (function () {
                 charset: 'utf8mb4',
                 timezone: 'utc'
             });
-            // this.con = mysql.createPool({
-            //     host: "213.190.6.106",
-            //     user: "u826845424_bkLive",
-            //     password: "5%Gy88OoPje5",
-            //     database: "u826845424_bkLive",
-            //     connectionLimit: 10,
-            //     charset: 'utf8mb4',
-            //     timezone: 'utc'
-            // });
         }
     }
     database.prototype.query = function (sql, callback) {

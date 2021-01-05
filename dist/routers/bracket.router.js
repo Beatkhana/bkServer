@@ -9,5 +9,6 @@ var bracketCon = new bracket_controller_1.bracketController();
 bracketRouter.get('/tournament/:id/bracket', function (req, res) { return bracketCon.getBracket({ req: req, res: res }); });
 bracketRouter.get('/tournament/:tourneyId/bracket/:matchId', function (req, res) { return bracketCon.getBracketMatch({ req: req, res: res }); });
 bracketRouter.put('/tournament/:tourneyId/bracket/schedule/:id', function (req, res) { return bracketCon.scheduleMatch(req, res); });
+bracketRouter.put('/tournament/:tourneyId/bracket/setBestOf/:id', function (req, res) { return bracketCon.setBestOf(req, res); });
 bracketRouter.put('/tournament/:tourneyId/bracket/:matchId', function (req, res) { return bracketCon.updateBracket({ req: req, res: res }); });
 bracketRouter.post('/tournament/:id/generateBracket', function (req, res) { return bracketCon.saveBracket(req, res); });

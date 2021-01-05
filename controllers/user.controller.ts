@@ -2,9 +2,34 @@ import { controller } from "./controller";
 import express from "express";
 import { authController } from "./auth.controller";
 import sharp from 'sharp';
+import { User, userAPI } from "../models/user.model";
 const fetch = require('node-fetch');
 
 export class userController extends controller {
+
+    async getUser(req: express.Request, res: express.Response) {
+        if(!req.params.id) return this.clientError(res, "No Id provided");
+        let user = await this.userById(req.params.id);
+        return res.send(user);
+    }
+
+    async updateUserBadges(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!(await auth.admin() || await auth.staff())) return this.unauthorized(res);
+        if (!req.params.id) return this.clientError(res, "No user ID provided");
+        if (!req.body) return this.clientError(res, 'Invalid request');
+        try {
+            await this.db.aQuery('DELETE FROM badge_assignment WHERE userId = ?', [req.params.id]);
+            if (req.body.length > 0) {
+                let insetData = req.body.map(x => [x, req.params.id]);
+                await this.db.aQuery(`INSERT INTO badge_assignment (badgeId, userId) VALUES ?`, [insetData]);
+            }
+            // console.log(insetData);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res,error);
+        }
+    }
 
     async createBadge(req: express.Request, res: express.Response) {
         let auth = new authController(req);
@@ -91,8 +116,36 @@ export class userController extends controller {
         }
     }
 
+    private async userById(id): Promise<userAPI> {
+        let userData2 = await this.db.aQuery(`SELECT 
+            u.discordId, 
+            u.ssId, 
+            u.name, 
+            u.twitchName, 
+            u.avatar, 
+            u.globalRank, 
+            u.localRank, 
+            u.country, 
+            u.tourneyRank, 
+            u.TR, 
+            u.pronoun
+        FROM users u
+        WHERE u.discordId = ?`, [id]);
+        let badges = await this.db.aQuery(`SELECT b.* FROM badges b
+        LEFT JOIN badge_assignment ba ON ba.badgeId = b.id
+        WHERE ba.userId = ?`, [id]);
+        let tournaments = await this.db.aQuery(`SELECT t.name FROM participants p 
+        INNER JOIN tournaments t ON p.tournamentId = t.id
+        INNER JOIN tournament_settings ts ON p.tournamentId = ts.tournamentId AND ts.public = 1
+        WHERE p.userId = ?`, [id]);
+        let user = userData2[0];
+        user.tournaments = tournaments.map(x => x.name);
+        user.badges = badges;
+        return user;
+    }
+
     static async getSSData(id: string) {
-        const response = await fetch(`https://new.scoresaber.com/api/player/${id}/basic`);
+        const response = await fetch(`https://new.scoresaber.com/api/player/${id}/full`);
         try {
             return await response.json();
         } catch (error) {

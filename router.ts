@@ -136,11 +136,11 @@ router.get(baseUrl + '/user/by-ss/:id', function (req, res) {
     })
 });
 
-router.get(baseUrl + '/user/:id', function (req, res) {
-    ranking.getUser(req.params.id, (result: any) => {
-        res.send(result);
-    })
-});
+// router.get(baseUrl + '/user/:id', function (req, res) {
+//     ranking.getUser(req.params.id, (result: any) => {
+//         res.send(result);
+//     })
+// });
 
 // logout
 router.get(baseUrl + '/logout', function (req, res) {

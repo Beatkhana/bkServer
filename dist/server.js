@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = __importDefault(require("express"));
+var cron_controller_1 = require("./controllers/cron.controller");
 var debugLogger_controller_1 = require("./controllers/debugLogger.controller");
 var event_controller_1 = require("./controllers/event.controller");
 var router = require('./router');
@@ -13,12 +14,14 @@ var compression = require('compression');
 var session = require('express-session');
 var MemoryStore = require('memorystore')(session);
 var cron = require('node-cron');
-// const cronJobs = require('./crons')
-var crons_1 = require("./crons");
 var bracket_router_1 = require("./routers/bracket.router");
 var tournamentList_router_1 = require("./routers/tournamentList.router");
+var user_router_1 = require("./routers/user.router");
 new debugLogger_controller_1.debugLogger();
+var validHosts = ['localhost', 'bk.dannypoke03.me', 'beatkhana.com'];
 app.use(function (req, res, next) {
+    if (!validHosts.includes(req.get("host").split(':')[0]))
+        return res.sendStatus(404);
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     res.header('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
@@ -26,7 +29,8 @@ app.use(function (req, res, next) {
         res.sendStatus(200);
     }
     else {
-        console.debug(req.method + " " + req.url);
+        if (env != 'production')
+            console.debug(req.method + " " + req.url);
         next();
     }
 });
@@ -61,10 +65,12 @@ app.use(function (err, req, res, next) {
 });
 app.use('/api', bracket_router_1.bracketRouter);
 app.use('/api', tournamentList_router_1.tournamentListRouter);
+app.use('/api', user_router_1.userRouter);
 app.use('/', router);
 var env = process.env.NODE_ENV || 'production';
 var mainDir = env == 'development' ? 'dist/public' : 'public';
 var assetDir = env == 'development' ? 'dist/public/assets' : 'public/assets';
+app.use('/assets/images', express_1.default.static(path.join(__dirname, assetDir + '/images'), { maxAge: "4h" }));
 app.use('/assets', express_1.default.static(path.join(__dirname, assetDir), { maxAge: "30d" }));
 app.use(express_1.default.static(path.join(__dirname, mainDir)));
 app.get('*', function (req, res) {
@@ -86,11 +92,13 @@ server.on('upgrade', function (request, socket, head) {
 //     console.log('Running in ' + env + ' mode')
 // });
 // Crons???
-cron.schedule("0 * * * *", function () {
-    console.log("Running Cron: Update users");
-    crons_1.crons.updateSSData();
-});
-cron.schedule("*/5 * * * *", function () {
-    console.log("Running Cron: Discord users update");
-    crons_1.crons.updateUsersDiscord();
-});
+var cronCon = new cron_controller_1.cronController();
+cronCon.setCrons();
+// cron.schedule("0 * * * *", () => {
+//     console.log("Running Cron: Update users");
+//     crons.updateSSData();
+// });
+// cron.schedule("*/5 * * * *", () => {
+//     console.log("Running Cron: Discord users update");
+//     crons.updateUsersDiscord();
+// });

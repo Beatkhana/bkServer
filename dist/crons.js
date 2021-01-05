@@ -63,7 +63,7 @@ var crons = /** @class */ (function () {
                                     switch (_a.label) {
                                         case 0:
                                             uA_1.getSSData(user.ssId, function (data) {
-                                                var _a;
+                                                var _a, _b, _c, _d;
                                                 if (data) {
                                                     var info = {};
                                                     if (((_a = data === null || data === void 0 ? void 0 : data.playerInfo) === null || _a === void 0 ? void 0 : _a.banned) == 1) {
@@ -74,11 +74,11 @@ var crons = /** @class */ (function () {
                                                     }
                                                     else {
                                                         info = {
-                                                            ssId: data.playerInfo.playerId,
+                                                            ssId: (_b = data.playerInfo) === null || _b === void 0 ? void 0 : _b.playerId,
                                                             // name: data.playerInfo.playerName,
                                                             // avatar: data.playerInfo.avatar,
-                                                            globalRank: data.playerInfo.rank,
-                                                            localRank: data.playerInfo.countryRank,
+                                                            globalRank: (_c = data.playerInfo) === null || _c === void 0 ? void 0 : _c.rank,
+                                                            localRank: (_d = data.playerInfo) === null || _d === void 0 ? void 0 : _d.countryRank,
                                                         };
                                                     }
                                                     db_1.preparedQuery('UPDATE users SET ? WHERE discordId = ?', [info, user.discordId], function (err, res) {

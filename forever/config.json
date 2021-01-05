@@ -1,0 +1,10 @@
+{
+    "uid": "bk",
+    "append": true,
+    "watch": false,
+    "script": "server.js",
+    "sourceDir": "/root/bkServer/dist",
+    "logFile": "/root/logs/forever.log",
+    "outFile": "/root/logs/out.log",
+    "errFile": "/root/logs/error.log"
+}

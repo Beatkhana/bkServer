@@ -5,7 +5,7 @@
     "license": "MIT",
     "scripts": {
         "postinstall": "npx tsc",
-        "dev": "NODE_ENV=development nodemon ./server.ts",
+        "dev": "NODE_ENV=development nodemon server.ts",
         "start": "node dist/server.js"
     },
     "dependencies": {

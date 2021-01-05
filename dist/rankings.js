@@ -73,7 +73,7 @@ var rankings = /** @class */ (function () {
         });
     };
     rankings.prototype.getUser = function (userId, callback) {
-        this.db.preparedQuery("SELECT u.discordId, u.ssId, u.name, u.twitchName, u.avatar, u.globalRank, u.localRank, u.country, u.tourneyRank, u.TR, u.pronoun, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u\n        LEFT JOIN participants p ON p.userId = u.discordId\n        LEFT JOIN tournaments t ON p.tournamentId = t.id\n        LEFT JOIN tournament_settings ts ON p.tournamentId = ts.tournamentId\n        WHERE u.discordId = ? AND ts.public = 1\n        GROUP BY u.discordId", [userId], function (err, result) {
+        this.db.preparedQuery("SELECT u.discordId, u.ssId, u.name, u.twitchName, u.avatar, u.globalRank, u.localRank, u.country, u.tourneyRank, u.TR, u.pronoun, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u\n        LEFT JOIN participants p ON p.userId = u.discordId\n        LEFT JOIN tournaments t ON p.tournamentId = t.id\n        LEFT JOIN tournament_settings ts ON p.tournamentId = ts.tournamentId AND ts.public = 1\n        WHERE u.discordId = ?\n        GROUP BY u.discordId", [userId], function (err, result) {
             console.log(err);
             return callback(result);
         });
