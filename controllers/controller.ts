@@ -2,7 +2,7 @@ import * as express from 'express'
 import { database } from '../database';
 import { settings } from '../models/settings.model';
 import { emitter } from './event.controller';
-import Ajv, {JSONSchemaType, DefinedError} from "ajv"
+import Ajv from "ajv"
 export abstract class controller {
 
     protected env = process.env.NODE_ENV || 'production';
