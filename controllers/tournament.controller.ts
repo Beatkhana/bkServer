@@ -2,7 +2,7 @@ import express from "express";
 import { staff } from "../models/tournament.models";
 import { authController } from "./auth.controller";
 import { controller } from "./controller";
-var newStaffRequestSchema = require('../schemas/newStaffRequest.json');
+// var newStaffRequestSchema = require('../schemas/newStaffRequest.json');
 
 export class TournamentController extends controller {
 
