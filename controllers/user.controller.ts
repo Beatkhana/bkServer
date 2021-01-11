@@ -147,9 +147,11 @@ export class userController extends controller {
 
     static async getSSData(id: string) {
         const response = await fetch(`https://new.scoresaber.com/api/player/${id}/full`);
+        // console.log(await response.text());
         try {
             return await response.json();
         } catch (error) {
+            // console.error(error);
             return null;
         }
     }

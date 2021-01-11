@@ -98,3 +98,23 @@ export interface bslMatch {
     p2Avatar: string,
     bye?: boolean
 }
+
+export interface staff {
+    discordId: string;
+    ssId: string;
+    name: string;
+    twitchName: string;
+    avatar: string;
+    globalRank: number;
+    localRank: number;
+    country: string;
+    tourneyRank: number;
+    TR: number;
+    pronoun: string;
+    roles: {id: number, role: string}[];
+}
+
+export interface newStaffRequest {
+    userId: string;
+    roleIds: number[];
+}

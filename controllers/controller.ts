@@ -2,7 +2,7 @@ import * as express from 'express'
 import { database } from '../database';
 import { settings } from '../models/settings.model';
 import { emitter } from './event.controller';
-
+import Ajv, {JSONSchemaType, DefinedError} from "ajv"
 export abstract class controller {
 
     protected env = process.env.NODE_ENV || 'production';
@@ -13,9 +13,24 @@ export abstract class controller {
 
     protected emitter = emitter;
 
+    protected ajv = new Ajv();
+
+    protected delay(ms: number) {
+        return new Promise( resolve => setTimeout(resolve, ms) );
+    }
+
     protected async getSettings(id: string | number): Promise<settings> {
         const set: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
         return set[0];
+    }
+
+    protected validate(schema: object, data: object) {
+        const validate = this.ajv.compile(schema);
+        if (validate(data)) {
+            return true;
+        } else {
+            return validate.errors;
+        }
     }
 
     public static jsonResponse(

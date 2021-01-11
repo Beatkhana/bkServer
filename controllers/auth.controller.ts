@@ -40,6 +40,48 @@ export class authController extends controller {
         return null;
     }
 
+    // getters
+    public get isAdmin() {
+        return (async () => {
+            let userRoles = await this.getRoles();
+            if (userRoles != null && userRoles.some(x => this.adminRoles.includes(x))) {
+                return true;
+            }
+            return false;
+        })();
+    }
+
+    public get isStaff() {
+        return (async () => {
+            let userRoles = await this.getRoles();
+            if (userRoles != null && userRoles.some(x => this.staffRoles.includes(x))) {
+                return true;
+            }
+            return false;
+        })();
+    }
+
+    public get isOwner() {
+        return (async () => {
+            let owner = await this.db.aQuery(`SELECT * FROM tournaments WHERE id = ? AND owner = ?`, [this.tourneyId, this.userId]);
+            return owner.length == 1;
+        })();
+    }
+
+    public get validApiKey() {
+        return (async () => {
+            let key = await this.db.aQuery("SELECT * FROM api_keys WHERE tournamentId = ? AND api_key = ?", [this.tourneyId, this.apiKey]);
+            return key.length == 1;
+        })();
+    }
+
+    public get hasAdminPerms() {
+        return (async () => {
+            return (await this.isAdmin || await this.isOwner || await this.validApiKey);
+        })();
+    }
+
+    // old method
     public async admin(): Promise<boolean> {
         let userRoles = await this.getRoles();
         if (userRoles != null && userRoles.some(x => this.adminRoles.includes(x))) {
@@ -47,6 +89,7 @@ export class authController extends controller {
         }
         return false;
     }
+
 
     public async staff(): Promise<boolean> {
         let userRoles = await this.getRoles();

@@ -4,7 +4,6 @@ import { badge, User } from '../models/user.model';
 import { controller } from './controller';
 import { userController } from './user.controller';
 import sharp from 'sharp';
-import { AnyLengthString } from 'aws-sdk/clients/comprehendmedical';
 
 const FormData = require('form-data');
 const fetch = require('node-fetch');
@@ -93,8 +92,9 @@ export class cronController extends controller {
         let badgeLabels = curBadges.map(x => x.image);
         let updated = 0;
         // let ssData: ssResponse = await userController.getSSData("76561198333869741");
-
-        for (const user of users) {
+        for (let i = 0; i < users.length; i++) {
+            const user = users[i];
+            if (i !== 0 && i % 60 == 0) await this.delay(60000);
             let ssData: ssResponse = await userController.getSSData(user.ssId);
             // console.log(ssData)
             if (ssData != null && ssData?.playerInfo?.banned != 1) {
@@ -103,10 +103,10 @@ export class cronController extends controller {
                     localRank: ssData.playerInfo.countryRank
                 }
                 try {
-                    updated++;
                     await this.db.aQuery("UPDATE users SET ? WHERE discordId = ?", [info, user.discordId]);
+                    updated++;
                 } catch (error) {
-                    console.error(error);
+                    console.log(error);
                     // throw error;
                 }
                 if (ssData.playerInfo.badges.length > 0) {
@@ -152,7 +152,7 @@ export class cronController extends controller {
                         }
                     }
                 }
-            }
+            } 
         }
         console.info(`Score Saber update complete: ${updated}/${users.length}`);
     }
