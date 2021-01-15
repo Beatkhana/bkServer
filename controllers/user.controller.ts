@@ -38,7 +38,7 @@ export class userController extends controller {
         let base64String = data.image;
         let base64Img = base64String.split(';base64,').pop();
 
-        let savePath = this.env == 'development' ? '../app/src/assets/badges/' : __dirname + '/public/assets/badges/';
+        let savePath = this.env == 'development' ? '../app/src/assets/badges/' : __dirname + '/../../public/assets/badges/';
 
         try {
             data.imgName = data.imgName.split('.')[0];
@@ -75,7 +75,7 @@ export class userController extends controller {
                 let base64String = data.image;
                 let base64Img = base64String.split(';base64,').pop();
         
-                let savePath = this.env == 'development' ? '../app/src/assets/badges/' : __dirname + '/public/assets/badges/';
+                let savePath = this.env == 'development' ? '../app/src/assets/badges/' : __dirname + '/../../public/assets/badges/';
                 const buf = await Buffer.from(base64Img, 'base64');
                 const webpData = await sharp(buf)
                     .resize({ width: 80, height: 30 })
