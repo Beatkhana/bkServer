@@ -117,7 +117,7 @@ export class cronController extends controller {
                             // console.log(badge);
                             let info = await fetch(`https://new.scoresaber.com/api/static/badges/${badge.image}`);
                             let buff = await info.buffer();
-                            let savePath = this.env == 'development' ? '../app/src/assets/badges/' : __dirname + '/public/assets/badges/';
+                            let savePath = this.env == 'development' ? '../app/src/assets/badges/' : '../public/assets/badges/';
                             const webpData = await sharp(buff)
                                 .resize({ width: 80, height: 30 })
                                 .png()
