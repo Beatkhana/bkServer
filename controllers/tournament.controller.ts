@@ -140,7 +140,7 @@ export class TournamentController extends controller {
             imgName = imgName.toLowerCase();
             imgName = imgName.replace(/\s/g, "");
             imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
-            let savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname + '/../../public/assets/images/';
+            let savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname + '/../public/assets/images/';
 
             // sharp
             const buf = await Buffer.from(base64Img, 'base64');
