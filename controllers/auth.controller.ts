@@ -8,15 +8,16 @@ export class authController extends controller {
 
     public userId: string | null = null;
     private apiKey: string | null = null;
-    private tourneyId: string | null = null;
+    public tourneyId: string | null = null;
 
     // private db: database = new database();
 
     private adminRoles: number[] = [1];
     private staffRoles: number[] = [1, 2];
-    private mapPoolRoles: number[] = [1, 3];
-    private mapPoolHeadRoles: number[] = [1, -1];
-    private coordinatorRoles: number[] = [1, 2, 4];
+    private tournamentHostRoles: number[] = [1, 2, 3];
+    // private mapPoolRoles: number[] = [1, 3];
+    // private mapPoolHeadRoles: number[] = [1, -1];
+    // private coordinatorRoles: number[] = [1, 2, 4];
 
 
     constructor (req: express.Request) {
@@ -27,6 +28,7 @@ export class authController extends controller {
     }
 
     public async getUser(): Promise<User> {
+        if (this.userId == undefined) return null;
         let user: any = await this.db.aQuery("SELECT * FROM users WHERE discordId = ?", [this.userId]);
         return user[0];
     }
@@ -41,6 +43,7 @@ export class authController extends controller {
     }
 
     // getters
+    // admin
     public get isAdmin() {
         return (async () => {
             let userRoles = await this.getRoles();
@@ -51,6 +54,7 @@ export class authController extends controller {
         })();
     }
 
+    // staff
     public get isStaff() {
         return (async () => {
             let userRoles = await this.getRoles();
@@ -61,6 +65,17 @@ export class authController extends controller {
         })();
     }
 
+    public get isTournamentHost() {
+        return (async () => {
+            let userRoles = await this.getRoles();
+            if (userRoles != null && userRoles.some(x => this.tournamentHostRoles.includes(x))) {
+                return true;
+            }
+            return false;
+        })();
+    }
+
+    // owner
     public get isOwner() {
         return (async () => {
             let owner = await this.db.aQuery(`SELECT * FROM tournaments WHERE id = ? AND owner = ?`, [this.tourneyId, this.userId]);
@@ -68,16 +83,48 @@ export class authController extends controller {
         })();
     }
 
+    // api
     public get validApiKey() {
         return (async () => {
             let key = await this.db.aQuery("SELECT * FROM api_keys WHERE tournamentId = ? AND api_key = ?", [this.tourneyId, this.apiKey]);
             return key.length == 1;
         })();
+    }    
+
+    // tournament Admin
+    public get tournamentAdmin() {
+        return (async () => {
+            let adminRole = await this.db.aQuery(`SELECT * FROM tournament_role_assignment WHERE user_id = ? AND tournament_id = ? AND role_id = 1`, [this.userId, this.tourneyId]);
+            return adminRole.length == 1;
+        })();
+    }
+    
+    // tournament map pooler
+    public get tournamentMaPool() {
+        return (async () => {
+            let mapPoolRole = await this.db.aQuery(`SELECT * FROM tournament_role_assignment WHERE user_id = ? AND tournament_id = ? AND role_id = 2`, [this.userId, this.tourneyId]);
+            return mapPoolRole.length == 1;
+        })();
     }
 
+    // tournament coordinator
+    public get tournamentCoordinator() {
+        return (async () => {
+            let coordinatorRole = await this.db.aQuery(`SELECT * FROM tournament_role_assignment WHERE user_id = ? AND tournament_id = ? AND role_id = 3`, [this.userId, this.tourneyId]);
+            return coordinatorRole.length == 1;
+        })();
+    }
+
+    // admin, owner, api or tournament admin
     public get hasAdminPerms() {
         return (async () => {
-            return (await this.isAdmin || await this.isOwner || await this.validApiKey);
+            return (await this.isAdmin || await this.isOwner || await this.validApiKey || await this.tournamentAdmin);
+        })();
+    }
+
+    public isTournamentStaff() {
+        return (async () => {
+            return (await this.tournamentAdmin || await this.tournamentCoordinator || await this.tournamentMaPool);
         })();
     }
 
@@ -99,30 +146,30 @@ export class authController extends controller {
         return false;
     }
 
-    public async mapPool(): Promise<boolean> {
-        let userRoles = await this.getRoles();
-        if (userRoles != null && userRoles.some(x => this.mapPoolRoles.includes(x))) {
-            return true;
-        }
-        return false;
-    }
+    // public async mapPool(): Promise<boolean> {
+    //     let userRoles = await this.getRoles();
+    //     if (userRoles != null && userRoles.some(x => this.mapPoolRoles.includes(x))) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
-    public async poolHead(): Promise<boolean> {
-        let userRoles = await this.getRoles();
-        if (userRoles != null && userRoles.some(x => this.mapPoolHeadRoles.includes(x))) {
-            return true;
-        }
-        return false;
-    }
+    // public async poolHead(): Promise<boolean> {
+    //     let userRoles = await this.getRoles();
+    //     if (userRoles != null && userRoles.some(x => this.mapPoolHeadRoles.includes(x))) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
 
-    public async coordinator(): Promise<boolean> {
-        let userRoles = await this.getRoles();
-        if (userRoles != null && userRoles.some(x => this.coordinatorRoles.includes(x))) {
-            return true;
-        }
-        return false;
-    }
+    // public async coordinator(): Promise<boolean> {
+    //     let userRoles = await this.getRoles();
+    //     if (userRoles != null && userRoles.some(x => this.coordinatorRoles.includes(x))) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
     public async owner(): Promise<boolean> {
         let owner = await this.db.aQuery(`SELECT * FROM tournaments WHERE id = ? AND owner = ?`, [this.tourneyId, this.userId]);

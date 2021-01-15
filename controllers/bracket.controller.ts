@@ -29,7 +29,7 @@ export class bracketController extends controller {
 
     async scheduleMatch(req: express.Request, res: express.Response) {
         let auth = new authController(req);
-        if (!(await auth.admin() || await auth.owner() || await auth.validKey())) return this.unauthorized(res);
+        if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
         let time = new Date(req.body.matchTime);
         let timeString = time.toISOString().slice(0, 19).replace('T', ' ');
         try {
@@ -42,7 +42,7 @@ export class bracketController extends controller {
 
     async setBestOf(req: express.Request, res: express.Response) {
         let auth = new authController(req);
-        if (!(await auth.admin() || await auth.owner() || await auth.validKey())) return this.unauthorized(res);
+        if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
         if (!req.body.best_of) return this.clientError(res, "Please provide a valid best of value");
         try {
             await this.db.aQuery('UPDATE bracket SET best_of = ? WHERE id = ?', [req.body.best_of, req.params.id]);
@@ -54,7 +54,7 @@ export class bracketController extends controller {
 
     async saveOverlay(req: express.Request, res: express.Response) {
         let auth = new authController(req);
-        if (!(await auth.admin() || await auth.owner() || await auth.validKey())) return this.unauthorized(res);
+        if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
         if (!req.body.img) return this.clientError(res, "Please provide a valid best of value");
         try {
             console.log(req.body.img);
@@ -79,7 +79,7 @@ export class bracketController extends controller {
         let auth = new authController(req);
         let id = req.params.id;
         let data = req.body;
-        if (!(await auth.admin() || await auth.owner() || await auth.validKey())) return this.unauthorized(res);
+        if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
         let matches: Array<match> = [];
         console.log(data);
 
@@ -438,7 +438,7 @@ export class bracketController extends controller {
         let { req, res, auth } = args;
         let id = req.params.tourneyId;
         let data = req.body;
-        let isAuth = await auth.admin() || await auth.owner() || await auth.validKey();
+        let isAuth = await auth.hasAdminPerms;
         if (!isAuth) return this.unauthorized(res);
         if (data.status == 'update') {
             try {

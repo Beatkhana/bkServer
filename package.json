@@ -13,6 +13,7 @@
         "@types/express": "^4.17.6",
         "@types/express-session": "^1.17.0",
         "@types/mysql": "^2.15.13",
+        "@types/sharp": "^0.27.1",
         "ajv": "^7.0.3",
         "api-key-auth": "^0.2.3",
         "aws-sdk": "^2.724.0",

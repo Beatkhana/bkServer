@@ -86,4 +86,33 @@ export abstract class controller {
             message: error.toString()
         })
     }
+
+    protected formatDate(date) {
+        var d = new Date(date);
+        return d.toISOString().slice(0, 19).replace('T', ' ');
+    }
+
+    protected randHash(length) {
+        var result = '';
+        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+        var charactersLength = characters.length;
+        for (var i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+    }
+
+    protected isBase64(str) {
+        const base64regex = /^\s*data:([a-z]+\/[a-z0-9-+.]+(;[a-z-]+=[a-z0-9-]+)?)?(;base64)?,([a-z0-9!$&',()*+;=\-._~:@\/?%\s]*)\s*$/i;
+        return base64regex.test(str);
+    }
+
+    protected sumProperty(items, prop) {
+        if (items == null) return 0;
+
+        return items.reduce(function (a, b) {
+            return b[prop] == null ? a : a + b[prop];
+        }, 0);
+    }
+
 }

@@ -5,8 +5,7 @@ const tournamentListRouter: Router = Router();
 const listCon: tournamentListController = new tournamentListController();
 
 tournamentListRouter.get('/tournament/archived', (req, res) => listCon.getArchive(req, res));
-// bracketRouter.get('/tournament/:tourneyId/bracket/:matchId', (req, res) => bracketCon.getBracketMatch({ req: req, res: res }));
-
-// bracketRouter.put('/tournament/:tourneyId/bracket/:matchId', (req, res) => bracketCon.updateBracket({ req: req, res: res }))
+tournamentListRouter.get('/mini-tournaments', (req, res) => listCon.getActiveMini(req, res));
+tournamentListRouter.get('/tournaments', (req, res) => listCon.getActive(req, res));
 
 export { tournamentListRouter }

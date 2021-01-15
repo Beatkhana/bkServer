@@ -6,18 +6,19 @@ import sharp from 'sharp';
 const AWS = require('aws-sdk');
 
 import * as rp from 'request-promise';
+const https = require('https');
 import cheerio from 'cheerio';
 import { bslMatch, match, qualScore, qualsScore, removeParticipant, tournamentSettings, tournamentUpdate, updateParticipant } from './models/tournament.models';
 import { Observable, throwError } from 'rxjs';
 
-const ID = 'AKIAJNEXL3RYO3HDJ5EA';
-const SECRET = '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';
-const BUCKET_NAME = 'beatkhanas3';
-const s3 = new AWS.S3({
-    accessKeyId: ID,
-    secretAccessKey: SECRET
-});
-const fs = require('fs');
+// const ID = 'AKIAJNEXL3RYO3HDJ5EA';
+// const SECRET = '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';
+// const BUCKET_NAME = 'beatkhanas3';
+// const s3 = new AWS.S3({
+//     accessKeyId: ID,
+//     secretAccessKey: SECRET
+// });
+// const fs = require('fs');
 
 export class tournaments {
     db = new database();
@@ -758,7 +759,7 @@ export class tournaments {
         let diff = data.diff;
         let bsData = await rp.get('https://beatsaver.com/api/maps/detail/' + key, {
             headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
+                "User-Agent": "BeatKhana/1.0.0 (+https://github.com/Dannypoke03)"
             },
             json: true
         })
@@ -1427,9 +1428,8 @@ export class tournaments {
     private getBSData(hash, diff, callback: Function): any {
         rp.get('https://beatsaver.com/api/maps/by-hash/' + hash, {
             headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
-            },
-            json: true
+                "User-Agent": "BeatKhana/1.0.0 (+https://github.com/Dannypoke03)"
+            }
         })
             .then(res => {
                 let info = {
@@ -1442,6 +1442,10 @@ export class tournaments {
                 }
                 callback(info);
                 return null;
+            })
+            .catch(err => {
+                console.debug(hash);
+                console.error(err);
             });
     }
 

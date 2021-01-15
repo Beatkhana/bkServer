@@ -68,8 +68,8 @@ app.use((err, req, res, next) => {
 });
 
 app.use('/api', bracketRouter);
-app.use('/api', tournamentRouter);
 app.use('/api', tournamentListRouter);
+app.use('/api', tournamentRouter);
 app.use('/api', userRouter);
 app.use('/', router);
 
