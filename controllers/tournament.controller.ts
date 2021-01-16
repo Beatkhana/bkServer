@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { staff } from "../models/tournament.models";
 import { authController } from "./auth.controller";
 import { controller } from "./controller";
+import { ParticipantsController } from "./participants";
 // var newStaffRequestSchema = require('../schemas/newStaffRequest.json');
 
 export class TournamentController extends controller {
@@ -127,7 +128,7 @@ export class TournamentController extends controller {
 
     async updateTournament(req: express.Request, res: express.Response) {
         let auth = new authController(req);
-        if (!await auth.hasAdminPerms || await auth.tournamentAdmin) return this.unauthorized(res);
+        if (!await auth.hasAdminPerms) return this.unauthorized(res);
         let data = { "tournament": req.body, "id": auth.tourneyId };
         let imgName: string = data.tournament.image;
 
@@ -168,7 +169,7 @@ export class TournamentController extends controller {
 
     async updateSettings(req: express.Request, res: express.Response) {
         let auth = new authController(req);
-        if (!await auth.hasAdminPerms || await auth.tournamentAdmin) return this.unauthorized(res);
+        if (!await auth.hasAdminPerms) return this.unauthorized(res);
         let data = req.body;
         let curSettings: any = await this.db.aQuery("SELECT * FROM tournament_settings WHERE id = ?", [data.settingsId]);
         if (data.settings.state == 'main_stage' && curSettings[0].state == "qualifiers") {
@@ -193,10 +194,10 @@ export class TournamentController extends controller {
     }
 
     // non quals seed
-     private async seedPlayers(tournamentId: string, cutoff, method: string) {
+    private async seedPlayers(tournamentId: string, cutoff, method: string) {
         if (method == 'date') {
             let updateErr = false;
-            let participants: any = await this.allParticipants(tournamentId);
+            let participants: any = await ParticipantsController.allParticipants(tournamentId);
             participants.sort((a, b) => a.participantId - b.participantId);
             let qualified = participants.slice(0, cutoff + 1);
             for (const user of participants) {
@@ -286,31 +287,6 @@ export class TournamentController extends controller {
         }
         return !updateErr;
 
-    }
-
-    async allParticipants(id) {
-        let result = await this.db.aQuery(`SELECT p.id AS participantId,
-        CAST(p.userId AS CHAR) as userId,
-        p.forfeit,
-        p.seed,
-        p.position,
-        p.comment,
-        CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
-        CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
-        \`u\`.\`name\`,
-        \`u\`.\`twitchName\`,
-        \`u\`.\`avatar\`,
-        \`u\`.\`globalRank\`,
-        \`u\`.\`localRank\`,
-        \`u\`.\`country\`,
-        \`u\`.\`tourneyRank\`,
-        \`u\`.\`TR\`,
-        \`u\`.\`pronoun\`
-        FROM participants p
-        LEFT JOIN users u ON u.discordId = p.userId
-        LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
-        WHERE p.tournamentId = ?`, [id]);
-        return result;
     }
 
     // to move to map pool controller when made
@@ -431,6 +407,27 @@ export class TournamentController extends controller {
             }
         }
         return scores;
+    }
+
+    async signUp(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        // if (!auth.userId) return this.clientError(res, "No user logged in");
+        if (!auth.tourneyId) return this.clientError(res, "No Tournament ID provided");
+        let settings = await this.getSettings(auth.tourneyId);
+        if (!settings.public_signups) return this.unauthorized(res, "Signups are not enabled for this tournament.");
+        let curUser = await auth.getUser();
+        let countries = null;
+        if (settings.countries != '') countries = settings.countries.toLowerCase().replace(' ', '').split(',');
+        if (countries != null && !countries.includes(curUser.country.toLowerCase())) return this.unauthorized(res, "Signups are country restricted");
+        // if (!req.body.userId && !await auth.hasAdminPerms) req.body.userId = auth.userId;
+        if (req.body.userId && !await auth.hasAdminPerms) req.body.userId = auth.userId;
+        if (!req.body.userId && auth.userId) req.body.userId = auth.userId;
+        try {
+            let result = await this.db.aQuery(`INSERT INTO participants SET ?`, [req.body]);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
     }
 
     async isSignedUp(req: express.Request, res: express.Response) {

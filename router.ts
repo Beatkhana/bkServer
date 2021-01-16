@@ -420,58 +420,58 @@ router.get(baseUrl + '/tournament/:id/bracketTest', function (req, res) {
 // });
 
 // Sign up for tournament settings
-router.post(baseUrl + '/tournament/:id/signUp', function (req, res) {
-    if (req.session.user[0] != null) {
-        if (req.body.userId != null) {
-            isAdminOwner(req, req.params.id, isAuth => {
-                if (isAuth) {
-                    tournament.signUp(req.body, response => {
-                        res.send(response);
-                        log.createLog(req.session.user[0]['discordId'], `Signed user(${req.body.userId}) up to a tournament (${req.params.id})`);
-                    });
-                    return null;
-                } else {
-                    res.sendStatus(401);
-                    return null;
-                }
-            });
-        } else {
-            req.body.userId = req.session.user[0].discordId;
-            tournament.signUp(req.body, response => {
-                res.send(response);
-                log.createLog(req.session.user[0]['discordId'], `Signed up to a tournament (${req.params.id})`);
-            });
-        }
-    } else {
-        res.sendStatus(401);
-        return null;
-    }
-});
+// router.post(baseUrl + '/tournament/:id/signUp', function (req, res) {
+//     if (req.session.user[0] != null) {
+//         if (req.body.userId != null) {
+//             isAdminOwner(req, req.params.id, isAuth => {
+//                 if (isAuth) {
+//                     tournament.signUp(req.body, response => {
+//                         res.send(response);
+//                         log.createLog(req.session.user[0]['discordId'], `Signed user(${req.body.userId}) up to a tournament (${req.params.id})`);
+//                     });
+//                     return null;
+//                 } else {
+//                     res.sendStatus(401);
+//                     return null;
+//                 }
+//             });
+//         } else {
+//             req.body.userId = req.session.user[0].discordId;
+//             tournament.signUp(req.body, response => {
+//                 res.send(response);
+//                 log.createLog(req.session.user[0]['discordId'], `Signed up to a tournament (${req.params.id})`);
+//             });
+//         }
+//     } else {
+//         res.sendStatus(401);
+//         return null;
+//     }
+// });
 
 // Get participants
-router.get(baseUrl + '/tournament/:id/participants', function (req, res) {
-    isAdminOwner(req, req.params.id, isAuth => {
-        if (isAuth) {
-            tournament.participants(req.params.id, true)
-                .then(response => {
-                    res.send(response);
-                })
-            return null;
-        } else if (req.session.user != null) {
-            tournament.participants(req.params.id, false, req.session.user[0].discordId)
-                .then(response => {
-                    res.send(response);
-                })
-            return null;
-        } else {
-            tournament.participants(req.params.id, false)
-                .then(response => {
-                    res.send(response);
-                })
-            return null;
-        }
-    })
-});
+// router.get(baseUrl + '/tournament/:id/participants', function (req, res) {
+//     isAdminOwner(req, req.params.id, isAuth => {
+//         if (isAuth) {
+//             tournament.participants(req.params.id, true)
+//                 .then(response => {
+//                     res.send(response);
+//                 })
+//             return null;
+//         } else if (req.session.user != null) {
+//             tournament.participants(req.params.id, false, req.session.user[0].discordId)
+//                 .then(response => {
+//                     res.send(response);
+//                 })
+//             return null;
+//         } else {
+//             tournament.participants(req.params.id, false)
+//                 .then(response => {
+//                     res.send(response);
+//                 })
+//             return null;
+//         }
+//     })
+// });
 
 // Get all participants
 router.get(baseUrl + '/tournament/:id/allParticipants', function (req, res) {

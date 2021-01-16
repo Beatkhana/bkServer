@@ -9,6 +9,7 @@ tournamentRouter.get('/tournament/:tourneyId/staff', (req, res) => tournamentCon
 tournamentRouter.get('/tournament/:tourneyId', (req, res) => tournamentCon.getTournament(req, res));
 
 tournamentRouter.post('/tournament/:tourneyId/staff', (req, res) => tournamentCon.addStaff(req, res));
+tournamentRouter.post('/tournament/:tourneyId/signUp', (req, res) => tournamentCon.signUp(req, res));
 tournamentRouter.post('/tournament', (req, res) => tournamentCon.createTournament(req, res));
 
 tournamentRouter.delete('/tournament/:tourneyId', (req, res) => tournamentCon.deleteTournament(req, res));

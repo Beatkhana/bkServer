@@ -15,6 +15,7 @@ const cron = require('node-cron');
 // const cronJobs = require('./crons')
 import { crons } from './crons';
 import { bracketRouter } from './routers/bracket.router';
+import { participantsRouter } from './routers/participants';
 import { tournamentRouter } from './routers/tournament.router';
 import { tournamentListRouter } from './routers/tournamentList.router';
 import { userRouter } from './routers/user.router';
@@ -69,6 +70,7 @@ app.use((err, req, res, next) => {
 
 app.use('/api', bracketRouter);
 app.use('/api', tournamentListRouter);
+app.use('/api', participantsRouter);
 app.use('/api', tournamentRouter);
 app.use('/api', userRouter);
 app.use('/', router);
