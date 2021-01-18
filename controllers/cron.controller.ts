@@ -97,7 +97,7 @@ export class cronController extends controller {
             if (i !== 0 && i % 60 == 0) await this.delay(60000);
             let ssData: ssResponse = await userController.getSSData(user.ssId);
             // console.log(ssData)
-            if (ssData != null && ssData?.playerInfo?.banned != 1) {
+            if (ssData != null && ssData.playerInfo && ssData?.playerInfo?.banned != 1) {
                 let info = {
                     globalRank: ssData.playerInfo.rank,
                     localRank: ssData.playerInfo.countryRank

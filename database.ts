@@ -1,27 +1,47 @@
 import mysql from 'mysql';
 import { connect } from 'http2';
 // const mysql = mysql;
+let con: mysql.Pool;
 
 export class database {
 
-    public con: any;
+    // to remove
+    public oldCon: any;
     public connected: boolean = false;
 
     constructor() {
         const env = process.env.NODE_ENV || 'production';
         // console.log(env);
         if (env == 'production') {
-            this.con = mysql.createPool({
+            this.oldCon = mysql.createPool({
                 host: "localhost",
                 user: "dan",
                 password: "root",
                 database: "bk",
-                connectionLimit: 200,
+                connectionLimit: 100,
+                charset: 'utf8mb4',
+                timezone: 'utc'
+            });
+            con = mysql.createPool({
+                host: "localhost",
+                user: "dan",
+                password: "root",
+                database: "bk",
+                connectionLimit: 100,
                 charset: 'utf8mb4',
                 timezone: 'utc'
             });
         } else {
-            this.con = mysql.createPool({
+            this.oldCon = mysql.createPool({
+                host: "localhost",
+                user: "dan",
+                password: "test",
+                database: "bk",
+                connectionLimit: 100,
+                charset: 'utf8mb4',
+                timezone: 'utc'
+            });
+            con = mysql.createPool({
                 host: "localhost",
                 user: "dan",
                 password: "test",
@@ -34,7 +54,7 @@ export class database {
     }
 
     query(sql: string, callback: Function) {
-        this.con.getConnection(function (err, connection) {
+        this.oldCon.getConnection(function (err, connection) {
             if (err) throw err;
             var query = connection.query(sql, function (error, results, fields) {
                 let result = results;
@@ -48,7 +68,7 @@ export class database {
     }
 
     preparedQuery(sql: string, params: any[], callback: Function) {
-        this.con.getConnection(function (err, connection) {
+        this.oldCon.getConnection(function (err, connection) {
             if (err) throw err;
             var result;
             var query = connection.query(sql, params, function (error, results, fields) {
@@ -61,7 +81,7 @@ export class database {
 
     async aQuery(sql: string, params: any[] = []) {
         return new Promise<any[]>((resolve, reject) => {
-            this.con.query(sql, params, (err: any, result: any, fields: any) => {
+            con.query(sql, params, (err: any, result: any, fields: any) => {
                 if (err) reject(err);
                 resolve(result);
             });
@@ -70,7 +90,7 @@ export class database {
 
     async asyncPreparedQuery(sql: string, params: any[] = []) {
         return new Promise((resolve, reject) => {
-            this.con.query(sql, params, (err, result, fields) => {
+            this.oldCon.query(sql, params, (err, result, fields) => {
                 if (err) reject(err);
                 resolve(result);
             });
@@ -85,7 +105,7 @@ export class database {
             params.push(+perPage);
             params.push(page*perPage);
             return new Promise((resolve, reject) => {
-                let query = this.con.query(sql, params, (err, result, fields) => {
+                let query = this.oldCon.query(sql, params, (err, result, fields) => {
                     if (err) reject(err);
                     // console.log(query.sql);
                     resolve({total: numRecords, data: result});
