@@ -33,6 +33,27 @@ export class userController extends controller {
         return res.send(user);
     }
 
+    async allUsers(req: express.Request, res: express.Response) {
+        let users = await this.db.aQuery(`SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, 
+        CAST(\`users\`.\`discordId\` AS CHAR) as discordId,
+        CAST(\`users\`.\`ssId\` AS CHAR) as ssId,
+        \`users\`.\`name\`,
+        \`users\`.\`twitchName\`,
+        \`users\`.\`avatar\`,
+        \`users\`.\`globalRank\`,
+        \`users\`.\`localRank\`,
+        \`users\`.\`country\`,
+        \`users\`.\`tourneyRank\`,
+        \`users\`.\`TR\`,
+        \`users\`.\`pronoun\`, 
+        GROUP_CONCAT(DISTINCT r.roleName SEPARATOR ', ') as roleNames
+        FROM users
+        LEFT JOIN roleassignment ra ON ra.userId = users.discordId
+        LEFT JOIN roles r ON r.roleId = ra.roleId
+        GROUP BY users.discordId`);
+        return res.send(users);
+    }
+
     async userBySS(req: express.Request, res: express.Response) {
         let result = await this.db.aQuery(`SELECT u.discordId, u.ssId, u.name, u.twitchName, u.avatar, u.globalRank, u.localRank, u.country, u.tourneyRank, u.TR, u.pronoun, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u
         LEFT JOIN participants p ON p.userId = u.discordId
@@ -268,6 +289,7 @@ export class userController extends controller {
                 }))
                 .then(userRes => userRes.json())
                 .then(data => {
+                    data.id += 10;
                     this.checkuser(data.id, refresh_token, data.avatar, data.username, (userRes, newUser) => {
                         if (!newUser) {
                             req.session.user = userRes;
@@ -329,7 +351,7 @@ export class userController extends controller {
     }
 
     async newUser(req: express.Request, res: express.Response) {
-        if (req.session?.newUsr[0]) {
+        if (req.session?.newUsr?.length > 0) {
             let usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'], refresh_token: req.session.newUsr[0]['refresh_token'], avatar: req.session.newUsr[0]['avatar'], name: req.session.newUsr[0]['name'] };
             let ssData = await userController.getSSData(usrData.links.scoreSaber.split('u/')[1]);
             let user = {
@@ -354,7 +376,7 @@ export class userController extends controller {
                 return this.fail(res, error);   
             }
         } else {
-            return this.clientError(res);
+            return this.clientError(res, "Invalid discord data");
         }
     }
 

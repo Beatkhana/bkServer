@@ -800,19 +800,19 @@ router.get(baseUrl + '/events', function (req, res) {
     })
 });
 
-router.get(baseUrl + '/rankings', function (req, res) {
-    ranking.getRanks(req.query.page, req.query.perPage)
-        .then(response => {
-            res.send(response);
-        })
-        .catch((err) => {
-            console.error(err);
-            res.sendStatus(500);
-        })
-    // ranking.getRanks((result: any) => {
-    //     res.send(result);
-    // });
-});
+// router.get(baseUrl + '/rankings', function (req, res) {
+//     ranking.getRanks(req.query.page, req.query.perPage)
+//         .then(response => {
+//             res.send(response);
+//         })
+//         .catch((err) => {
+//             console.error(err);
+//             res.sendStatus(500);
+//         })
+//     // ranking.getRanks((result: any) => {
+//     //     res.send(result);
+//     // });
+// });
 
 router.get(baseUrl + '/team', function (req, res) {
     ranking.getTeam((result: any) => {

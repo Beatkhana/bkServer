@@ -16,6 +16,7 @@ userRouter.get('/badge(s)?', (req, res) => userCon.getBadges(req, res));
 // User
 userRouter.get('/user/by-ss/:id', (req, res) => userCon.userBySS(req, res));
 userRouter.get('/user/:id', (req, res) => userCon.getUser(req, res));
+userRouter.get('/users', (req, res) => userCon.allUsers(req, res));
 userRouter.get('/user', (req, res) => userCon.me(req, res));
 
 userRouter.put('/user/:id/badge(s)?', (req, res) => userCon.updateUserBadges(req, res));
