@@ -67,11 +67,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.cronController = void 0;
 var cron = __importStar(require("node-cron"));
 var controller_1 = require("./controller");
 var user_controller_1 = require("./user.controller");
+var sharp_1 = __importDefault(require("sharp"));
 var FormData = require('form-data');
 var fetch = require('node-fetch');
 var cronController = /** @class */ (function (_super) {
@@ -187,43 +191,137 @@ var cronController = /** @class */ (function (_super) {
         });
     };
     cronController.prototype.updateUsersSS = function () {
+        var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var users, updated, _i, users_2, user, ssData, info, error_2;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var users, curBadges, badgeAssignment, badgeLabels, updated, i, user, ssData, info, error_2, _loop_2, this_2, _i, _b, badge;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0: return [4 /*yield*/, this.db.aQuery('SELECT * FROM users')];
                     case 1:
-                        users = _a.sent();
-                        updated = 0;
-                        _i = 0, users_2 = users;
-                        _a.label = 2;
+                        users = _c.sent();
+                        return [4 /*yield*/, this.db.aQuery("SELECT * FROM badges")];
                     case 2:
-                        if (!(_i < users_2.length)) return [3 /*break*/, 8];
-                        user = users_2[_i];
-                        return [4 /*yield*/, user_controller_1.userController.getSSData(user.ssId)];
+                        curBadges = _c.sent();
+                        return [4 /*yield*/, this.db.aQuery("SELECT * FROM badge_assignment")];
                     case 3:
-                        ssData = _a.sent();
-                        if (!(ssData != null && ssData.playerInfo.banned != 1)) return [3 /*break*/, 7];
+                        badgeAssignment = _c.sent();
+                        badgeLabels = curBadges.map(function (x) { return x.image; });
+                        updated = 0;
+                        i = 0;
+                        _c.label = 4;
+                    case 4:
+                        if (!(i < users.length)) return [3 /*break*/, 16];
+                        user = users[i];
+                        if (!(i !== 0 && i % 60 == 0)) return [3 /*break*/, 6];
+                        return [4 /*yield*/, this.delay(60000)];
+                    case 5:
+                        _c.sent();
+                        _c.label = 6;
+                    case 6: return [4 /*yield*/, user_controller_1.userController.getSSData(user.ssId)];
+                    case 7:
+                        ssData = _c.sent();
+                        if (!(ssData != null && ((_a = ssData === null || ssData === void 0 ? void 0 : ssData.playerInfo) === null || _a === void 0 ? void 0 : _a.banned) != 1)) return [3 /*break*/, 15];
                         info = {
                             globalRank: ssData.playerInfo.rank,
                             localRank: ssData.playerInfo.countryRank
                         };
-                        _a.label = 4;
-                    case 4:
-                        _a.trys.push([4, 6, , 7]);
-                        updated++;
-                        return [4 /*yield*/, this.db.aQuery("UPDATE users SET ? WHERE discordId = ?", [info, user.discordId])];
-                    case 5:
-                        _a.sent();
-                        return [3 /*break*/, 7];
-                    case 6:
-                        error_2 = _a.sent();
-                        console.error(error_2);
-                        return [3 /*break*/, 7];
-                    case 7:
-                        _i++;
-                        return [3 /*break*/, 2];
+                        _c.label = 8;
                     case 8:
+                        _c.trys.push([8, 10, , 11]);
+                        return [4 /*yield*/, this.db.aQuery("UPDATE users SET ? WHERE discordId = ?", [info, user.discordId])];
+                    case 9:
+                        _c.sent();
+                        updated++;
+                        return [3 /*break*/, 11];
+                    case 10:
+                        error_2 = _c.sent();
+                        console.log(error_2);
+                        return [3 /*break*/, 11];
+                    case 11:
+                        if (!(ssData.playerInfo.badges.length > 0)) return [3 /*break*/, 15];
+                        _loop_2 = function (badge) {
+                            var imgName, info_1, buff, savePath, webpData, result, error_3, curBadge, result, error_4;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        imgName = badge.image.split('.')[0];
+                                        if (['ranker', 'supporter'].includes(imgName))
+                                            return [2 /*return*/, "continue"];
+                                        if (!!badgeLabels.includes(imgName)) return [3 /*break*/, 8];
+                                        return [4 /*yield*/, fetch("https://new.scoresaber.com/api/static/badges/" + badge.image)];
+                                    case 1:
+                                        info_1 = _a.sent();
+                                        return [4 /*yield*/, info_1.buffer()];
+                                    case 2:
+                                        buff = _a.sent();
+                                        savePath = this_2.env == 'development' ? '../app/src/assets/badges/' : __dirname + '/../public/assets/badges/';
+                                        return [4 /*yield*/, sharp_1.default(buff)
+                                                .resize({ width: 80, height: 30 })
+                                                .png()
+                                                .toBuffer()];
+                                    case 3:
+                                        webpData = _a.sent();
+                                        return [4 /*yield*/, sharp_1.default(webpData)
+                                                .toFile(savePath + imgName + '.png')];
+                                    case 4:
+                                        _a.sent();
+                                        _a.label = 5;
+                                    case 5:
+                                        _a.trys.push([5, 7, , 8]);
+                                        return [4 /*yield*/, this_2.db.aQuery("INSERT INTO badges (image, description) VALUES (?)", [[imgName, badge.description]])];
+                                    case 6:
+                                        result = _a.sent();
+                                        curBadges.push({
+                                            id: result.insertId,
+                                            image: imgName,
+                                            description: badge.description
+                                        });
+                                        badgeLabels.push(imgName);
+                                        return [3 /*break*/, 8];
+                                    case 7:
+                                        error_3 = _a.sent();
+                                        console.error(error_3);
+                                        return [3 /*break*/, 8];
+                                    case 8:
+                                        curBadge = curBadges.find(function (x) { return x.image == imgName; });
+                                        if (!!badgeAssignment.find(function (x) { return x.badgeId == curBadge.id; })) return [3 /*break*/, 12];
+                                        _a.label = 9;
+                                    case 9:
+                                        _a.trys.push([9, 11, , 12]);
+                                        return [4 /*yield*/, this_2.db.aQuery("INSERT INTO badge_assignment (badgeId, userId) VALUES (?)", [[curBadge.id, user.discordId]])];
+                                    case 10:
+                                        result = _a.sent();
+                                        badgeAssignment.push({
+                                            id: result.insertId,
+                                            badgeId: curBadge.id,
+                                            userId: user.discordId
+                                        });
+                                        return [3 /*break*/, 12];
+                                    case 11:
+                                        error_4 = _a.sent();
+                                        console.log(error_4);
+                                        return [3 /*break*/, 12];
+                                    case 12: return [2 /*return*/];
+                                }
+                            });
+                        };
+                        this_2 = this;
+                        _i = 0, _b = ssData.playerInfo.badges;
+                        _c.label = 12;
+                    case 12:
+                        if (!(_i < _b.length)) return [3 /*break*/, 15];
+                        badge = _b[_i];
+                        return [5 /*yield**/, _loop_2(badge)];
+                    case 13:
+                        _c.sent();
+                        _c.label = 14;
+                    case 14:
+                        _i++;
+                        return [3 /*break*/, 12];
+                    case 15:
+                        i++;
+                        return [3 /*break*/, 4];
+                    case 16:
                         console.info("Score Saber update complete: " + updated + "/" + users.length);
                         return [2 /*return*/];
                 }

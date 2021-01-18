@@ -16,5 +16,6 @@ tournamentRouter.delete('/tournament/:tourneyId', (req, res) => tournamentCon.de
 
 tournamentRouter.put('/tournament/:tourneyId/settings', (req, res) => tournamentCon.updateSettings(req, res));
 tournamentRouter.put('/tournament/:tourneyId', (req, res) => tournamentCon.updateTournament(req, res));
+tournamentRouter.put('/archiveTournament', (req, res) => tournamentCon.archive(req, res));
 
 export { tournamentRouter }

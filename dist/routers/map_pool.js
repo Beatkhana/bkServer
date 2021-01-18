@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.mapPoolRouter = void 0;
+var express_1 = require("express");
+var map_pool_1 = require("../controllers/map_pool");
+var mapPoolRouter = express_1.Router();
+exports.mapPoolRouter = mapPoolRouter;
+var mapPoolCon = new map_pool_1.MapPoolController();
+mapPoolRouter.get('/tournament/:tourneyId/map-pools', function (req, res) { return mapPoolCon.getPools(req, res); });
+mapPoolRouter.put('/tournament/:tourneyId/map-pools', function (req, res) { return mapPoolCon.updatePool(req, res); });
+mapPoolRouter.post('/tournament/:tourneyId/addPool', function (req, res) { return mapPoolCon.addPool(req, res); });

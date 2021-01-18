@@ -15,6 +15,9 @@ var session = require('express-session');
 var MemoryStore = require('memorystore')(session);
 var cron = require('node-cron');
 var bracket_router_1 = require("./routers/bracket.router");
+var map_pool_1 = require("./routers/map_pool");
+var participants_1 = require("./routers/participants");
+var tournament_router_1 = require("./routers/tournament.router");
 var tournamentList_router_1 = require("./routers/tournamentList.router");
 var user_router_1 = require("./routers/user.router");
 new debugLogger_controller_1.debugLogger();
@@ -65,12 +68,15 @@ app.use(function (err, req, res, next) {
 });
 app.use('/api', bracket_router_1.bracketRouter);
 app.use('/api', tournamentList_router_1.tournamentListRouter);
+app.use('/api', participants_1.participantsRouter);
+app.use('/api', map_pool_1.mapPoolRouter);
+app.use('/api', tournament_router_1.tournamentRouter);
 app.use('/api', user_router_1.userRouter);
 app.use('/', router);
 var env = process.env.NODE_ENV || 'production';
 var mainDir = env == 'development' ? 'dist/public' : 'public';
 var assetDir = env == 'development' ? 'dist/public/assets' : 'public/assets';
-app.use('/assets/images', express_1.default.static(path.join(__dirname, assetDir + '/images'), { maxAge: "4h" }));
+// app.use('/assets/images', express.static(path.join(__dirname, assetDir+'/images'), { maxAge: "1d" }));
 app.use('/assets', express_1.default.static(path.join(__dirname, assetDir), { maxAge: "30d" }));
 app.use(express_1.default.static(path.join(__dirname, mainDir)));
 app.get('*', function (req, res) {

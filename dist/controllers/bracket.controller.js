@@ -58,6 +58,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.bracketController = void 0;
 var auth_controller_1 = require("./auth.controller");
 var controller_1 = require("./controller");
+var fs = require('fs');
 var bracketController = /** @class */ (function (_super) {
     __extends(bracketController, _super);
     function bracketController() {
@@ -102,84 +103,92 @@ var bracketController = /** @class */ (function (_super) {
     };
     bracketController.prototype.scheduleMatch = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, _a, _b, time, timeString, error_1;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var auth, time, timeString, error_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         auth = new auth_controller_1.authController(req);
-                        return [4 /*yield*/, auth.admin()];
+                        return [4 /*yield*/, auth.hasAdminPerms];
                     case 1:
-                        _b = (_c.sent());
-                        if (_b) return [3 /*break*/, 3];
-                        return [4 /*yield*/, auth.owner()];
-                    case 2:
-                        _b = (_c.sent());
-                        _c.label = 3;
-                    case 3:
-                        _a = _b;
-                        if (_a) return [3 /*break*/, 5];
-                        return [4 /*yield*/, auth.validKey()];
-                    case 4:
-                        _a = (_c.sent());
-                        _c.label = 5;
-                    case 5:
-                        if (!(_a))
+                        if (!(_a.sent()))
                             return [2 /*return*/, this.unauthorized(res)];
                         time = new Date(req.body.matchTime);
                         timeString = time.toISOString().slice(0, 19).replace('T', ' ');
-                        _c.label = 6;
-                    case 6:
-                        _c.trys.push([6, 8, , 9]);
+                        _a.label = 2;
+                    case 2:
+                        _a.trys.push([2, 4, , 5]);
                         return [4 /*yield*/, this.db.aQuery('UPDATE bracket SET time = ? WHERE id = ?', [timeString, req.params.id])];
-                    case 7:
-                        _c.sent();
+                    case 3:
+                        _a.sent();
                         return [2 /*return*/, this.ok(res)];
-                    case 8:
-                        error_1 = _c.sent();
+                    case 4:
+                        error_1 = _a.sent();
                         return [2 /*return*/, this.fail(res, error_1)];
-                    case 9: return [2 /*return*/];
+                    case 5: return [2 /*return*/];
                 }
             });
         });
     };
     bracketController.prototype.setBestOf = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, _a, _b, error_2;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var auth, error_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         auth = new auth_controller_1.authController(req);
-                        return [4 /*yield*/, auth.admin()];
+                        return [4 /*yield*/, auth.hasAdminPerms];
                     case 1:
-                        _b = (_c.sent());
-                        if (_b) return [3 /*break*/, 3];
-                        return [4 /*yield*/, auth.owner()];
-                    case 2:
-                        _b = (_c.sent());
-                        _c.label = 3;
-                    case 3:
-                        _a = _b;
-                        if (_a) return [3 /*break*/, 5];
-                        return [4 /*yield*/, auth.validKey()];
-                    case 4:
-                        _a = (_c.sent());
-                        _c.label = 5;
-                    case 5:
-                        if (!(_a))
+                        if (!(_a.sent()))
                             return [2 /*return*/, this.unauthorized(res)];
                         if (!req.body.best_of)
                             return [2 /*return*/, this.clientError(res, "Please provide a valid best of value")];
-                        _c.label = 6;
-                    case 6:
-                        _c.trys.push([6, 8, , 9]);
+                        _a.label = 2;
+                    case 2:
+                        _a.trys.push([2, 4, , 5]);
                         return [4 /*yield*/, this.db.aQuery('UPDATE bracket SET best_of = ? WHERE id = ?', [req.body.best_of, req.params.id])];
-                    case 7:
-                        _c.sent();
+                    case 3:
+                        _a.sent();
                         return [2 /*return*/, this.ok(res)];
-                    case 8:
-                        error_2 = _c.sent();
+                    case 4:
+                        error_2 = _a.sent();
                         return [2 /*return*/, this.fail(res, error_2)];
-                    case 9: return [2 /*return*/];
+                    case 5: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    bracketController.prototype.saveOverlay = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var auth, savePath;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        auth = new auth_controller_1.authController(req);
+                        return [4 /*yield*/, auth.hasAdminPerms];
+                    case 1:
+                        if (!(_a.sent()))
+                            return [2 /*return*/, this.unauthorized(res)];
+                        if (!req.body.img)
+                            return [2 /*return*/, this.clientError(res, "Please provide a valid best of value")];
+                        try {
+                            console.log(req.body.img);
+                            savePath = this.env == 'development' ? '../app/src/assets/overlay/' : __dirname + '/../public/assets/overlay/';
+                            // let base64Img = req.body.img.split(';base64,').pop();
+                            // const buf = await Buffer.from(base64Img, 'base64');
+                            // const webpData = await sharp(buf)
+                            //     .toFile(savePath+req.params.id+'.svg');
+                            fs.writeFile(savePath + req.params.id + '.svg', req.body.img, function (err) {
+                                if (err)
+                                    return console.log(err);
+                                // console.log('Hello World > helloworld.txt');
+                            });
+                            // await this.db.aQuery('UPDATE bracket SET best_of = ? WHERE id = ?', [req.body.best_of, req.params.id]);
+                            return [2 /*return*/, this.ok(res)];
+                        }
+                        catch (error) {
+                            return [2 /*return*/, this.fail(res, error)];
+                        }
+                        return [2 /*return*/];
                 }
             });
         });
@@ -187,37 +196,23 @@ var bracketController = /** @class */ (function (_super) {
     bracketController.prototype.saveBracket = function (req, res) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var auth, id, data, _c, _d, matches, tempMatches, _i, tempMatches_1, match, tempMatches, _e, tempMatches_2, match, tempMatches, _f, tempMatches_3, match, sqlMatches, _g, matches_1, match, error_3;
-            return __generator(this, function (_h) {
-                switch (_h.label) {
+            var auth, id, data, matches, tempMatches, _i, tempMatches_1, match, tempMatches, _c, tempMatches_2, match, tempMatches, _d, tempMatches_3, match, sqlMatches, _e, matches_1, match, error_3;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
                     case 0:
                         auth = new auth_controller_1.authController(req);
                         id = req.params.id;
                         data = req.body;
-                        return [4 /*yield*/, auth.admin()];
+                        return [4 /*yield*/, auth.hasAdminPerms];
                     case 1:
-                        _d = (_h.sent());
-                        if (_d) return [3 /*break*/, 3];
-                        return [4 /*yield*/, auth.owner()];
-                    case 2:
-                        _d = (_h.sent());
-                        _h.label = 3;
-                    case 3:
-                        _c = _d;
-                        if (_c) return [3 /*break*/, 5];
-                        return [4 /*yield*/, auth.validKey()];
-                    case 4:
-                        _c = (_h.sent());
-                        _h.label = 5;
-                    case 5:
-                        if (!(_c))
+                        if (!(_f.sent()))
                             return [2 /*return*/, this.unauthorized(res)];
                         matches = [];
                         console.log(data);
-                        if (!(((_a = data.customPlayers) === null || _a === void 0 ? void 0 : _a.length) > 0)) return [3 /*break*/, 7];
+                        if (!(((_a = data.customPlayers) === null || _a === void 0 ? void 0 : _a.length) > 0)) return [3 /*break*/, 3];
                         return [4 /*yield*/, this.generateBracket(id, data.customPlayers)];
-                    case 6:
-                        tempMatches = _h.sent();
+                    case 2:
+                        tempMatches = _f.sent();
                         for (_i = 0, tempMatches_1 = tempMatches; _i < tempMatches_1.length; _i++) {
                             match = tempMatches_1[_i];
                             matches.push({
@@ -229,14 +224,14 @@ var bracketController = /** @class */ (function (_super) {
                                 bye: +match.bye || 0
                             });
                         }
-                        return [3 /*break*/, 11];
-                    case 7:
-                        if (!(((_b = data.players) === null || _b === void 0 ? void 0 : _b.length) > 0)) return [3 /*break*/, 9];
+                        return [3 /*break*/, 7];
+                    case 3:
+                        if (!(((_b = data.players) === null || _b === void 0 ? void 0 : _b.length) > 0)) return [3 /*break*/, 5];
                         return [4 /*yield*/, this.generateBracket(id, null, data.players)];
-                    case 8:
-                        tempMatches = _h.sent();
-                        for (_e = 0, tempMatches_2 = tempMatches; _e < tempMatches_2.length; _e++) {
-                            match = tempMatches_2[_e];
+                    case 4:
+                        tempMatches = _f.sent();
+                        for (_c = 0, tempMatches_2 = tempMatches; _c < tempMatches_2.length; _c++) {
+                            match = tempMatches_2[_c];
                             matches.push({
                                 tournamentId: id,
                                 round: match.round,
@@ -246,12 +241,12 @@ var bracketController = /** @class */ (function (_super) {
                                 bye: +match.bye || 0
                             });
                         }
-                        return [3 /*break*/, 11];
-                    case 9: return [4 /*yield*/, this.generateBracket(id)];
-                    case 10:
-                        tempMatches = _h.sent();
-                        for (_f = 0, tempMatches_3 = tempMatches; _f < tempMatches_3.length; _f++) {
-                            match = tempMatches_3[_f];
+                        return [3 /*break*/, 7];
+                    case 5: return [4 /*yield*/, this.generateBracket(id)];
+                    case 6:
+                        tempMatches = _f.sent();
+                        for (_d = 0, tempMatches_3 = tempMatches; _d < tempMatches_3.length; _d++) {
+                            match = tempMatches_3[_d];
                             matches.push({
                                 tournamentId: id,
                                 round: match.round,
@@ -261,27 +256,27 @@ var bracketController = /** @class */ (function (_super) {
                                 bye: +match.bye || 0
                             });
                         }
-                        _h.label = 11;
-                    case 11:
+                        _f.label = 7;
+                    case 7:
                         sqlMatches = [];
-                        for (_g = 0, matches_1 = matches; _g < matches_1.length; _g++) {
-                            match = matches_1[_g];
+                        for (_e = 0, matches_1 = matches; _e < matches_1.length; _e++) {
+                            match = matches_1[_e];
                             sqlMatches.push(Object.values(match));
                         }
-                        _h.label = 12;
-                    case 12:
-                        _h.trys.push([12, 15, , 16]);
+                        _f.label = 8;
+                    case 8:
+                        _f.trys.push([8, 11, , 12]);
                         return [4 /*yield*/, this.db.asyncPreparedQuery('DELETE FROM bracket WHERE tournamentId = ?', [id])];
-                    case 13:
-                        _h.sent();
+                    case 9:
+                        _f.sent();
                         return [4 /*yield*/, this.db.asyncPreparedQuery('INSERT INTO bracket (tournamentId, round, matchNum, p1, p2, bye) VALUES ?', [sqlMatches])];
-                    case 14:
-                        _h.sent();
-                        return [3 /*break*/, 16];
-                    case 15:
-                        error_3 = _h.sent();
+                    case 10:
+                        _f.sent();
+                        return [3 /*break*/, 12];
+                    case 11:
+                        error_3 = _f.sent();
                         return [2 /*return*/, this.fail(res, error_3)];
-                    case 16: return [2 /*return*/, this.ok(res)];
+                    case 12: return [2 /*return*/, this.ok(res)];
                 }
             });
         });
@@ -590,66 +585,52 @@ var bracketController = /** @class */ (function (_super) {
     };
     bracketController.prototype.updateBracket = function (args) {
         return __awaiter(this, void 0, void 0, function () {
-            var req, res, auth, id, data, isAuth, _a, _b, error_4, tmpMatch, error_5, settings, bracket, thisMatch, winner, loser, winnersRound_1, maxRound, winnersMatch_1, playerIdentifier, nextMatch, tmpMatch_1, error_6, tmpMatch_2, winnersRound_2, maxRound, winnersMatch_2, winnerIdentifier, nextMatch, tmpMatch_3, error_7, loserRound_1, loserMatch_1, loserIdentifier, loserNextMatch, tmpMatch_4, error_8, winnersMatch_3, nextMatch, tmpMatch_5, error_9, winnersMatch_4, nextMatch, tmpMatch_6, error_10, winnersRound_3, minRound, maxRound, winnersMatch_5, winnerIdentifier, nextMatch, error_11, tmpMatch_7, tmpMatch;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var req, res, auth, id, data, isAuth, error_4, tmpMatch, error_5, settings, bracket, thisMatch, winner, loser, winnersRound_1, maxRound, winnersMatch_1, playerIdentifier, nextMatch, tmpMatch_1, error_6, tmpMatch_2, winnersRound_2, maxRound, winnersMatch_2, winnerIdentifier, nextMatch, tmpMatch_3, error_7, loserRound_1, loserMatch_1, loserIdentifier, loserNextMatch, tmpMatch_4, error_8, winnersMatch_3, nextMatch, tmpMatch_5, error_9, winnersMatch_4, nextMatch, tmpMatch_6, error_10, winnersRound_3, minRound, maxRound, winnersMatch_5, winnerIdentifier, nextMatch, error_11, tmpMatch_7, tmpMatch;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         req = args.req, res = args.res, auth = args.auth;
                         id = req.params.tourneyId;
                         data = req.body;
-                        return [4 /*yield*/, auth.admin()];
+                        return [4 /*yield*/, auth.hasAdminPerms];
                     case 1:
-                        _b = (_c.sent());
-                        if (_b) return [3 /*break*/, 3];
-                        return [4 /*yield*/, auth.owner()];
-                    case 2:
-                        _b = (_c.sent());
-                        _c.label = 3;
-                    case 3:
-                        _a = _b;
-                        if (_a) return [3 /*break*/, 5];
-                        return [4 /*yield*/, auth.validKey()];
-                    case 4:
-                        _a = (_c.sent());
-                        _c.label = 5;
-                    case 5:
-                        isAuth = _a;
+                        isAuth = _a.sent();
                         if (!isAuth)
                             return [2 /*return*/, this.unauthorized(res)];
-                        if (!(data.status == 'update')) return [3 /*break*/, 11];
-                        _c.label = 6;
-                    case 6:
-                        _c.trys.push([6, 8, , 9]);
+                        if (!(data.status == 'update')) return [3 /*break*/, 7];
+                        _a.label = 2;
+                    case 2:
+                        _a.trys.push([2, 4, , 5]);
                         return [4 /*yield*/, this.db.asyncPreparedQuery('UPDATE bracket SET p1Score = ?, p2Score = ?, status = "in_progress" WHERE id = ?', [+data.p1Score, +data.p2Score, data.matchId])];
-                    case 7:
-                        _c.sent();
-                        return [3 /*break*/, 9];
-                    case 8:
-                        error_4 = _c.sent();
+                    case 3:
+                        _a.sent();
+                        return [3 /*break*/, 5];
+                    case 4:
+                        error_4 = _a.sent();
                         return [2 /*return*/, this.fail(res, error_4)];
-                    case 9: return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, data.matchId)];
-                    case 10:
-                        tmpMatch = _c.sent();
+                    case 5: return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, data.matchId)];
+                    case 6:
+                        tmpMatch = _a.sent();
                         this.emitter.emit('bracketMatch', tmpMatch);
                         return [2 /*return*/, this.ok(res)];
-                    case 11:
-                        if (!(data.status == 'complete')) return [3 /*break*/, 55];
-                        _c.label = 12;
-                    case 12:
-                        _c.trys.push([12, 14, , 15]);
+                    case 7:
+                        if (!(data.status == 'complete')) return [3 /*break*/, 51];
+                        _a.label = 8;
+                    case 8:
+                        _a.trys.push([8, 10, , 11]);
                         return [4 /*yield*/, this.db.asyncPreparedQuery('UPDATE bracket SET p1Score = ?, p2Score = ?, status = "complete" WHERE id = ?', [+data.p1Score, +data.p2Score, data.matchId])];
-                    case 13:
-                        _c.sent();
-                        return [3 /*break*/, 15];
-                    case 14:
-                        error_5 = _c.sent();
+                    case 9:
+                        _a.sent();
+                        return [3 /*break*/, 11];
+                    case 10:
+                        error_5 = _a.sent();
                         return [2 /*return*/, this.fail(res, error_5)];
-                    case 15: return [4 /*yield*/, this.getSettings(id)];
-                    case 16:
-                        settings = _c.sent();
+                    case 11: return [4 /*yield*/, this.getSettings(id)];
+                    case 12:
+                        settings = _a.sent();
                         return [4 /*yield*/, this.bracketDataOld(id)];
-                    case 17:
-                        bracket = _c.sent();
+                    case 13:
+                        bracket = _a.sent();
                         thisMatch = bracket.find(function (x) { return x.id == data.matchId; });
                         winner = '';
                         loser = '';
@@ -661,56 +642,56 @@ var bracketController = /** @class */ (function (_super) {
                             winner = thisMatch.p2;
                             loser = thisMatch.p1;
                         }
-                        if (!(settings.type == 'single_elim')) return [3 /*break*/, 24];
+                        if (!(settings.type == 'single_elim')) return [3 /*break*/, 20];
                         winnersRound_1 = thisMatch.round + 1;
                         maxRound = Math.max.apply(Math, bracket.map(function (x) { return x.round; }));
-                        if (!(winnersRound_1 <= maxRound)) return [3 /*break*/, 22];
+                        if (!(winnersRound_1 <= maxRound)) return [3 /*break*/, 18];
                         winnersMatch_1 = Math.floor(thisMatch.matchNum / 2);
                         playerIdentifier = thisMatch.matchNum % 2 == 0 ? 'p1' : 'p2';
                         nextMatch = bracket.find(function (x) { return x.round == winnersRound_1 && x.matchNum == winnersMatch_1; });
-                        _c.label = 18;
-                    case 18:
-                        _c.trys.push([18, 21, , 22]);
+                        _a.label = 14;
+                    case 14:
+                        _a.trys.push([14, 17, , 18]);
                         return [4 /*yield*/, this.db.asyncPreparedQuery('UPDATE bracket SET ?? = ? WHERE id = ?', [playerIdentifier, winner, nextMatch.id])];
-                    case 19:
-                        _c.sent();
+                    case 15:
+                        _a.sent();
                         return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, nextMatch.id)];
-                    case 20:
-                        tmpMatch_1 = _c.sent();
+                    case 16:
+                        tmpMatch_1 = _a.sent();
                         this.emitter.emit('bracketMatch', tmpMatch_1);
-                        return [3 /*break*/, 22];
-                    case 21:
-                        error_6 = _c.sent();
+                        return [3 /*break*/, 18];
+                    case 17:
+                        error_6 = _a.sent();
                         return [2 /*return*/, this.fail(res, error_6)];
-                    case 22: return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, data.matchId)];
-                    case 23:
-                        tmpMatch_2 = _c.sent();
+                    case 18: return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, data.matchId)];
+                    case 19:
+                        tmpMatch_2 = _a.sent();
                         this.emitter.emit('bracketMatch', tmpMatch_2);
                         return [2 /*return*/, this.ok(res)];
-                    case 24:
-                        if (!(settings.type == 'double_elim')) return [3 /*break*/, 53];
-                        if (!(thisMatch.round >= 0)) return [3 /*break*/, 47];
+                    case 20:
+                        if (!(settings.type == 'double_elim')) return [3 /*break*/, 49];
+                        if (!(thisMatch.round >= 0)) return [3 /*break*/, 43];
                         winnersRound_2 = thisMatch.round + 1;
                         maxRound = Math.max.apply(Math, bracket.map(function (x) { return x.round; }));
-                        if (!(winnersRound_2 < maxRound)) return [3 /*break*/, 35];
+                        if (!(winnersRound_2 < maxRound)) return [3 /*break*/, 31];
                         winnersMatch_2 = Math.floor(thisMatch.matchNum / 2);
                         winnerIdentifier = thisMatch.matchNum % 2 == 0 ? 'p1' : 'p2';
                         nextMatch = bracket.find(function (x) { return x.round == winnersRound_2 && x.matchNum == winnersMatch_2; });
-                        _c.label = 25;
-                    case 25:
-                        _c.trys.push([25, 28, , 29]);
+                        _a.label = 21;
+                    case 21:
+                        _a.trys.push([21, 24, , 25]);
                         return [4 /*yield*/, this.db.asyncPreparedQuery('UPDATE bracket SET ?? = ? WHERE id = ?', [winnerIdentifier, winner, nextMatch.id])];
-                    case 26:
-                        _c.sent();
+                    case 22:
+                        _a.sent();
                         return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, nextMatch.id)];
-                    case 27:
-                        tmpMatch_3 = _c.sent();
+                    case 23:
+                        tmpMatch_3 = _a.sent();
                         this.emitter.emit('bracketMatch', tmpMatch_3);
-                        return [3 /*break*/, 29];
-                    case 28:
-                        error_7 = _c.sent();
+                        return [3 /*break*/, 25];
+                    case 24:
+                        error_7 = _a.sent();
                         return [2 /*return*/, this.fail(res, error_7)];
-                    case 29:
+                    case 25:
                         loserRound_1 = -1;
                         loserMatch_1 = Math.floor(thisMatch.matchNum / 2);
                         loserIdentifier = thisMatch.matchNum % 2 == 0 ? 'p1' : 'p2';
@@ -728,61 +709,61 @@ var bracketController = /** @class */ (function (_super) {
                             }
                         }
                         loserNextMatch = bracket.find(function (x) { return x.round == loserRound_1 && x.matchNum == loserMatch_1; });
-                        _c.label = 30;
-                    case 30:
-                        _c.trys.push([30, 33, , 34]);
+                        _a.label = 26;
+                    case 26:
+                        _a.trys.push([26, 29, , 30]);
                         return [4 /*yield*/, this.db.asyncPreparedQuery('UPDATE bracket SET ?? = ? WHERE id = ?', [loserIdentifier, loser, loserNextMatch.id])];
-                    case 31:
-                        _c.sent();
+                    case 27:
+                        _a.sent();
                         return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, loserNextMatch.id)];
-                    case 32:
-                        tmpMatch_4 = _c.sent();
+                    case 28:
+                        tmpMatch_4 = _a.sent();
                         this.emitter.emit('bracketMatch', tmpMatch_4);
-                        return [3 /*break*/, 34];
-                    case 33:
-                        error_8 = _c.sent();
+                        return [3 /*break*/, 30];
+                    case 29:
+                        error_8 = _a.sent();
                         return [2 /*return*/, this.fail(res, error_8)];
-                    case 34: return [3 /*break*/, 46];
-                    case 35:
-                        if (!(winnersRound_2 == maxRound && data.p1Score < data.p2Score)) return [3 /*break*/, 41];
+                    case 30: return [3 /*break*/, 42];
+                    case 31:
+                        if (!(winnersRound_2 == maxRound && data.p1Score < data.p2Score)) return [3 /*break*/, 37];
                         winnersMatch_3 = 0;
                         nextMatch = bracket.find(function (x) { return x.round == winnersRound_2 && x.matchNum == winnersMatch_3; });
-                        _c.label = 36;
-                    case 36:
-                        _c.trys.push([36, 39, , 40]);
+                        _a.label = 32;
+                    case 32:
+                        _a.trys.push([32, 35, , 36]);
                         return [4 /*yield*/, this.db.asyncPreparedQuery('UPDATE bracket SET p1 = ?, p2 = ?, bye = 0 WHERE id = ?', [winner, loser, nextMatch.id])];
-                    case 37:
-                        _c.sent();
+                    case 33:
+                        _a.sent();
                         return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, nextMatch.id)];
-                    case 38:
-                        tmpMatch_5 = _c.sent();
+                    case 34:
+                        tmpMatch_5 = _a.sent();
                         this.emitter.emit('bracketMatch', tmpMatch_5);
-                        return [3 /*break*/, 40];
-                    case 39:
-                        error_9 = _c.sent();
+                        return [3 /*break*/, 36];
+                    case 35:
+                        error_9 = _a.sent();
                         return [2 /*return*/, this.fail(res, error_9)];
-                    case 40: return [3 /*break*/, 46];
-                    case 41:
-                        if (!(winnersRound_2 == maxRound && data.p1Score > data.p2Score)) return [3 /*break*/, 46];
+                    case 36: return [3 /*break*/, 42];
+                    case 37:
+                        if (!(winnersRound_2 == maxRound && data.p1Score > data.p2Score)) return [3 /*break*/, 42];
                         winnersMatch_4 = 0;
                         nextMatch = bracket.find(function (x) { return x.round == winnersRound_2 && x.matchNum == winnersMatch_4; });
-                        _c.label = 42;
-                    case 42:
-                        _c.trys.push([42, 45, , 46]);
+                        _a.label = 38;
+                    case 38:
+                        _a.trys.push([38, 41, , 42]);
                         return [4 /*yield*/, this.db.asyncPreparedQuery('UPDATE bracket SET bye = 1 WHERE id = ?', [nextMatch.id])];
-                    case 43:
-                        _c.sent();
+                    case 39:
+                        _a.sent();
                         return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, nextMatch.id)];
-                    case 44:
-                        tmpMatch_6 = _c.sent();
+                    case 40:
+                        tmpMatch_6 = _a.sent();
                         this.emitter.emit('bracketMatch', tmpMatch_6);
-                        return [3 /*break*/, 46];
-                    case 45:
-                        error_10 = _c.sent();
+                        return [3 /*break*/, 42];
+                    case 41:
+                        error_10 = _a.sent();
                         return [2 /*return*/, this.fail(res, error_10)];
-                    case 46: return [3 /*break*/, 53];
-                    case 47:
-                        if (!(thisMatch.round < 0)) return [3 /*break*/, 53];
+                    case 42: return [3 /*break*/, 49];
+                    case 43:
+                        if (!(thisMatch.round < 0)) return [3 /*break*/, 49];
                         winnersRound_3 = thisMatch.round - 1;
                         minRound = Math.min.apply(Math, bracket.map(function (x) { return x.round; }));
                         maxRound = Math.max.apply(Math, bracket.map(function (x) { return x.round; }));
@@ -799,27 +780,27 @@ var bracketController = /** @class */ (function (_super) {
                         nextMatch = bracket.find(function (x) { return x.round == winnersRound_3 && x.matchNum == winnersMatch_5; });
                         if (thisMatch.round * -1 % 2 == 1)
                             winnerIdentifier = 'p2';
-                        _c.label = 48;
-                    case 48:
-                        _c.trys.push([48, 50, , 51]);
+                        _a.label = 44;
+                    case 44:
+                        _a.trys.push([44, 46, , 47]);
                         return [4 /*yield*/, this.db.asyncPreparedQuery('UPDATE bracket SET ?? = ? WHERE id = ?', [winnerIdentifier, winner, nextMatch.id])];
-                    case 49:
-                        _c.sent();
-                        return [3 /*break*/, 51];
-                    case 50:
-                        error_11 = _c.sent();
+                    case 45:
+                        _a.sent();
+                        return [3 /*break*/, 47];
+                    case 46:
+                        error_11 = _a.sent();
                         return [2 /*return*/, this.fail(res, error_11)];
-                    case 51: return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, data.matchId)];
-                    case 52:
-                        tmpMatch_7 = _c.sent();
+                    case 47: return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, data.matchId)];
+                    case 48:
+                        tmpMatch_7 = _a.sent();
                         this.emitter.emit('bracketMatch', tmpMatch_7);
                         return [2 /*return*/, this.ok(res)];
-                    case 53: return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, data.matchId)];
-                    case 54:
-                        tmpMatch = _c.sent();
+                    case 49: return [4 /*yield*/, this.bracketMatchData(req.params.tourneyId, data.matchId)];
+                    case 50:
+                        tmpMatch = _a.sent();
                         this.emitter.emit('bracketMatch', tmpMatch);
                         return [2 /*return*/, this.ok(res)];
-                    case 55: return [2 /*return*/, this.fail(res, 'Something went wrong')];
+                    case 51: return [2 /*return*/, this.fail(res, 'Something went wrong')];
                 }
             });
         });

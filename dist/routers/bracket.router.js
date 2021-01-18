@@ -12,3 +12,4 @@ bracketRouter.put('/tournament/:tourneyId/bracket/schedule/:id', function (req, 
 bracketRouter.put('/tournament/:tourneyId/bracket/setBestOf/:id', function (req, res) { return bracketCon.setBestOf(req, res); });
 bracketRouter.put('/tournament/:tourneyId/bracket/:matchId', function (req, res) { return bracketCon.updateBracket({ req: req, res: res }); });
 bracketRouter.post('/tournament/:id/generateBracket', function (req, res) { return bracketCon.saveBracket(req, res); });
+bracketRouter.post('/tournament/:id/overlay', function (req, res) { return bracketCon.saveOverlay(req, res); });

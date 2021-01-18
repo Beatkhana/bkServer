@@ -16,7 +16,7 @@ export class database {
                 user: "dan",
                 password: "root",
                 database: "bk",
-                connectionLimit: 10,
+                connectionLimit: 200,
                 charset: 'utf8mb4',
                 timezone: 'utc'
             });
@@ -26,7 +26,7 @@ export class database {
                 user: "dan",
                 password: "test",
                 database: "bk",
-                connectionLimit: 10,
+                connectionLimit: 100,
                 charset: 'utf8mb4',
                 timezone: 'utc'
             });

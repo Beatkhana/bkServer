@@ -65,15 +65,16 @@ var database_1 = require("./database");
 var sharp_1 = __importDefault(require("sharp"));
 var AWS = require('aws-sdk');
 var rp = __importStar(require("request-promise"));
+var https = require('https');
 var cheerio_1 = __importDefault(require("cheerio"));
-var ID = 'AKIAJNEXL3RYO3HDJ5EA';
-var SECRET = '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';
-var BUCKET_NAME = 'beatkhanas3';
-var s3 = new AWS.S3({
-    accessKeyId: ID,
-    secretAccessKey: SECRET
-});
-var fs = require('fs');
+// const ID = 'AKIAJNEXL3RYO3HDJ5EA';
+// const SECRET = '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';
+// const BUCKET_NAME = 'beatkhanas3';
+// const s3 = new AWS.S3({
+//     accessKeyId: ID,
+//     secretAccessKey: SECRET
+// });
+// const fs = require('fs');
 var tournaments = /** @class */ (function () {
     function tournaments() {
         this.db = new database_1.database();
@@ -276,14 +277,14 @@ var tournaments = /** @class */ (function () {
                             })];
                     }
                     result = this.db.preparedQuery("INSERT INTO tournaments SET ?", [data], function (err, result) { return __awaiter(_this, void 0, void 0, function () {
-                        var flag, buf, webpData;
+                        var flag, buf, webpData, hash;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
                                     flag = false;
                                     if (err)
                                         flag = true;
-                                    if (!!err) return [3 /*break*/, 4];
+                                    if (!!err) return [3 /*break*/, 5];
                                     return [4 /*yield*/, Buffer.from(base64Img, 'base64')];
                                 case 1:
                                     buf = _a.sent();
@@ -295,11 +296,13 @@ var tournaments = /** @class */ (function () {
                                     ];
                                 case 2:
                                     webpData = _a.sent();
-                                    // console.debug(savePath+data.id+'.webp');
+                                    hash = this.randHash(15);
                                     return [4 /*yield*/, sharp_1.default(webpData)
-                                            .toFile(savePath + result.insertId + '.webp')];
+                                            .toFile(savePath + (result.insertId + "_" + hash + ".webp"))];
                                 case 3:
-                                    // console.debug(savePath+data.id+'.webp');
+                                    _a.sent();
+                                    return [4 /*yield*/, this.db.aQuery('UPDATE tournaments SET image = ? WHERE id = ?', [result.insertId + "_" + hash + ".webp", result.insertId])];
+                                case 4:
                                     _a.sent();
                                     this.db.preparedQuery('INSERT INTO tournament_settings SET tournamentId = ?', [result.insertId], function (err, result2) {
                                         var flag = false;
@@ -311,13 +314,13 @@ var tournaments = /** @class */ (function () {
                                             err: err
                                         });
                                     });
-                                    return [3 /*break*/, 5];
-                                case 4: return [2 /*return*/, callback({
+                                    return [3 /*break*/, 6];
+                                case 5: return [2 /*return*/, callback({
                                         data: result,
                                         flag: flag,
                                         err: err
                                     })];
-                                case 5: return [2 /*return*/];
+                                case 6: return [2 /*return*/];
                             }
                         });
                     }); });
@@ -340,7 +343,7 @@ var tournaments = /** @class */ (function () {
     };
     tournaments.prototype.update = function (data, callback) {
         return __awaiter(this, void 0, void 0, function () {
-            var imgErr, imgName, base64String, base64Img, savePath, buf, webpData, result;
+            var imgErr, imgName, base64String, base64Img, savePath, buf, webpData, hash, result;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -363,11 +366,12 @@ var tournaments = /** @class */ (function () {
                                 .toBuffer()];
                     case 2:
                         webpData = _a.sent();
+                        hash = this.randHash(15);
                         return [4 /*yield*/, sharp_1.default(webpData)
-                                .toFile(savePath + data.id + '.webp')];
+                                .toFile(savePath + (data.id + "_" + hash + ".webp"))];
                     case 3:
                         _a.sent();
-                        data.tournament.image = imgName;
+                        data.tournament.image = data.id + "_" + hash + ".webp";
                         _a.label = 4;
                     case 4:
                         if (!imgErr) {
@@ -888,7 +892,7 @@ var tournaments = /** @class */ (function () {
                         diff = data.diff;
                         return [4 /*yield*/, rp.get('https://beatsaver.com/api/maps/detail/' + key, {
                                 headers: {
-                                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
+                                    "User-Agent": "BeatKhana/1.0.0 (+https://github.com/Dannypoke03)"
                                 },
                                 json: true
                             })
@@ -1669,9 +1673,8 @@ var tournaments = /** @class */ (function () {
     tournaments.prototype.getBSData = function (hash, diff, callback) {
         rp.get('https://beatsaver.com/api/maps/by-hash/' + hash, {
             headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
-            },
-            json: true
+                "User-Agent": "BeatKhana/1.0.0 (+https://github.com/Dannypoke03)"
+            }
         })
             .then(function (res) {
             var info = {
@@ -1684,6 +1687,10 @@ var tournaments = /** @class */ (function () {
             };
             callback(info);
             return null;
+        })
+            .catch(function (err) {
+            console.debug(hash);
+            console.error(err);
         });
     };
     tournaments.prototype.getSettings = function (id) {
@@ -1751,6 +1758,15 @@ var tournaments = /** @class */ (function () {
             array[randomIndex] = temporaryValue;
         }
         return array;
+    };
+    tournaments.prototype.randHash = function (length) {
+        var result = '';
+        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+        var charactersLength = characters.length;
+        for (var i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
     };
     return tournaments;
 }());

@@ -26,11 +26,11 @@ var debugLogger = /** @class */ (function () {
             var args = __spreadArrays(['\x1b[31m[ERROR] %s\x1b[0m'], Array.from(arguments));
             error.apply(console, args);
         };
-        var log = console.log;
-        console.log = function () {
-            var args = __spreadArrays(['[LOG]'], Array.from(arguments));
-            log.apply(console, args);
-        };
+        // const log = console.log;
+        // console.log = function () {
+        //     let args: [any, ...any[]] = ['[LOG]', ...Array.from(arguments)];
+        //     log.apply(console, args);
+        // };
         var info = console.info;
         console.info = function () {
             var args = __spreadArrays(['\x1b[90m[INFO] %s\x1b[0m'], Array.from(arguments));

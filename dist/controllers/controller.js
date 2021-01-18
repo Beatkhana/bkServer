@@ -35,10 +35,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.controller = void 0;
 var database_1 = require("../database");
 var event_controller_1 = require("./event.controller");
+var ajv_1 = __importDefault(require("ajv"));
 var controller = /** @class */ (function () {
     function controller() {
         this.env = process.env.NODE_ENV || 'production';
@@ -46,7 +50,11 @@ var controller = /** @class */ (function () {
         this.CLIENT_ID = '721696709331386398';
         this.CLIENT_SECRET = 'LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6';
         this.emitter = event_controller_1.emitter;
+        this.ajv = new ajv_1.default();
     }
+    controller.prototype.delay = function (ms) {
+        return new Promise(function (resolve) { return setTimeout(resolve, ms); });
+    };
     controller.prototype.getSettings = function (id) {
         return __awaiter(this, void 0, void 0, function () {
             var set;
@@ -59,6 +67,15 @@ var controller = /** @class */ (function () {
                 }
             });
         });
+    };
+    controller.prototype.validate = function (schema, data) {
+        var validate = this.ajv.compile(schema);
+        if (validate(data)) {
+            return true;
+        }
+        else {
+            return validate.errors;
+        }
     };
     controller.jsonResponse = function (res, code, message) {
         return res.status(code).json({ message: message });
@@ -101,6 +118,30 @@ var controller = /** @class */ (function () {
         return res.status(500).json({
             message: error.toString()
         });
+    };
+    controller.prototype.formatDate = function (date) {
+        var d = new Date(date);
+        return d.toISOString().slice(0, 19).replace('T', ' ');
+    };
+    controller.prototype.randHash = function (length) {
+        var result = '';
+        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+        var charactersLength = characters.length;
+        for (var i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+    };
+    controller.prototype.isBase64 = function (str) {
+        var base64regex = /^\s*data:([a-z]+\/[a-z0-9-+.]+(;[a-z-]+=[a-z0-9-]+)?)?(;base64)?,([a-z0-9!$&',()*+;=\-._~:@\/?%\s]*)\s*$/i;
+        return base64regex.test(str);
+    };
+    controller.prototype.sumProperty = function (items, prop) {
+        if (items == null)
+            return 0;
+        return items.reduce(function (a, b) {
+            return b[prop] == null ? a : a + b[prop];
+        }, 0);
     };
     return controller;
 }());

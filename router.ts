@@ -53,88 +53,88 @@ if (env == 'production') {
 //     });
 // }
 
-router.get(baseUrl + '/protected', (req, res) => {
-    res.send(req.headers);
-});
+// router.get(baseUrl + '/protected', (req, res) => {
+//     res.send(req.headers);
+// });
 
 // Routes
 router.get(baseUrl, function (req, res) {
     res.send({ 'hello there': 'general kenobi' });
 });
 
-router.get(baseUrl + '/login', function (req, res) {
-    res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&scope=identify&response_type=code&redirect_uri=${redirect}&state=${req.query.url}`);
-});
+// router.get(baseUrl + '/login', function (req, res) {
+//     res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&scope=identify&response_type=code&redirect_uri=${redirect}&state=${req.query.url}`);
+// });
 
-router.get(baseUrl + '/discordAuth', function (req, res) {
-    if (req.query.code) {
-        user.sendCode(req.query.code.toString(), (usrRes, newUsr = false) => {
-            if (!newUsr) {
-                req.session.user = usrRes;
-                if (req.query.state != undefined) {
-                    res.redirect(`${req.query.state}`);
-                } else {
-                    res.redirect('/');
-                }
-            } else {
-                req.session.newUsr = usrRes;
-                res.redirect('/sign-up');
-            }
-        });
-    } else {
-        res.redirect('/');
-    }
-});
+// router.get(baseUrl + '/discordAuth', function (req, res) {
+//     if (req.query.code) {
+//         user.sendCode(req.query.code.toString(), (usrRes, newUsr = false) => {
+//             if (!newUsr) {
+//                 req.session.user = usrRes;
+//                 if (req.query.state != undefined) {
+//                     res.redirect(`${req.query.state}`);
+//                 } else {
+//                     res.redirect('/');
+//                 }
+//             } else {
+//                 req.session.newUsr = usrRes;
+//                 res.redirect('/sign-up');
+//             }
+//         });
+//     } else {
+//         res.redirect('/');
+//     }
+// });
 
-router.get(baseUrl + '/user', function (req, res) {
-    res.send(req.session.user);
-});
+// router.get(baseUrl + '/user', function (req, res) {
+//     res.send(req.session.user);
+// });
 
-router.put(baseUrl + '/user/:id', function (req, res) {
-    hasPerms(req, 2, auth => {
-        if (auth) {
-            user.update(req.params.id, req.body, (response) => {
-                res.send(response);
-            });
-            return null;
-        } else if (req.session.user[0]['discordId'] == req.params.id) {
-            req.session.user[0] = { ...req.session.user[0], ...req.body };
-            user.update(req.params.id, req.body, (response) => {
-                res.send(response);
-            });
-            return null;
-        } else {
-            res.sendStatus(401);
-            return null;
-        }
-    });
-});
+// router.put(baseUrl + '/user/:id', function (req, res) {
+//     hasPerms(req, 2, auth => {
+//         if (auth) {
+//             user.update(req.params.id, req.body, (response) => {
+//                 res.send(response);
+//             });
+//             return null;
+//         } else if (req.session.user[0]['discordId'] == req.params.id) {
+//             req.session.user[0] = { ...req.session.user[0], ...req.body };
+//             user.update(req.params.id, req.body, (response) => {
+//                 res.send(response);
+//             });
+//             return null;
+//         } else {
+//             res.sendStatus(401);
+//             return null;
+//         }
+//     });
+// });
 
-router.post(baseUrl + '/newUser', function (req, res) {
-    if (req.session.newUsr[0]) {
-        let usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'], refresh_token: req.session.newUsr[0]['refresh_token'], avatar: req.session.newUsr[0]['avatar'], name: req.session.newUsr[0]['name'] };
-        user.newUser(usrData, (result) => {
-            // req.session.destroy(() => { });
-            log.createLog(req.session.newUsr[0]['discordId'], 'Created an account');
-            req.session.user = result;
-            res.send({ message: 'success' });
-        });
-    } else {
-        res.sendStatus(400);
-    }
-});
+// router.post(baseUrl + '/newUser', function (req, res) {
+//     if (req.session.newUsr[0]) {
+//         let usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'], refresh_token: req.session.newUsr[0]['refresh_token'], avatar: req.session.newUsr[0]['avatar'], name: req.session.newUsr[0]['name'] };
+//         user.newUser(usrData, (result) => {
+//             // req.session.destroy(() => { });
+//             log.createLog(req.session.newUsr[0]['discordId'], 'Created an account');
+//             req.session.user = result;
+//             res.send({ message: 'success' });
+//         });
+//     } else {
+//         res.sendStatus(400);
+//     }
+// });
 
-router.get(baseUrl + '/users', function (req, res) {
-    ranking.allUsers((result: any) => {
-        res.send(result);
-    });
-});
+// router.get(baseUrl + '/users', function (req, res) {
+//     ranking.allUsers((result: any) => {
+//         res.send(result);
+//     });
+// });
 
-router.get(baseUrl + '/user/by-ss/:id', function (req, res) {
-    ranking.getUserSS(req.params.id, (result: any) => {
-        res.send(result);
-    })
-});
+// router.get(baseUrl + '/user/by-ss/:id', function (req, res) {
+//     ranking.getUserSS(req.params.id, (result: any) => {
+//         res.send(result);
+//     })
+// });
 
 // router.get(baseUrl + '/user/:id', function (req, res) {
 //     ranking.getUser(req.params.id, (result: any) => {
@@ -143,10 +143,10 @@ router.get(baseUrl + '/user/by-ss/:id', function (req, res) {
 // });
 
 // logout
-router.get(baseUrl + '/logout', function (req, res) {
-    req.session.destroy(() => { });
-    res.redirect('/');
-});
+// router.get(baseUrl + '/logout', function (req, res) {
+//     req.session.destroy(() => { });
+//     res.redirect('/');
+// });
 
 // Get all tournaments
 // router.get(baseUrl + '/tournaments', function (req, res) {
@@ -303,16 +303,16 @@ router.get(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
 });
 
 // bracket testing
-router.get(baseUrl + '/tournament/:id/bracketTest', function (req, res) {
-    tournament.generateBracket(req.params.id)
-        .then(response => {
-            res.send(response);
-        })
-        .catch((err) => {
-            console.error(err);
-            res.sendStatus(500);
-        })
-});
+// router.get(baseUrl + '/tournament/:id/bracketTest', function (req, res) {
+//     tournament.generateBracket(req.params.id)
+//         .then(response => {
+//             res.send(response);
+//         })
+//         .catch((err) => {
+//             console.error(err);
+//             res.sendStatus(500);
+//         })
+// });
 
 //get bracket
 // router.get(baseUrl + '/tournament/:id/bracket', async function (req, res) {
@@ -474,322 +474,322 @@ router.get(baseUrl + '/tournament/:id/bracketTest', function (req, res) {
 // });
 
 // Get all participants
-router.get(baseUrl + '/tournament/:id/allParticipants', function (req, res) {
-    isAdminOwner(req, req.params.id, isAuth => {
-        if (isAuth) {
-            tournament.allParticipants(req.params.id)
-                .then(response => {
-                    res.send(response);
-                })
-            return null;
-        } else {
-            res.sendStatus(401)
-            return null;
-        }
-    })
-});
+// router.get(baseUrl + '/tournament/:id/allParticipants', function (req, res) {
+//     isAdminOwner(req, req.params.id, isAuth => {
+//         if (isAuth) {
+//             tournament.allParticipants(req.params.id)
+//                 .then(response => {
+//                     res.send(response);
+//                 })
+//             return null;
+//         } else {
+//             res.sendStatus(401)
+//             return null;
+//         }
+//     })
+// });
 
 // update participant sign up
-router.put(baseUrl + '/updateParticipant/:id/:participantId', function (req, res) {
-    isAdminOwner(req, req.params.id, isAuth => {
-        req.body.participantId = req.params.participantId;
-        req.body.tournamentId = req.params.id;
-        if (isAuth) {
-            req.body.discordId = req.session.user[0].discordId;
-            tournament.updateParticipant(req.body, true, response => {
-                log.createLog(req.session.user[0]['discordId'], `Updated user(${req.body.userId}) sign up on a tournament (${req.params.id})`);
-                res.send(response);
-            });
-            return null;
-        } else if (req.session.user != null) {
-            req.body.discordId = req.session.user[0].discordId;
-            tournament.updateParticipant(req.body, false, response => {
-                log.createLog(req.session.user[0]['discordId'], `Updated their sign up on a tournament (${req.params.id})`);
-                res.send(response);
-            });
-            return null;
-        } else {
-            res.sendStatus(401);
-            return null;
-        }
-    })
-});
+// router.put(baseUrl + '/updateParticipant/:id/:participantId', function (req, res) {
+//     isAdminOwner(req, req.params.id, isAuth => {
+//         req.body.participantId = req.params.participantId;
+//         req.body.tournamentId = req.params.id;
+//         if (isAuth) {
+//             req.body.discordId = req.session.user[0].discordId;
+//             tournament.updateParticipant(req.body, true, response => {
+//                 log.createLog(req.session.user[0]['discordId'], `Updated user(${req.body.userId}) sign up on a tournament (${req.params.id})`);
+//                 res.send(response);
+//             });
+//             return null;
+//         } else if (req.session.user != null) {
+//             req.body.discordId = req.session.user[0].discordId;
+//             tournament.updateParticipant(req.body, false, response => {
+//                 log.createLog(req.session.user[0]['discordId'], `Updated their sign up on a tournament (${req.params.id})`);
+//                 res.send(response);
+//             });
+//             return null;
+//         } else {
+//             res.sendStatus(401);
+//             return null;
+//         }
+//     })
+// });
 
 // Remove participant
-router.post(baseUrl + '/tournament/:id/deleteParticipant', function (req, res) {
-    isAdminOwner(req, req.params.id, isAuth => {
-        if (isAuth) {
-            tournament.removeParticipant(req.body, response => {
-                log.createLog(req.session.user[0]['discordId'], `Removed user(${req.body.userId}) as a participant on a tournament (${req.params.id})`);
-                res.send(response);
-            });
-            return null;
-        } else {
-            res.sendStatus(401)
-            return null;
-        }
-    })
-});
+// router.post(baseUrl + '/tournament/:id/deleteParticipant', function (req, res) {
+//     isAdminOwner(req, req.params.id, isAuth => {
+//         if (isAuth) {
+//             tournament.removeParticipant(req.body, response => {
+//                 log.createLog(req.session.user[0]['discordId'], `Removed user(${req.body.userId}) as a participant on a tournament (${req.params.id})`);
+//                 res.send(response);
+//             });
+//             return null;
+//         } else {
+//             res.sendStatus(401)
+//             return null;
+//         }
+//     })
+// });
 
 // Eliminate participant - battle royale
-router.post(baseUrl + '/tournament/:id/elimParticipant', function (req, res) {
-    isAdminOwner(req, req.params.id, isAuth => {
-        if (isAuth) {
-            tournament.elimParticipant(req.body.participantId, req.params.id)
-                .then(response => res.send(response));
-            return null;
-        } else {
-            res.sendStatus(401)
-            return null;
-        }
-    })
-});
+// router.post(baseUrl + '/tournament/:id/elimParticipant', function (req, res) {
+//     isAdminOwner(req, req.params.id, isAuth => {
+//         if (isAuth) {
+//             tournament.elimParticipant(req.body.participantId, req.params.id)
+//                 .then(response => res.send(response));
+//             return null;
+//         } else {
+//             res.sendStatus(401)
+//             return null;
+//         }
+//     })
+// });
 
 // archive tournament
-router.put(baseUrl + '/archiveTournament', function (req, res) {
-    hasPerms(req, 2, auth => {
-        if (auth) {
-            tournament.archive(req.body, (response) => {
-                log.createLog(req.session.user[0]['discordId'], `Archived a tournament (${req.params.id})`);
-                res.send(response);
-            });
-        } else {
-            res.sendStatus(401);
-            return null;
-        }
-    });
-});
+// router.put(baseUrl + '/archiveTournament', function (req, res) {
+//     hasPerms(req, 2, auth => {
+//         if (auth) {
+//             tournament.archive(req.body, (response) => {
+//                 log.createLog(req.session.user[0]['discordId'], `Archived a tournament (${req.params.id})`);
+//                 res.send(response);
+//             });
+//         } else {
+//             res.sendStatus(401);
+//             return null;
+//         }
+//     });
+// });
 
 // Add map pool
-router.post(baseUrl + '/tournament/:id/addPool', function (req, res) {
-    isAdminOwner(req, req.params.id, auth => {
-        if (auth) {
-            tournament.addPool(req.body, (response) => {
-                log.createLog(req.session.user[0]['discordId'], `Created a map pool for a tournament (${req.body.tournamentId})`);
-                res.send(response);
-            });
-            return null;
-        } else {
-            res.sendStatus(401);
-            return null;
-        }
-    });
-});
+// router.post(baseUrl + '/tournament/:id/addPool', function (req, res) {
+//     isAdminOwner(req, req.params.id, auth => {
+//         if (auth) {
+//             tournament.addPool(req.body, (response) => {
+//                 log.createLog(req.session.user[0]['discordId'], `Created a map pool for a tournament (${req.body.tournamentId})`);
+//                 res.send(response);
+//             });
+//             return null;
+//         } else {
+//             res.sendStatus(401);
+//             return null;
+//         }
+//     });
+// });
 
 // get map pools
-router.get(baseUrl + '/tournament/:id/map-pools', function (req, res) {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(isAuth => {
-                tournament.getMapPools(req.params.id, isAuth)
-                    .then(response => {
-                        res.send(response)
-                    });
-                // if (isAuth) {
-                //     tournament.getMapPools(req.params.id, (result: any) => {
-                //         res.send(result);
-                //     }, true);
-                // } else {
-                //     tournament.getMapPools(req.params.id, (result: any) => {
-                //         res.send(result);
-                //     });
-                // }
-            })
-            .catch((err) => {
-                console.error(err);
-                res.sendStatus(500);
-            });
-    } else {
-        isAdminOwner(req, req.params.id, auth => {
-            tournament.getMapPools(req.params.id, auth)
-                .then(response => {
-                    res.send(response)
-                });
-            //     if (auth) {
-            //         tournament.getMapPools(req.params.id, (result: any) => {
-            //             res.send(result);
-            //         }, true);
-            //         return null;
-            //     } else {
-            //         tournament.getMapPools(req.params.id, (result: any) => {
-            //             res.send(result);
-            //         });
-            //         return null;
-            //     }
-        });
-    }
+// router.get(baseUrl + '/tournament/:id/map-pools', function (req, res) {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 tournament.getMapPools(req.params.id, isAuth)
+//                     .then(response => {
+//                         res.send(response)
+//                     });
+//                 // if (isAuth) {
+//                 //     tournament.getMapPools(req.params.id, (result: any) => {
+//                 //         res.send(result);
+//                 //     }, true);
+//                 // } else {
+//                 //     tournament.getMapPools(req.params.id, (result: any) => {
+//                 //         res.send(result);
+//                 //     });
+//                 // }
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.params.id, auth => {
+//             tournament.getMapPools(req.params.id, auth)
+//                 .then(response => {
+//                     res.send(response)
+//                 });
+//             //     if (auth) {
+//             //         tournament.getMapPools(req.params.id, (result: any) => {
+//             //             res.send(result);
+//             //         }, true);
+//             //         return null;
+//             //     } else {
+//             //         tournament.getMapPools(req.params.id, (result: any) => {
+//             //             res.send(result);
+//             //         });
+//             //         return null;
+//             //     }
+//         });
+//     }
 
-});
+// });
 
 // Udate map pools
-router.put(baseUrl + '/tournament/:id/map-pools', function (req, res) {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(isAuth => {
-                if (isAuth) {
-                    tournament.updatePool(req.body, (result) => {
-                        res.send(result);
-                    });
-                    // return null;
-                } else {
-                    res.sendStatus(401);
-                    // return null;
-                }
-            })
-            .catch((err) => {
-                console.error(err);
-                res.sendStatus(500);
-            });
-    } else {
-        isAdminOwner(req, req.params.id, auth => {
-            if (auth) {
-                tournament.updatePool(req.body, (result) => {
-                    res.send(result);
-                });
-                return null;
-            } else {
-                res.sendStatus(401);
-                return null;
-            }
-        });
-    }
-});
+// router.put(baseUrl + '/tournament/:id/map-pools', function (req, res) {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 if (isAuth) {
+//                     tournament.updatePool(req.body, (result) => {
+//                         res.send(result);
+//                     });
+//                     // return null;
+//                 } else {
+//                     res.sendStatus(401);
+//                     // return null;
+//                 }
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.params.id, auth => {
+//             if (auth) {
+//                 tournament.updatePool(req.body, (result) => {
+//                     res.send(result);
+//                 });
+//                 return null;
+//             } else {
+//                 res.sendStatus(401);
+//                 return null;
+//             }
+//         });
+//     }
+// });
 
 // Download pool
-router.get(baseUrl + '/download-pool/:id', (req, res) => {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(isAuth => {
-                tournament.downloadPool(req.params.id, isAuth)
-                    .then(response => {
-                        var data = JSON.stringify(response);
-                        let filename = response.playlistTitle.replace(/[<>:"\/\\|?*]+/g, '').replace(/ /g, '_');
-                        res.setHeader('Content-disposition', `attachment; filename= ${filename}.json`);
-                        res.setHeader('Content-type', 'application/json');
-                        res.send(data);
-                    });
-                return null;
-            })
-            .catch((err) => {
-                console.error(err);
-                res.sendStatus(500);
-            });
-    } else {
-        isAdminOwner(req, req.params.id, auth => {
-            tournament.downloadPool(req.params.id, auth)
-                .then(response => {
-                    var data = JSON.stringify(response);
-                    let filename = response.playlistTitle.replace(/[<>:"\/\\|?*]+/g, '').replace(/ /g, '_');
-                    res.setHeader('Content-disposition', `attachment; filename= ${filename}.json`);
-                    res.setHeader('Content-type', 'application/json');
-                    res.send(data);
-                });
-            return null;
-        });
-    }
-});
+// router.get(baseUrl + '/download-pool/:id', (req, res) => {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 tournament.downloadPool(req.params.id, isAuth)
+//                     .then(response => {
+//                         var data = JSON.stringify(response);
+//                         let filename = response.playlistTitle.replace(/[<>:"\/\\|?*]+/g, '').replace(/ /g, '_');
+//                         res.setHeader('Content-disposition', `attachment; filename= ${filename}.json`);
+//                         res.setHeader('Content-type', 'application/json');
+//                         res.send(data);
+//                     });
+//                 return null;
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.params.id, auth => {
+//             tournament.downloadPool(req.params.id, auth)
+//                 .then(response => {
+//                     var data = JSON.stringify(response);
+//                     let filename = response.playlistTitle.replace(/[<>:"\/\\|?*]+/g, '').replace(/ /g, '_');
+//                     res.setHeader('Content-disposition', `attachment; filename= ${filename}.json`);
+//                     res.setHeader('Content-type', 'application/json');
+//                     res.send(data);
+//                 });
+//             return null;
+//         });
+//     }
+// });
 
 // Add song
-router.post(baseUrl + '/tournament/:id/addSong', function (req, res) {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(isAuth => {
-                if (isAuth) {
-                    tournament.addSong(req.body, (response) => {
-                        log.createLog(req.headers.authorization, `Added a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
-                        res.send(response);
-                    });
-                    // return null;
-                } else {
-                    res.sendStatus(401);
-                    // return null;
-                }
-            })
-            .catch((err) => {
-                console.error(err);
-                res.sendStatus(500);
-            });
-    } else {
-        isAdminOwner(req, req.body.tournamentId, auth => {
-            if (auth) {
-                tournament.addSong(req.body, (response) => {
-                    log.createLog(req.session.user[0]['discordId'], `Added a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
-                    res.send(response);
-                });
-                return null;
-            } else {
-                res.sendStatus(401);
-                return null;
-            }
-        });
-    }
-});
+// router.post(baseUrl + '/tournament/:id/addSong', function (req, res) {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 if (isAuth) {
+//                     tournament.addSong(req.body, (response) => {
+//                         log.createLog(req.headers.authorization, `Added a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
+//                         res.send(response);
+//                     });
+//                     // return null;
+//                 } else {
+//                     res.sendStatus(401);
+//                     // return null;
+//                 }
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.body.tournamentId, auth => {
+//             if (auth) {
+//                 tournament.addSong(req.body, (response) => {
+//                     log.createLog(req.session.user[0]['discordId'], `Added a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
+//                     res.send(response);
+//                 });
+//                 return null;
+//             } else {
+//                 res.sendStatus(401);
+//                 return null;
+//             }
+//         });
+//     }
+// });
 
-router.post(baseUrl + '/tournament/:id/addSongByKey', (req, res) => {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(isAuth => {
-                if (isAuth) {
-                    tournament.songByKey(req.body)
-                        .then(response => res.send(response));
-                } else {
-                    res.sendStatus(401);
-                }
-            })
-            .catch((err) => {
-                console.error(err);
-                res.sendStatus(500);
-            });
-    } else {
-        isAdminOwner(req, req.body.tournamentId, auth => {
-            if (auth) {
-                tournament.songByKey(req.body)
-                    .then(response => res.send(response));
-                return null;
-            } else {
-                res.sendStatus(401);
-                return null;
-            }
-        });
-    }
-    return null;
-});
+// router.post(baseUrl + '/tournament/:id/addSongByKey', (req, res) => {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 if (isAuth) {
+//                     tournament.songByKey(req.body)
+//                         .then(response => res.send(response));
+//                 } else {
+//                     res.sendStatus(401);
+//                 }
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.body.tournamentId, auth => {
+//             if (auth) {
+//                 tournament.songByKey(req.body)
+//                     .then(response => res.send(response));
+//                 return null;
+//             } else {
+//                 res.sendStatus(401);
+//                 return null;
+//             }
+//         });
+//     }
+//     return null;
+// });
 
 // Delete song from pool
-router.post(baseUrl + '/tournament/:id/deleteSong', function (req, res) {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(isAuth => {
-                if (isAuth) {
-                    tournament.deleteSong(req.body.id, (response) => {
-                        log.createLog(req.headers.authorization, `Deleted a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
-                        res.send(response);
-                    });
-                    // return null;
-                } else {
-                    res.sendStatus(401);
-                    // return null;
-                }
-            })
-            .catch((err) => {
-                console.error(err);
-                res.sendStatus(500);
-            });
-    } else {
-        isAdminOwner(req, req.body.tournamentId, auth => {
-            if (auth) {
-                tournament.deleteSong(req.body.id, (response) => {
-                    log.createLog(req.session.user[0]['discordId'], `Deleted a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
-                    res.send(response);
-                });
-                return null;
-            } else {
-                res.sendStatus(401);
-                return null;
-            }
-        });
-    }
-});
+// router.post(baseUrl + '/tournament/:id/deleteSong', function (req, res) {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 if (isAuth) {
+//                     tournament.deleteSong(req.body.id, (response) => {
+//                         log.createLog(req.headers.authorization, `Deleted a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
+//                         res.send(response);
+//                     });
+//                     // return null;
+//                 } else {
+//                     res.sendStatus(401);
+//                     // return null;
+//                 }
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.body.tournamentId, auth => {
+//             if (auth) {
+//                 tournament.deleteSong(req.body.id, (response) => {
+//                     log.createLog(req.session.user[0]['discordId'], `Deleted a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
+//                     res.send(response);
+//                 });
+//                 return null;
+//             } else {
+//                 res.sendStatus(401);
+//                 return null;
+//             }
+//         });
+//     }
+// });
 
 // Calendar events
 router.get(baseUrl + '/events', function (req, res) {

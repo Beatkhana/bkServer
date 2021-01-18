@@ -19,8 +19,7 @@ export class authController extends controller {
     // private mapPoolHeadRoles: number[] = [1, -1];
     // private coordinatorRoles: number[] = [1, 2, 4];
 
-
-    constructor (req: express.Request) {
+    constructor(req: express.Request) {
         super()
         this.userId = req.session.user ? req.session?.user[0]?.discordId : undefined;
         this.tourneyId = req.params?.tourneyId;
@@ -34,7 +33,7 @@ export class authController extends controller {
     }
 
     async getRoles() {
-        if(this.userId != null) {
+        if (this.userId != null) {
             let roleIds: any = await this.db.aQuery('SELECT roleId FROM roleassignment WHERE userId = ?', [this.userId]);
             roleIds = roleIds.map(x => +x.roleId);
             return roleIds;
@@ -89,7 +88,7 @@ export class authController extends controller {
             let key = await this.db.aQuery("SELECT * FROM api_keys WHERE tournamentId = ? AND api_key = ?", [this.tourneyId, this.apiKey]);
             return key.length == 1;
         })();
-    }    
+    }
 
     // tournament Admin
     public get tournamentAdmin() {
@@ -98,9 +97,9 @@ export class authController extends controller {
             return adminRole.length == 1;
         })();
     }
-    
+
     // tournament map pooler
-    public get tournamentMaPool() {
+    public get tournamentMapPool() {
         return (async () => {
             let mapPoolRole = await this.db.aQuery(`SELECT * FROM tournament_role_assignment WHERE user_id = ? AND tournament_id = ? AND role_id = 2`, [this.userId, this.tourneyId]);
             return mapPoolRole.length == 1;
@@ -124,7 +123,7 @@ export class authController extends controller {
 
     public isTournamentStaff() {
         return (async () => {
-            return (await this.tournamentAdmin || await this.tournamentCoordinator || await this.tournamentMaPool);
+            return (await this.tournamentAdmin || await this.tournamentCoordinator || await this.tournamentMapPool);
         })();
     }
 

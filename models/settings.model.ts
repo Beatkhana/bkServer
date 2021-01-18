@@ -17,6 +17,6 @@ export interface settings {
     has_quals: boolean
     countries: string
     sort_method: string
-    standard_cutoff: string
+    standard_cutoff: number
     ta_url: string
 }

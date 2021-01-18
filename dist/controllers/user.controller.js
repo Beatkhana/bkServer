@@ -62,9 +62,70 @@ var userController = /** @class */ (function (_super) {
     function userController() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
+    userController.prototype.getUser = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var user;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!req.params.id)
+                            return [2 /*return*/, this.clientError(res, "No Id provided")];
+                        return [4 /*yield*/, this.userById(req.params.id)];
+                    case 1:
+                        user = _a.sent();
+                        return [2 /*return*/, res.send(user)];
+                }
+            });
+        });
+    };
+    userController.prototype.updateUserBadges = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var auth, _a, insetData, error_1;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        auth = new auth_controller_1.authController(req);
+                        return [4 /*yield*/, auth.admin()];
+                    case 1:
+                        _a = (_b.sent());
+                        if (_a) return [3 /*break*/, 3];
+                        return [4 /*yield*/, auth.staff()];
+                    case 2:
+                        _a = (_b.sent());
+                        _b.label = 3;
+                    case 3:
+                        if (!(_a))
+                            return [2 /*return*/, this.unauthorized(res)];
+                        if (!req.params.id)
+                            return [2 /*return*/, this.clientError(res, "No user ID provided")];
+                        if (!req.body)
+                            return [2 /*return*/, this.clientError(res, 'Invalid request')];
+                        _b.label = 4;
+                    case 4:
+                        _b.trys.push([4, 8, , 9]);
+                        return [4 /*yield*/, this.db.aQuery('DELETE FROM badge_assignment WHERE userId = ?', [req.params.id])];
+                    case 5:
+                        _b.sent();
+                        if (!(req.body.length > 0)) return [3 /*break*/, 7];
+                        insetData = req.body.map(function (x) { return [x, req.params.id]; });
+                        return [4 /*yield*/, this.db.aQuery("INSERT INTO badge_assignment (badgeId, userId) VALUES ?", [insetData])];
+                    case 6:
+                        _b.sent();
+                        _b.label = 7;
+                    case 7: 
+                    // console.log(insetData);
+                    return [2 /*return*/, this.ok(res)];
+                    case 8:
+                        error_1 = _b.sent();
+                        return [2 /*return*/, this.fail(res, error_1)];
+                    case 9: return [2 /*return*/];
+                }
+            });
+        });
+    };
     userController.prototype.createBadge = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, data, base64String, base64Img, savePath, buf, webpData, error_1;
+            var auth, data, base64String, base64Img, savePath, buf, webpData, error_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -76,7 +137,7 @@ var userController = /** @class */ (function (_super) {
                         data = req.body;
                         base64String = data.image;
                         base64Img = base64String.split(';base64,').pop();
-                        savePath = this.env == 'development' ? '../app/src/assets/badges/' : __dirname + '/public/assets/badges/';
+                        savePath = this.env == 'development' ? '../app/src/assets/badges/' : __dirname + '/../public/assets/badges/';
                         _a.label = 2;
                     case 2:
                         _a.trys.push([2, 7, , 8]);
@@ -101,8 +162,8 @@ var userController = /** @class */ (function (_super) {
                         _a.sent();
                         return [2 /*return*/, this.ok(res)];
                     case 7:
-                        error_1 = _a.sent();
-                        return [2 /*return*/, this.fail(res, error_1)];
+                        error_2 = _a.sent();
+                        return [2 /*return*/, this.fail(res, error_2)];
                     case 8: return [2 /*return*/];
                 }
             });
@@ -110,7 +171,7 @@ var userController = /** @class */ (function (_super) {
     };
     userController.prototype.updateBadge = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, _a, data, base64String, base64Img, savePath, buf, webpData, error_2;
+            var auth, _a, data, base64String, base64Img, savePath, buf, webpData, error_3;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -138,7 +199,7 @@ var userController = /** @class */ (function (_super) {
                         if (!(data.image != '')) return [3 /*break*/, 9];
                         base64String = data.image;
                         base64Img = base64String.split(';base64,').pop();
-                        savePath = this.env == 'development' ? '../app/src/assets/badges/' : __dirname + '/public/assets/badges/';
+                        savePath = this.env == 'development' ? '../app/src/assets/badges/' : __dirname + '/../public/assets/badges/';
                         return [4 /*yield*/, Buffer.from(base64Img, 'base64')];
                     case 6:
                         buf = _b.sent();
@@ -156,8 +217,8 @@ var userController = /** @class */ (function (_super) {
                         _b.label = 9;
                     case 9: return [2 /*return*/, this.ok(res)];
                     case 10:
-                        error_2 = _b.sent();
-                        return [2 /*return*/, this.fail(res, error_2)];
+                        error_3 = _b.sent();
+                        return [2 /*return*/, this.fail(res, error_3)];
                     case 11: return [2 /*return*/];
                 }
             });
@@ -165,7 +226,7 @@ var userController = /** @class */ (function (_super) {
     };
     userController.prototype.deleteBadge = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, _a, error_3;
+            var auth, _a, error_4;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -189,8 +250,8 @@ var userController = /** @class */ (function (_super) {
                         _b.sent();
                         return [2 /*return*/, this.ok(res)];
                     case 6:
-                        error_3 = _b.sent();
-                        return [2 /*return*/, this.fail(res, error_3)];
+                        error_4 = _b.sent();
+                        return [2 /*return*/, this.fail(res, error_4)];
                     case 7: return [2 /*return*/];
                 }
             });
@@ -198,7 +259,7 @@ var userController = /** @class */ (function (_super) {
     };
     userController.prototype.getBadges = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, _a, badges, error_4;
+            var auth, _a, badges, error_5;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -222,19 +283,43 @@ var userController = /** @class */ (function (_super) {
                         badges = _b.sent();
                         return [2 /*return*/, res.send(badges)];
                     case 6:
-                        error_4 = _b.sent();
-                        return [2 /*return*/, this.fail(res, error_4)];
+                        error_5 = _b.sent();
+                        return [2 /*return*/, this.fail(res, error_5)];
                     case 7: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    userController.prototype.userById = function (id) {
+        return __awaiter(this, void 0, void 0, function () {
+            var userData2, badges, tournaments, user;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.db.aQuery("SELECT \n            u.discordId, \n            u.ssId, \n            u.name, \n            u.twitchName, \n            u.avatar, \n            u.globalRank, \n            u.localRank, \n            u.country, \n            u.tourneyRank, \n            u.TR, \n            u.pronoun\n        FROM users u\n        WHERE u.discordId = ?", [id])];
+                    case 1:
+                        userData2 = _a.sent();
+                        return [4 /*yield*/, this.db.aQuery("SELECT b.* FROM badges b\n        LEFT JOIN badge_assignment ba ON ba.badgeId = b.id\n        WHERE ba.userId = ?", [id])];
+                    case 2:
+                        badges = _a.sent();
+                        return [4 /*yield*/, this.db.aQuery("SELECT t.name FROM participants p \n        INNER JOIN tournaments t ON p.tournamentId = t.id\n        INNER JOIN tournament_settings ts ON p.tournamentId = ts.tournamentId AND ts.public = 1\n        WHERE p.userId = ?", [id])];
+                    case 3:
+                        tournaments = _a.sent();
+                        user = userData2[0];
+                        if (!user)
+                            return [2 /*return*/, null];
+                        user.tournaments = tournaments.map(function (x) { return x.name; });
+                        user.badges = badges;
+                        return [2 /*return*/, user];
                 }
             });
         });
     };
     userController.getSSData = function (id) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, error_5;
+            var response, error_6;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, fetch("https://new.scoresaber.com/api/player/" + id + "/basic")];
+                    case 0: return [4 /*yield*/, fetch("https://new.scoresaber.com/api/player/" + id + "/full")];
                     case 1:
                         response = _a.sent();
                         _a.label = 2;
@@ -243,7 +328,8 @@ var userController = /** @class */ (function (_super) {
                         return [4 /*yield*/, response.json()];
                     case 3: return [2 /*return*/, _a.sent()];
                     case 4:
-                        error_5 = _a.sent();
+                        error_6 = _a.sent();
+                        // console.error(error);
                         return [2 /*return*/, null];
                     case 5: return [2 /*return*/];
                 }

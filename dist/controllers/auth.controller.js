@@ -53,6 +53,9 @@ exports.auth = exports.authController = void 0;
 var controller_1 = require("./controller");
 var authController = /** @class */ (function (_super) {
     __extends(authController, _super);
+    // private mapPoolRoles: number[] = [1, 3];
+    // private mapPoolHeadRoles: number[] = [1, -1];
+    // private coordinatorRoles: number[] = [1, 2, 4];
     function authController(req) {
         var _a, _b, _c, _d;
         var _this = _super.call(this) || this;
@@ -62,9 +65,7 @@ var authController = /** @class */ (function (_super) {
         // private db: database = new database();
         _this.adminRoles = [1];
         _this.staffRoles = [1, 2];
-        _this.mapPoolRoles = [1, 3];
-        _this.mapPoolHeadRoles = [1, -1];
-        _this.coordinatorRoles = [1, 2, 4];
+        _this.tournamentHostRoles = [1, 2, 3];
         _this.userId = req.session.user ? (_b = (_a = req.session) === null || _a === void 0 ? void 0 : _a.user[0]) === null || _b === void 0 ? void 0 : _b.discordId : undefined;
         _this.tourneyId = (_c = req.params) === null || _c === void 0 ? void 0 : _c.tourneyId;
         _this.apiKey = (_d = req.headers) === null || _d === void 0 ? void 0 : _d.authorization;
@@ -75,7 +76,10 @@ var authController = /** @class */ (function (_super) {
             var user;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.db.aQuery("SELECT * FROM users WHERE discordId = ?", [this.userId])];
+                    case 0:
+                        if (this.userId == undefined)
+                            return [2 /*return*/, null];
+                        return [4 /*yield*/, this.db.aQuery("SELECT * FROM users WHERE discordId = ?", [this.userId])];
                     case 1:
                         user = _a.sent();
                         return [2 /*return*/, user[0]];
@@ -100,6 +104,235 @@ var authController = /** @class */ (function (_super) {
             });
         });
     };
+    Object.defineProperty(authController.prototype, "isAdmin", {
+        // getters
+        // admin
+        get: function () {
+            var _this = this;
+            return (function () { return __awaiter(_this, void 0, void 0, function () {
+                var userRoles;
+                var _this = this;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this.getRoles()];
+                        case 1:
+                            userRoles = _a.sent();
+                            if (userRoles != null && userRoles.some(function (x) { return _this.adminRoles.includes(x); })) {
+                                return [2 /*return*/, true];
+                            }
+                            return [2 /*return*/, false];
+                    }
+                });
+            }); })();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(authController.prototype, "isStaff", {
+        // staff
+        get: function () {
+            var _this = this;
+            return (function () { return __awaiter(_this, void 0, void 0, function () {
+                var userRoles;
+                var _this = this;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this.getRoles()];
+                        case 1:
+                            userRoles = _a.sent();
+                            if (userRoles != null && userRoles.some(function (x) { return _this.staffRoles.includes(x); })) {
+                                return [2 /*return*/, true];
+                            }
+                            return [2 /*return*/, false];
+                    }
+                });
+            }); })();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(authController.prototype, "isTournamentHost", {
+        get: function () {
+            var _this = this;
+            return (function () { return __awaiter(_this, void 0, void 0, function () {
+                var userRoles;
+                var _this = this;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this.getRoles()];
+                        case 1:
+                            userRoles = _a.sent();
+                            if (userRoles != null && userRoles.some(function (x) { return _this.tournamentHostRoles.includes(x); })) {
+                                return [2 /*return*/, true];
+                            }
+                            return [2 /*return*/, false];
+                    }
+                });
+            }); })();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(authController.prototype, "isOwner", {
+        // owner
+        get: function () {
+            var _this = this;
+            return (function () { return __awaiter(_this, void 0, void 0, function () {
+                var owner;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this.db.aQuery("SELECT * FROM tournaments WHERE id = ? AND owner = ?", [this.tourneyId, this.userId])];
+                        case 1:
+                            owner = _a.sent();
+                            return [2 /*return*/, owner.length == 1];
+                    }
+                });
+            }); })();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(authController.prototype, "validApiKey", {
+        // api
+        get: function () {
+            var _this = this;
+            return (function () { return __awaiter(_this, void 0, void 0, function () {
+                var key;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this.db.aQuery("SELECT * FROM api_keys WHERE tournamentId = ? AND api_key = ?", [this.tourneyId, this.apiKey])];
+                        case 1:
+                            key = _a.sent();
+                            return [2 /*return*/, key.length == 1];
+                    }
+                });
+            }); })();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(authController.prototype, "tournamentAdmin", {
+        // tournament Admin
+        get: function () {
+            var _this = this;
+            return (function () { return __awaiter(_this, void 0, void 0, function () {
+                var adminRole;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this.db.aQuery("SELECT * FROM tournament_role_assignment WHERE user_id = ? AND tournament_id = ? AND role_id = 1", [this.userId, this.tourneyId])];
+                        case 1:
+                            adminRole = _a.sent();
+                            return [2 /*return*/, adminRole.length == 1];
+                    }
+                });
+            }); })();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(authController.prototype, "tournamentMapPool", {
+        // tournament map pooler
+        get: function () {
+            var _this = this;
+            return (function () { return __awaiter(_this, void 0, void 0, function () {
+                var mapPoolRole;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this.db.aQuery("SELECT * FROM tournament_role_assignment WHERE user_id = ? AND tournament_id = ? AND role_id = 2", [this.userId, this.tourneyId])];
+                        case 1:
+                            mapPoolRole = _a.sent();
+                            return [2 /*return*/, mapPoolRole.length == 1];
+                    }
+                });
+            }); })();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(authController.prototype, "tournamentCoordinator", {
+        // tournament coordinator
+        get: function () {
+            var _this = this;
+            return (function () { return __awaiter(_this, void 0, void 0, function () {
+                var coordinatorRole;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this.db.aQuery("SELECT * FROM tournament_role_assignment WHERE user_id = ? AND tournament_id = ? AND role_id = 3", [this.userId, this.tourneyId])];
+                        case 1:
+                            coordinatorRole = _a.sent();
+                            return [2 /*return*/, coordinatorRole.length == 1];
+                    }
+                });
+            }); })();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(authController.prototype, "hasAdminPerms", {
+        // admin, owner, api or tournament admin
+        get: function () {
+            var _this = this;
+            return (function () { return __awaiter(_this, void 0, void 0, function () {
+                var _a, _b, _c;
+                return __generator(this, function (_d) {
+                    switch (_d.label) {
+                        case 0: return [4 /*yield*/, this.isAdmin];
+                        case 1:
+                            _c = (_d.sent());
+                            if (_c) return [3 /*break*/, 3];
+                            return [4 /*yield*/, this.isOwner];
+                        case 2:
+                            _c = (_d.sent());
+                            _d.label = 3;
+                        case 3:
+                            _b = _c;
+                            if (_b) return [3 /*break*/, 5];
+                            return [4 /*yield*/, this.validApiKey];
+                        case 4:
+                            _b = (_d.sent());
+                            _d.label = 5;
+                        case 5:
+                            _a = _b;
+                            if (_a) return [3 /*break*/, 7];
+                            return [4 /*yield*/, this.tournamentAdmin];
+                        case 6:
+                            _a = (_d.sent());
+                            _d.label = 7;
+                        case 7: return [2 /*return*/, (_a)];
+                    }
+                });
+            }); })();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    authController.prototype.isTournamentStaff = function () {
+        var _this = this;
+        return (function () { return __awaiter(_this, void 0, void 0, function () {
+            var _a, _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0: return [4 /*yield*/, this.tournamentAdmin];
+                    case 1:
+                        _b = (_c.sent());
+                        if (_b) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.tournamentCoordinator];
+                    case 2:
+                        _b = (_c.sent());
+                        _c.label = 3;
+                    case 3:
+                        _a = _b;
+                        if (_a) return [3 /*break*/, 5];
+                        return [4 /*yield*/, this.tournamentMapPool];
+                    case 4:
+                        _a = (_c.sent());
+                        _c.label = 5;
+                    case 5: return [2 /*return*/, (_a)];
+                }
+            });
+        }); })();
+    };
+    // old method
     authController.prototype.admin = function () {
         return __awaiter(this, void 0, void 0, function () {
             var userRoles;
@@ -134,57 +367,27 @@ var authController = /** @class */ (function (_super) {
             });
         });
     };
-    authController.prototype.mapPool = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var userRoles;
-            var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getRoles()];
-                    case 1:
-                        userRoles = _a.sent();
-                        if (userRoles != null && userRoles.some(function (x) { return _this.mapPoolRoles.includes(x); })) {
-                            return [2 /*return*/, true];
-                        }
-                        return [2 /*return*/, false];
-                }
-            });
-        });
-    };
-    authController.prototype.poolHead = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var userRoles;
-            var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getRoles()];
-                    case 1:
-                        userRoles = _a.sent();
-                        if (userRoles != null && userRoles.some(function (x) { return _this.mapPoolHeadRoles.includes(x); })) {
-                            return [2 /*return*/, true];
-                        }
-                        return [2 /*return*/, false];
-                }
-            });
-        });
-    };
-    authController.prototype.coordinator = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var userRoles;
-            var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getRoles()];
-                    case 1:
-                        userRoles = _a.sent();
-                        if (userRoles != null && userRoles.some(function (x) { return _this.coordinatorRoles.includes(x); })) {
-                            return [2 /*return*/, true];
-                        }
-                        return [2 /*return*/, false];
-                }
-            });
-        });
-    };
+    // public async mapPool(): Promise<boolean> {
+    //     let userRoles = await this.getRoles();
+    //     if (userRoles != null && userRoles.some(x => this.mapPoolRoles.includes(x))) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
+    // public async poolHead(): Promise<boolean> {
+    //     let userRoles = await this.getRoles();
+    //     if (userRoles != null && userRoles.some(x => this.mapPoolHeadRoles.includes(x))) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
+    // public async coordinator(): Promise<boolean> {
+    //     let userRoles = await this.getRoles();
+    //     if (userRoles != null && userRoles.some(x => this.coordinatorRoles.includes(x))) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
     authController.prototype.owner = function () {
         return __awaiter(this, void 0, void 0, function () {
             var owner;

@@ -167,6 +167,24 @@ export class TournamentController extends controller {
         }
     }
 
+    async archive(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!(await auth.isAdmin || await auth.isStaff)) return this.unauthorized(res);
+        let data = req.body;
+        try {
+            data.tournament = {
+                first: data.first,
+                second: data.second,
+                third: data.third,
+                archived: 1
+            };
+            await this.db.aQuery(`UPDATE tournaments SET ? WHERE ?? = ?`, [data.tournament, 'id', data.id]);
+            return this.ok(res);
+        } catch (err) {
+            return this.fail(res, err);
+        }
+    }
+
     async updateSettings(req: express.Request, res: express.Response) {
         let auth = new authController(req);
         if (!await auth.hasAdminPerms) return this.unauthorized(res);
@@ -207,11 +225,10 @@ export class TournamentController extends controller {
                         updateErr = true;
                     });
             }
-            console.log(qualified.entries());
             for (let i = 0; i < qualified.length; i++) {
                 const user = qualified[i];
                 console.log(i, user.userId, tournamentId)
-                await this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [i, user.userId, tournamentId])
+                await this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [i+1, user.userId, tournamentId])
                     .catch(err => {
                         console.error(err);
                         updateErr = true;
