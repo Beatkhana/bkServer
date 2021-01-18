@@ -289,7 +289,6 @@ export class userController extends controller {
                 }))
                 .then(userRes => userRes.json())
                 .then(data => {
-                    data.id += 10;
                     this.checkuser(data.id, refresh_token, data.avatar, data.username, (userRes, newUser) => {
                         if (!newUser) {
                             req.session.user = userRes;
