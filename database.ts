@@ -12,6 +12,30 @@ export class database {
     constructor() {
         const env = process.env.NODE_ENV || 'production';
         // console.log(env);
+        if (!con) {
+            if (env == 'production') {
+                con = mysql.createPool({
+                    host: "localhost",
+                    user: "dan",
+                    password: "root",
+                    database: "bk",
+                    connectionLimit: 100,
+                    charset: 'utf8mb4',
+                    timezone: 'utc'
+                });
+            } else {
+                con = mysql.createPool({
+                    host: "localhost",
+                    user: "dan",
+                    password: "test",
+                    database: "bk",
+                    connectionLimit: 100,
+                    charset: 'utf8mb4',
+                    timezone: 'utc'
+                });
+            }
+            
+        }
         if (env == 'production') {
             this.oldCon = mysql.createPool({
                 host: "localhost",
@@ -22,26 +46,8 @@ export class database {
                 charset: 'utf8mb4',
                 timezone: 'utc'
             });
-            con = mysql.createPool({
-                host: "localhost",
-                user: "dan",
-                password: "root",
-                database: "bk",
-                connectionLimit: 100,
-                charset: 'utf8mb4',
-                timezone: 'utc'
-            });
         } else {
             this.oldCon = mysql.createPool({
-                host: "localhost",
-                user: "dan",
-                password: "test",
-                database: "bk",
-                connectionLimit: 100,
-                charset: 'utf8mb4',
-                timezone: 'utc'
-            });
-            con = mysql.createPool({
                 host: "localhost",
                 user: "dan",
                 password: "test",
