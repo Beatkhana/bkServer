@@ -353,6 +353,9 @@ export class userController extends controller {
         if (req.session?.newUsr?.length > 0) {
             let usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'], refresh_token: req.session.newUsr[0]['refresh_token'], avatar: req.session.newUsr[0]['avatar'], name: req.session.newUsr[0]['name'] };
             let ssData = await userController.getSSData(usrData.links.scoreSaber.split('u/')[1]);
+            if (!usrData.avatar) {
+                usrData.avatar = "-";
+            }
             let user = {
                 discordId: usrData.discordId,
                 ssId: ssData.playerInfo.playerId,
