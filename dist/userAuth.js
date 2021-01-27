@@ -35,6 +35,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userAuth = void 0;
 var database_1 = require("./database");
@@ -177,19 +188,29 @@ var userAuth = /** @class */ (function () {
     };
     userAuth.prototype.update = function (id, data, callback) {
         return __awaiter(this, void 0, void 0, function () {
-            var roleIds, roleError, insert_1, _i, roleIds_1, roleId, result;
+            var roleIds, roleError, insert_1, roleIds_1, roleIds_1_1, roleId, result;
+            var e_1, _a;
             var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         roleIds = [];
                         roleError = false;
                         if (!(data.roleIds != null && data.roleIds.length > 0)) return [3 /*break*/, 2];
                         roleIds = data.roleIds;
                         insert_1 = [];
-                        for (_i = 0, roleIds_1 = roleIds; _i < roleIds_1.length; _i++) {
-                            roleId = roleIds_1[_i];
-                            insert_1.push([id, roleId]);
+                        try {
+                            for (roleIds_1 = __values(roleIds), roleIds_1_1 = roleIds_1.next(); !roleIds_1_1.done; roleIds_1_1 = roleIds_1.next()) {
+                                roleId = roleIds_1_1.value;
+                                insert_1.push([id, roleId]);
+                            }
+                        }
+                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                        finally {
+                            try {
+                                if (roleIds_1_1 && !roleIds_1_1.done && (_a = roleIds_1.return)) _a.call(roleIds_1);
+                            }
+                            finally { if (e_1) throw e_1.error; }
                         }
                         return [4 /*yield*/, this.db.preparedQuery("DELETE FROM roleassignment WHERE userId = ?;", [id], function (err, result) {
                                 var flag = false;
@@ -220,8 +241,8 @@ var userAuth = /** @class */ (function () {
                                 }
                             })];
                     case 1:
-                        _a.sent();
-                        _a.label = 2;
+                        _b.sent();
+                        _b.label = 2;
                     case 2:
                         if (!roleError) {
                             delete data.roleIds;

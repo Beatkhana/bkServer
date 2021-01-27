@@ -54,6 +54,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -453,39 +464,54 @@ var tournaments = /** @class */ (function () {
     // non quals seed
     tournaments.prototype.seedPlayers = function (tournamentId, cutoff, method) {
         return __awaiter(this, void 0, void 0, function () {
-            var updateErr_1, participants, qualified, _i, participants_1, user, i, user;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var updateErr_1, participants, qualified, participants_1, participants_1_1, user, e_1_1, i, user;
+            var e_1, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
-                        if (!(method == 'date')) return [3 /*break*/, 10];
+                        if (!(method == 'date')) return [3 /*break*/, 14];
                         updateErr_1 = false;
                         return [4 /*yield*/, this.allParticipants(tournamentId)];
                     case 1:
-                        participants = _a.sent();
+                        participants = _b.sent();
                         participants.sort(function (a, b) { return a.participantId - b.participantId; });
                         qualified = participants.slice(0, cutoff + 1);
-                        _i = 0, participants_1 = participants;
-                        _a.label = 2;
+                        _b.label = 2;
                     case 2:
-                        if (!(_i < participants_1.length)) return [3 /*break*/, 5];
-                        user = participants_1[_i];
+                        _b.trys.push([2, 7, 8, 9]);
+                        participants_1 = __values(participants), participants_1_1 = participants_1.next();
+                        _b.label = 3;
+                    case 3:
+                        if (!!participants_1_1.done) return [3 /*break*/, 6];
+                        user = participants_1_1.value;
                         return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = 0, position = 0 WHERE userId = ? AND tournamentId = ?", [user.userId, tournamentId])
                                 .catch(function (err) {
                                 console.error(err);
                                 updateErr_1 = true;
                             })];
-                    case 3:
-                        _a.sent();
-                        _a.label = 4;
                     case 4:
-                        _i++;
-                        return [3 /*break*/, 2];
+                        _b.sent();
+                        _b.label = 5;
                     case 5:
+                        participants_1_1 = participants_1.next();
+                        return [3 /*break*/, 3];
+                    case 6: return [3 /*break*/, 9];
+                    case 7:
+                        e_1_1 = _b.sent();
+                        e_1 = { error: e_1_1 };
+                        return [3 /*break*/, 9];
+                    case 8:
+                        try {
+                            if (participants_1_1 && !participants_1_1.done && (_a = participants_1.return)) _a.call(participants_1);
+                        }
+                        finally { if (e_1) throw e_1.error; }
+                        return [7 /*endfinally*/];
+                    case 9:
                         console.log(qualified.entries());
                         i = 0;
-                        _a.label = 6;
-                    case 6:
-                        if (!(i < qualified.length)) return [3 /*break*/, 9];
+                        _b.label = 10;
+                    case 10:
+                        if (!(i < qualified.length)) return [3 /*break*/, 13];
                         user = qualified[i];
                         console.log(i, user.userId, tournamentId);
                         return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [i, user.userId, tournamentId])
@@ -493,14 +519,14 @@ var tournaments = /** @class */ (function () {
                                 console.error(err);
                                 updateErr_1 = true;
                             })];
-                    case 7:
-                        _a.sent();
-                        _a.label = 8;
-                    case 8:
+                    case 11:
+                        _b.sent();
+                        _b.label = 12;
+                    case 12:
                         i++;
-                        return [3 /*break*/, 6];
-                    case 9: return [2 /*return*/, !updateErr_1];
-                    case 10: return [2 /*return*/];
+                        return [3 /*break*/, 10];
+                    case 13: return [2 /*return*/, !updateErr_1];
+                    case 14: return [2 /*return*/];
                 }
             });
         });
@@ -508,33 +534,52 @@ var tournaments = /** @class */ (function () {
     // quals seed
     tournaments.prototype.seedPlayersByQuals = function (tournamentId, cutoff) {
         return __awaiter(this, void 0, void 0, function () {
-            var pools, qualsPool, qualsScores, _i, qualsScores_1, user, _loop_1, _a, _b, score, _c, qualsScores_2, user, users, i, user, temp, updateErr, _d, users_1, user;
+            var pools, qualsPool, qualsScores, qualsScores_1, qualsScores_1_1, user, _loop_1, _a, _b, score, qualsScores_2, qualsScores_2_1, user, e_2_1, users, i, user, temp, updateErr, users_1, users_1_1, user, e_3_1;
+            var e_4, _c, e_5, _d, e_2, _e, e_3, _f;
             var _this = this;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            return __generator(this, function (_g) {
+                switch (_g.label) {
                     case 0: return [4 /*yield*/, this.getMapPools(tournamentId)];
                     case 1:
-                        pools = _e.sent();
+                        pools = _g.sent();
                         qualsPool = Object.values(pools).find(function (x) { return x.is_qualifiers == 1; });
                         return [4 /*yield*/, this.getQualsScores(tournamentId)];
                     case 2:
-                        qualsScores = _e.sent();
+                        qualsScores = _g.sent();
                         console.log(qualsScores);
-                        for (_i = 0, qualsScores_1 = qualsScores; _i < qualsScores_1.length; _i++) {
-                            user = qualsScores_1[_i];
-                            _loop_1 = function (score) {
-                                if (qualsPool.songs.find(function (x) { return x.hash == score.songHash; }).numNotes != 0) {
-                                    score.percentage = score.score / (qualsPool.songs.find(function (x) { return x.hash == score.songHash; }).numNotes * 920 - 7245);
+                        try {
+                            for (qualsScores_1 = __values(qualsScores), qualsScores_1_1 = qualsScores_1.next(); !qualsScores_1_1.done; qualsScores_1_1 = qualsScores_1.next()) {
+                                user = qualsScores_1_1.value;
+                                _loop_1 = function (score) {
+                                    if (qualsPool.songs.find(function (x) { return x.hash == score.songHash; }).numNotes != 0) {
+                                        score.percentage = score.score / (qualsPool.songs.find(function (x) { return x.hash == score.songHash; }).numNotes * 920 - 7245);
+                                    }
+                                    else {
+                                        score.percentage = 0;
+                                    }
+                                    score.score = Math.round(score.score / 2);
+                                };
+                                try {
+                                    for (_a = (e_5 = void 0, __values(user.scores)), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                        score = _b.value;
+                                        _loop_1(score);
+                                    }
                                 }
-                                else {
-                                    score.percentage = 0;
+                                catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                                finally {
+                                    try {
+                                        if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
+                                    }
+                                    finally { if (e_5) throw e_5.error; }
                                 }
-                                score.score = Math.round(score.score / 2);
-                            };
-                            for (_a = 0, _b = user.scores; _a < _b.length; _a++) {
-                                score = _b[_a];
-                                _loop_1(score);
                             }
+                        }
+                        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                        finally {
+                            try {
+                                if (qualsScores_1_1 && !qualsScores_1_1.done && (_c = qualsScores_1.return)) _c.call(qualsScores_1);
+                            }
+                            finally { if (e_4) throw e_4.error; }
                         }
                         qualsScores.sort(function (a, b) {
                             var sumA = _this.sumProperty(a.scores, 'score');
@@ -565,23 +610,37 @@ var tournaments = /** @class */ (function () {
                                 return b.avgPercentage - a.avgPercentage;
                             }
                         });
-                        _c = 0, qualsScores_2 = qualsScores;
-                        _e.label = 3;
+                        _g.label = 3;
                     case 3:
-                        if (!(_c < qualsScores_2.length)) return [3 /*break*/, 6];
-                        user = qualsScores_2[_c];
+                        _g.trys.push([3, 8, 9, 10]);
+                        qualsScores_2 = __values(qualsScores), qualsScores_2_1 = qualsScores_2.next();
+                        _g.label = 4;
+                    case 4:
+                        if (!!qualsScores_2_1.done) return [3 /*break*/, 7];
+                        user = qualsScores_2_1.value;
                         return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = 0 WHERE userId = ? AND tournamentId = ?", [user.discordId, tournamentId])
                                 .catch(function (err) {
                                 console.error(err);
                                 updateErr = true;
                             })];
-                    case 4:
-                        _e.sent();
-                        _e.label = 5;
                     case 5:
-                        _c++;
-                        return [3 /*break*/, 3];
+                        _g.sent();
+                        _g.label = 6;
                     case 6:
+                        qualsScores_2_1 = qualsScores_2.next();
+                        return [3 /*break*/, 4];
+                    case 7: return [3 /*break*/, 10];
+                    case 8:
+                        e_2_1 = _g.sent();
+                        e_2 = { error: e_2_1 };
+                        return [3 /*break*/, 10];
+                    case 9:
+                        try {
+                            if (qualsScores_2_1 && !qualsScores_2_1.done && (_e = qualsScores_2.return)) _e.call(qualsScores_2);
+                        }
+                        finally { if (e_2) throw e_2.error; }
+                        return [7 /*endfinally*/];
+                    case 10:
                         users = [];
                         for (i = 0; i < cutoff; i++) {
                             user = qualsScores[i];
@@ -592,23 +651,37 @@ var tournaments = /** @class */ (function () {
                             users.push(temp);
                         }
                         updateErr = false;
-                        _d = 0, users_1 = users;
-                        _e.label = 7;
-                    case 7:
-                        if (!(_d < users_1.length)) return [3 /*break*/, 10];
-                        user = users_1[_d];
+                        _g.label = 11;
+                    case 11:
+                        _g.trys.push([11, 16, 17, 18]);
+                        users_1 = __values(users), users_1_1 = users_1.next();
+                        _g.label = 12;
+                    case 12:
+                        if (!!users_1_1.done) return [3 /*break*/, 15];
+                        user = users_1_1.value;
                         return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [user.seed, user.discordId, tournamentId])
                                 .catch(function (err) {
                                 console.error(err);
                                 updateErr = true;
                             })];
-                    case 8:
-                        _e.sent();
-                        _e.label = 9;
-                    case 9:
-                        _d++;
-                        return [3 /*break*/, 7];
-                    case 10: return [2 /*return*/, !updateErr];
+                    case 13:
+                        _g.sent();
+                        _g.label = 14;
+                    case 14:
+                        users_1_1 = users_1.next();
+                        return [3 /*break*/, 12];
+                    case 15: return [3 /*break*/, 18];
+                    case 16:
+                        e_3_1 = _g.sent();
+                        e_3 = { error: e_3_1 };
+                        return [3 /*break*/, 18];
+                    case 17:
+                        try {
+                            if (users_1_1 && !users_1_1.done && (_f = users_1.return)) _f.call(users_1);
+                        }
+                        finally { if (e_3) throw e_3.error; }
+                        return [7 /*endfinally*/];
+                    case 18: return [2 /*return*/, !updateErr];
                 }
             });
         });
@@ -737,9 +810,10 @@ var tournaments = /** @class */ (function () {
     tournaments.prototype.getMapPools = function (tournamentId, isAuth) {
         if (isAuth === void 0) { isAuth = false; }
         return __awaiter(this, void 0, void 0, function () {
-            var sql, poolsRes, mapPools, _i, poolsRes_1, song, songs;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var sql, poolsRes, mapPools, poolsRes_1, poolsRes_1_1, song, songs;
+            var e_6, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         sql = "SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?";
                         if (isAuth) {
@@ -747,53 +821,62 @@ var tournaments = /** @class */ (function () {
                         }
                         return [4 /*yield*/, this.db.asyncPreparedQuery(sql, [tournamentId])];
                     case 1:
-                        poolsRes = _a.sent();
+                        poolsRes = _b.sent();
                         mapPools = {};
-                        // console.log(result)
-                        // if (poolsRes == undefined) return callback({});
-                        for (_i = 0, poolsRes_1 = poolsRes; _i < poolsRes_1.length; _i++) {
-                            song = poolsRes_1[_i];
-                            if (song.poolId in mapPools) {
-                                mapPools[song.poolId].songs.push({
-                                    id: song.songId,
-                                    hash: song.songHash,
-                                    name: song.songName,
-                                    songAuthor: song.songAuthor,
-                                    levelAuthor: song.levelAuthor,
-                                    diff: song.songDiff,
-                                    key: song.key,
-                                    ssLink: song.ssLink,
-                                    numNotes: song.numNotes
-                                });
-                            }
-                            else {
-                                songs = [];
-                                if (song.songId != null) {
-                                    songs = [
-                                        {
-                                            id: song.songId,
-                                            hash: song.songHash,
-                                            name: song.songName,
-                                            songAuthor: song.songAuthor,
-                                            levelAuthor: song.levelAuthor,
-                                            diff: song.songDiff,
-                                            key: song.key,
-                                            ssLink: song.ssLink,
-                                            numNotes: song.numNotes
-                                        }
-                                    ];
+                        try {
+                            // console.log(result)
+                            // if (poolsRes == undefined) return callback({});
+                            for (poolsRes_1 = __values(poolsRes), poolsRes_1_1 = poolsRes_1.next(); !poolsRes_1_1.done; poolsRes_1_1 = poolsRes_1.next()) {
+                                song = poolsRes_1_1.value;
+                                if (song.poolId in mapPools) {
+                                    mapPools[song.poolId].songs.push({
+                                        id: song.songId,
+                                        hash: song.songHash,
+                                        name: song.songName,
+                                        songAuthor: song.songAuthor,
+                                        levelAuthor: song.levelAuthor,
+                                        diff: song.songDiff,
+                                        key: song.key,
+                                        ssLink: song.ssLink,
+                                        numNotes: song.numNotes
+                                    });
                                 }
-                                mapPools[song.poolId] = {
-                                    id: song.poolId,
-                                    tournamentId: song.tournamentId,
-                                    poolName: song.poolName,
-                                    image: song.image,
-                                    description: song.description,
-                                    live: !!+song.live,
-                                    is_qualifiers: song.is_qualifiers,
-                                    songs: songs
-                                };
+                                else {
+                                    songs = [];
+                                    if (song.songId != null) {
+                                        songs = [
+                                            {
+                                                id: song.songId,
+                                                hash: song.songHash,
+                                                name: song.songName,
+                                                songAuthor: song.songAuthor,
+                                                levelAuthor: song.levelAuthor,
+                                                diff: song.songDiff,
+                                                key: song.key,
+                                                ssLink: song.ssLink,
+                                                numNotes: song.numNotes
+                                            }
+                                        ];
+                                    }
+                                    mapPools[song.poolId] = {
+                                        id: song.poolId,
+                                        tournamentId: song.tournamentId,
+                                        poolName: song.poolName,
+                                        image: song.image,
+                                        description: song.description,
+                                        live: !!+song.live,
+                                        is_qualifiers: song.is_qualifiers,
+                                        songs: songs
+                                    };
+                                }
                             }
+                        }
+                        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                        finally {
+                            try {
+                                if (poolsRes_1_1 && !poolsRes_1_1.done && (_a = poolsRes_1.return)) _a.call(poolsRes_1);
+                            }
+                            finally { if (e_6) throw e_6.error; }
                         }
                         return [2 /*return*/, mapPools];
                 }
@@ -835,14 +918,24 @@ var tournaments = /** @class */ (function () {
             if (diffSearch == 'expert+')
                 diffSearch = 'expertPlus';
             var songInfo = _this.getBSData(hash, diffSearch, function (songInfo) {
+                var e_7, _a;
                 // console.log(songInfo)
                 songInfo.songDiff = diff;
                 songInfo.ssLink = data.ssLink;
                 var values = [];
-                for (var _i = 0, _a = data.poolIds; _i < _a.length; _i++) {
-                    var id = _a[_i];
-                    songInfo.poolId = id;
-                    values.push(Object.values(songInfo));
+                try {
+                    for (var _b = __values(data.poolIds), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var id = _c.value;
+                        songInfo.poolId = id;
+                        values.push(Object.values(songInfo));
+                    }
+                }
+                catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_7) throw e_7.error; }
                 }
                 _this.saveSong(values, function (res) {
                     callback(res);
@@ -883,10 +976,11 @@ var tournaments = /** @class */ (function () {
     };
     tournaments.prototype.songByKey = function (data) {
         return __awaiter(this, void 0, void 0, function () {
-            var key, diff, bsData, songName, songHash, ssData, diffSearch, diffInfo, info, values, _i, _a, id, res, err_1;
+            var key, diff, bsData, songName, songHash, ssData, diffSearch, diffInfo, info, values, _a, _b, id, res, err_1;
+            var e_8, _c;
             var _this = this;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
                         key = data.ssLink.split('beatmap/')[1];
                         diff = data.diff;
@@ -898,7 +992,7 @@ var tournaments = /** @class */ (function () {
                             })
                                 .catch(function (err) { return console.log(err); })];
                     case 1:
-                        bsData = _b.sent();
+                        bsData = _d.sent();
                         songName = bsData.metadata.songName.replace(" ", "+");
                         songHash = bsData.hash;
                         return [4 /*yield*/, rp.get("https://scoresaber.com/?search=" + songName)
@@ -941,7 +1035,7 @@ var tournaments = /** @class */ (function () {
                                 console.log(err);
                             })];
                     case 2:
-                        ssData = _b.sent();
+                        ssData = _d.sent();
                         diffSearch = ssData.diff.toLowerCase();
                         if (diffSearch == 'expert+')
                             diffSearch = 'expertPlus';
@@ -958,24 +1052,33 @@ var tournaments = /** @class */ (function () {
                             poolId: 0
                         };
                         values = [];
-                        for (_i = 0, _a = data.poolIds; _i < _a.length; _i++) {
-                            id = _a[_i];
-                            info.poolId = id;
-                            values.push(Object.values(info));
+                        try {
+                            for (_a = __values(data.poolIds), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                id = _b.value;
+                                info.poolId = id;
+                                values.push(Object.values(info));
+                            }
                         }
-                        _b.label = 3;
+                        catch (e_8_1) { e_8 = { error: e_8_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            }
+                            finally { if (e_8) throw e_8.error; }
+                        }
+                        _d.label = 3;
                     case 3:
-                        _b.trys.push([3, 5, , 6]);
+                        _d.trys.push([3, 5, , 6]);
                         return [4 /*yield*/, this.db.asyncPreparedQuery("INSERT INTO pool_link (songHash, songName, songAuthor, levelAuthor, `key`, numNotes, songDiff, ssLink, poolId) VALUES ?", [values])];
                     case 4:
-                        res = _b.sent();
+                        res = _d.sent();
                         return [2 /*return*/, {
                                 data: res,
                                 flag: false,
                                 err: null
                             }];
                     case 5:
-                        err_1 = _b.sent();
+                        err_1 = _d.sent();
                         return [2 /*return*/, {
                                 data: null,
                                 flag: true,
@@ -1188,66 +1291,94 @@ var tournaments = /** @class */ (function () {
     };
     tournaments.prototype.saveBracket = function (id, data) {
         return __awaiter(this, void 0, void 0, function () {
-            var matches, tempMatches, _i, tempMatches_1, match, tempMatches, _a, tempMatches_2, match, err, sqlMatches, _b, matches_1, match, error_10;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var matches, tempMatches, tempMatches_1, tempMatches_1_1, match, tempMatches, tempMatches_2, tempMatches_2_1, match, err, sqlMatches, matches_1, matches_1_1, match, error_10;
+            var e_9, _a, e_10, _b, e_11, _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
                         matches = [];
                         console.log(data);
                         if (!(data.data == null || (data.data.length == 0 || Object.keys(data.data).length == 0))) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.generateBracket(id)];
                     case 1:
-                        tempMatches = _c.sent();
-                        // console.log(tempMatches);
-                        for (_i = 0, tempMatches_1 = tempMatches; _i < tempMatches_1.length; _i++) {
-                            match = tempMatches_1[_i];
-                            matches.push({
-                                tournamentId: id,
-                                round: match.round,
-                                matchNum: match.matchNum,
-                                p1: match.p1,
-                                p2: match.p2,
-                                bye: +match.bye || 0
-                            });
+                        tempMatches = _d.sent();
+                        try {
+                            // console.log(tempMatches);
+                            for (tempMatches_1 = __values(tempMatches), tempMatches_1_1 = tempMatches_1.next(); !tempMatches_1_1.done; tempMatches_1_1 = tempMatches_1.next()) {
+                                match = tempMatches_1_1.value;
+                                matches.push({
+                                    tournamentId: id,
+                                    round: match.round,
+                                    matchNum: match.matchNum,
+                                    p1: match.p1,
+                                    p2: match.p2,
+                                    bye: +match.bye || 0
+                                });
+                            }
+                        }
+                        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                        finally {
+                            try {
+                                if (tempMatches_1_1 && !tempMatches_1_1.done && (_a = tempMatches_1.return)) _a.call(tempMatches_1);
+                            }
+                            finally { if (e_9) throw e_9.error; }
                         }
                         return [3 /*break*/, 4];
                     case 2:
                         if (!(data.data.length > 0)) return [3 /*break*/, 4];
                         return [4 /*yield*/, this.generateBracket(id, data.data)];
                     case 3:
-                        tempMatches = _c.sent();
-                        // console.log(tempMatches);
-                        for (_a = 0, tempMatches_2 = tempMatches; _a < tempMatches_2.length; _a++) {
-                            match = tempMatches_2[_a];
-                            matches.push({
-                                tournamentId: id,
-                                round: match.round,
-                                matchNum: match.matchNum,
-                                p1: match.p1,
-                                p2: match.p2,
-                                bye: +match.bye || 0
-                            });
+                        tempMatches = _d.sent();
+                        try {
+                            // console.log(tempMatches);
+                            for (tempMatches_2 = __values(tempMatches), tempMatches_2_1 = tempMatches_2.next(); !tempMatches_2_1.done; tempMatches_2_1 = tempMatches_2.next()) {
+                                match = tempMatches_2_1.value;
+                                matches.push({
+                                    tournamentId: id,
+                                    round: match.round,
+                                    matchNum: match.matchNum,
+                                    p1: match.p1,
+                                    p2: match.p2,
+                                    bye: +match.bye || 0
+                                });
+                            }
                         }
-                        _c.label = 4;
+                        catch (e_10_1) { e_10 = { error: e_10_1 }; }
+                        finally {
+                            try {
+                                if (tempMatches_2_1 && !tempMatches_2_1.done && (_b = tempMatches_2.return)) _b.call(tempMatches_2);
+                            }
+                            finally { if (e_10) throw e_10.error; }
+                        }
+                        _d.label = 4;
                     case 4:
                         err = null;
                         sqlMatches = [];
-                        for (_b = 0, matches_1 = matches; _b < matches_1.length; _b++) {
-                            match = matches_1[_b];
-                            sqlMatches.push(Object.values(match));
+                        try {
+                            for (matches_1 = __values(matches), matches_1_1 = matches_1.next(); !matches_1_1.done; matches_1_1 = matches_1.next()) {
+                                match = matches_1_1.value;
+                                sqlMatches.push(Object.values(match));
+                            }
                         }
-                        _c.label = 5;
+                        catch (e_11_1) { e_11 = { error: e_11_1 }; }
+                        finally {
+                            try {
+                                if (matches_1_1 && !matches_1_1.done && (_c = matches_1.return)) _c.call(matches_1);
+                            }
+                            finally { if (e_11) throw e_11.error; }
+                        }
+                        _d.label = 5;
                     case 5:
-                        _c.trys.push([5, 8, , 9]);
+                        _d.trys.push([5, 8, , 9]);
                         return [4 /*yield*/, this.db.asyncPreparedQuery('DELETE FROM bracket WHERE tournamentId = ?', [id])];
                     case 6:
-                        _c.sent();
+                        _d.sent();
                         return [4 /*yield*/, this.db.asyncPreparedQuery('INSERT INTO bracket (tournamentId, round, matchNum, p1, p2, bye) VALUES ?', [sqlMatches])];
                     case 7:
-                        _c.sent();
+                        _d.sent();
                         return [3 /*break*/, 9];
                     case 8:
-                        error_10 = _c.sent();
+                        error_10 = _d.sent();
                         err = error_10;
                         throw error_10;
                     case 9: return [2 /*return*/, { flag: !!err, err: err }];
@@ -1257,12 +1388,13 @@ var tournaments = /** @class */ (function () {
     };
     tournaments.prototype.generateBracket = function (id, players) {
         return __awaiter(this, void 0, void 0, function () {
-            var settings, rand, participants, i, _i, participants_2, participant, matches;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var settings, rand, participants, i, participants_2, participants_2_1, participant, e_12_1, matches;
+            var e_12, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0: return [4 /*yield*/, this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id])];
                     case 1:
-                        settings = _a.sent();
+                        settings = _b.sent();
                         rand = false;
                         if (settings[0].bracket_sort_method == 'random') {
                             settings[0].bracket_sort_method = 'discordId';
@@ -1275,11 +1407,11 @@ var tournaments = /** @class */ (function () {
                                 console.error(err);
                             })];
                     case 2:
-                        participants = _a.sent();
+                        participants = _b.sent();
                         return [3 /*break*/, 4];
                     case 3:
                         participants = players;
-                        _a.label = 4;
+                        _b.label = 4;
                     case 4:
                         if (rand) {
                             this.shuffle(participants);
@@ -1287,35 +1419,49 @@ var tournaments = /** @class */ (function () {
                         participants.length = settings[0].bracket_limit;
                         return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = 0 WHERE tournamentId = ?", [id])];
                     case 5:
-                        _a.sent();
-                        if (!(settings[0].bracket_sort_method != 'seed' && !players)) return [3 /*break*/, 9];
+                        _b.sent();
+                        if (!(settings[0].bracket_sort_method != 'seed' && !players)) return [3 /*break*/, 13];
                         i = 1;
-                        _i = 0, participants_2 = participants;
-                        _a.label = 6;
+                        _b.label = 6;
                     case 6:
-                        if (!(_i < participants_2.length)) return [3 /*break*/, 9];
-                        participant = participants_2[_i];
-                        return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE id = ?", [i, participant.participantId])];
+                        _b.trys.push([6, 11, 12, 13]);
+                        participants_2 = __values(participants), participants_2_1 = participants_2.next();
+                        _b.label = 7;
                     case 7:
-                        _a.sent();
-                        i++;
-                        _a.label = 8;
+                        if (!!participants_2_1.done) return [3 /*break*/, 10];
+                        participant = participants_2_1.value;
+                        return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE id = ?", [i, participant.participantId])];
                     case 8:
-                        _i++;
-                        return [3 /*break*/, 6];
+                        _b.sent();
+                        i++;
+                        _b.label = 9;
                     case 9:
-                        if (!(settings[0].type == 'single_elim')) return [3 /*break*/, 11];
-                        return [4 /*yield*/, this.winnersRoundMatches(settings, participants, !!players)];
-                    case 10:
-                        matches = _a.sent();
-                        return [3 /*break*/, 13];
+                        participants_2_1 = participants_2.next();
+                        return [3 /*break*/, 7];
+                    case 10: return [3 /*break*/, 13];
                     case 11:
-                        if (!(settings[0].type == 'double_elim')) return [3 /*break*/, 13];
-                        return [4 /*yield*/, this.doubleElimMatches(settings, participants, !!players)];
+                        e_12_1 = _b.sent();
+                        e_12 = { error: e_12_1 };
+                        return [3 /*break*/, 13];
                     case 12:
-                        matches = _a.sent();
-                        _a.label = 13;
-                    case 13: return [2 /*return*/, matches];
+                        try {
+                            if (participants_2_1 && !participants_2_1.done && (_a = participants_2.return)) _a.call(participants_2);
+                        }
+                        finally { if (e_12) throw e_12.error; }
+                        return [7 /*endfinally*/];
+                    case 13:
+                        if (!(settings[0].type == 'single_elim')) return [3 /*break*/, 15];
+                        return [4 /*yield*/, this.winnersRoundMatches(settings, participants, !!players)];
+                    case 14:
+                        matches = _b.sent();
+                        return [3 /*break*/, 17];
+                    case 15:
+                        if (!(settings[0].type == 'double_elim')) return [3 /*break*/, 17];
+                        return [4 /*yield*/, this.doubleElimMatches(settings, participants, !!players)];
+                    case 16:
+                        matches = _b.sent();
+                        _b.label = 17;
+                    case 17: return [2 /*return*/, matches];
                 }
             });
         });
@@ -1586,12 +1732,13 @@ var tournaments = /** @class */ (function () {
     };
     tournaments.prototype.getQualsScores = function (id) {
         return __awaiter(this, void 0, void 0, function () {
-            var qualsScores, scores, _loop_3, _i, qualsScores_3, score;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var qualsScores, scores, _loop_3, qualsScores_3, qualsScores_3_1, score;
+            var e_13, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0: return [4 /*yield*/, this.db.asyncPreparedQuery("SELECT p.userId as discordId, p.forfeit, q.score, q.percentage, pl.*, u.* FROM participants p\n        LEFT JOIN users u ON u.discordId = p.userId\n        LEFT JOIN qualifier_scores q ON p.userId = q.userId \n        LEFT JOIN map_pools mp ON mp.tournamentId = p.tournamentId\n        LEFT JOIN pool_link pl ON (pl.songHash = q.songHash AND pl.poolId = mp.id)\n        LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId\n        WHERE ts.show_quals = 1 AND ts.show_quals = 1 AND p.tournamentId = ? AND mp.live = 1 AND mp.is_qualifiers AND mp.tournamentId = ? AND (q.tournamentId IS NULL OR q.tournamentId = ?)", [id, id, id])];
                     case 1:
-                        qualsScores = _a.sent();
+                        qualsScores = _b.sent();
                         scores = [];
                         _loop_3 = function (score) {
                             if (scores.some(function (x) { return x.discordId == score.discordId; })) {
@@ -1646,9 +1793,18 @@ var tournaments = /** @class */ (function () {
                                 scores.push(temp);
                             }
                         };
-                        for (_i = 0, qualsScores_3 = qualsScores; _i < qualsScores_3.length; _i++) {
-                            score = qualsScores_3[_i];
-                            _loop_3(score);
+                        try {
+                            for (qualsScores_3 = __values(qualsScores), qualsScores_3_1 = qualsScores_3.next(); !qualsScores_3_1.done; qualsScores_3_1 = qualsScores_3.next()) {
+                                score = qualsScores_3_1.value;
+                                _loop_3(score);
+                            }
+                        }
+                        catch (e_13_1) { e_13 = { error: e_13_1 }; }
+                        finally {
+                            try {
+                                if (qualsScores_3_1 && !qualsScores_3_1.done && (_a = qualsScores_3.return)) _a.call(qualsScores_3);
+                            }
+                            finally { if (e_13) throw e_13.error; }
                         }
                         return [2 /*return*/, scores];
                 }
@@ -1721,12 +1877,22 @@ var tournaments = /** @class */ (function () {
     };
     tournaments.prototype.seeding = function (numPlayers) {
         var nextPlayer = function (player) {
+            var e_14, _a;
             var out = [];
             var length = player.length * 2 + 1;
-            for (var _i = 0, player_1 = player; _i < player_1.length; _i++) {
-                var value = player_1[_i];
-                out.push(value);
-                out.push(length - value);
+            try {
+                for (var player_1 = __values(player), player_1_1 = player_1.next(); !player_1_1.done; player_1_1 = player_1.next()) {
+                    var value = player_1_1.value;
+                    out.push(value);
+                    out.push(length - value);
+                }
+            }
+            catch (e_14_1) { e_14 = { error: e_14_1 }; }
+            finally {
+                try {
+                    if (player_1_1 && !player_1_1.done && (_a = player_1.return)) _a.call(player_1);
+                }
+                finally { if (e_14) throw e_14.error; }
             }
             return out;
         };

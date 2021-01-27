@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.qualifiersRouter = void 0;
+var express_1 = require("express");
+var qualifiers_1 = require("../controllers/qualifiers");
+var qualifiersRouter = express_1.Router();
+exports.qualifiersRouter = qualifiersRouter;
+var qualsCon = new qualifiers_1.QualifiersController();
+qualifiersRouter.post('/tournament/:tourneyId/qualifiers', function (req, res) { return qualsCon.saveScore(req, res); });
+qualifiersRouter.put('/tournament/:tourneyId/updateFlags', function (req, res) { return qualsCon.updateFlags(req, res); });
+qualifiersRouter.get('/tournament/:tourneyId/qualifiers', function (req, res) { return qualsCon.getScores(req, res); });

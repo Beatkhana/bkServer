@@ -42,36 +42,70 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.database = void 0;
 var mysql_1 = __importDefault(require("mysql"));
 // const mysql = mysql;
+var con;
 var database = /** @class */ (function () {
     function database() {
         this.connected = false;
         var env = process.env.NODE_ENV || 'production';
         // console.log(env);
+        if (!con) {
+            if (env == 'production') {
+                // con = mysql.createPool({
+                //     host: "localhost",
+                //     user: "dan",
+                //     password: "root",
+                //     database: "bk",
+                //     connectionLimit: 100,
+                //     charset: 'utf8mb4',
+                //     timezone: 'utc'
+                // });
+                con = mysql_1.default.createPool({
+                    host: "localhost",
+                    user: "dan",
+                    password: "test",
+                    database: "bk",
+                    connectionLimit: 100,
+                    charset: 'utf8mb4',
+                    timezone: 'utc'
+                });
+            }
+            else {
+                con = mysql_1.default.createPool({
+                    host: "localhost",
+                    user: "dan",
+                    password: "test",
+                    database: "bk",
+                    connectionLimit: 100,
+                    charset: 'utf8mb4',
+                    timezone: 'utc'
+                });
+            }
+        }
         if (env == 'production') {
-            this.con = mysql_1.default.createPool({
+            this.oldCon = mysql_1.default.createPool({
                 host: "localhost",
                 user: "dan",
                 password: "root",
                 database: "bk",
-                connectionLimit: 10,
+                connectionLimit: 100,
                 charset: 'utf8mb4',
                 timezone: 'utc'
             });
         }
         else {
-            this.con = mysql_1.default.createPool({
+            this.oldCon = mysql_1.default.createPool({
                 host: "localhost",
                 user: "dan",
                 password: "test",
                 database: "bk",
-                connectionLimit: 10,
+                connectionLimit: 100,
                 charset: 'utf8mb4',
                 timezone: 'utc'
             });
         }
     }
     database.prototype.query = function (sql, callback) {
-        this.con.getConnection(function (err, connection) {
+        this.oldCon.getConnection(function (err, connection) {
             if (err)
                 throw err;
             var query = connection.query(sql, function (error, results, fields) {
@@ -85,7 +119,7 @@ var database = /** @class */ (function () {
         });
     };
     database.prototype.preparedQuery = function (sql, params, callback) {
-        this.con.getConnection(function (err, connection) {
+        this.oldCon.getConnection(function (err, connection) {
             if (err)
                 throw err;
             var result;
@@ -99,10 +133,9 @@ var database = /** @class */ (function () {
     database.prototype.aQuery = function (sql, params) {
         if (params === void 0) { params = []; }
         return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
             return __generator(this, function (_a) {
                 return [2 /*return*/, new Promise(function (resolve, reject) {
-                        _this.con.query(sql, params, function (err, result, fields) {
+                        con.query(sql, params, function (err, result, fields) {
                             if (err)
                                 reject(err);
                             resolve(result);
@@ -117,7 +150,7 @@ var database = /** @class */ (function () {
             var _this = this;
             return __generator(this, function (_a) {
                 return [2 /*return*/, new Promise(function (resolve, reject) {
-                        _this.con.query(sql, params, function (err, result, fields) {
+                        _this.oldCon.query(sql, params, function (err, result, fields) {
                             if (err)
                                 reject(err);
                             resolve(result);
@@ -142,7 +175,7 @@ var database = /** @class */ (function () {
                             params.push(+perPage);
                             params.push(page * perPage);
                             return [2 /*return*/, new Promise(function (resolve, reject) {
-                                    var query = _this.con.query(sql, params, function (err, result, fields) {
+                                    var query = _this.oldCon.query(sql, params, function (err, result, fields) {
                                         if (err)
                                             reject(err);
                                         // console.log(query.sql);

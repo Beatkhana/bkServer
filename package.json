@@ -14,6 +14,7 @@
         "@types/express-session": "^1.17.0",
         "@types/mysql": "^2.15.13",
         "@types/sharp": "^0.27.1",
+        "@types/websocket": "^1.0.1",
         "ajv": "^7.0.3",
         "api-key-auth": "^0.2.3",
         "aws-sdk": "^2.724.0",
@@ -39,6 +40,7 @@
         "tslib": "^1.10.0",
         "tslint": "^6.1.2",
         "typescript": "^3.9.3",
+        "uuid": "^8.3.2",
         "ws": "^7.4.0",
         "zone.js": "~0.10.2"
     },

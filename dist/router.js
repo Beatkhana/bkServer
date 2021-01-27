@@ -1,14 +1,23 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
         }
-        return t;
-    };
-    return __assign.apply(this, arguments);
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spread = (this && this.__spread) || function () {
+    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
+    return ar;
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -66,90 +75,83 @@ else {
 router.get(baseUrl, function (req, res) {
     res.send({ 'hello there': 'general kenobi' });
 });
-router.get(baseUrl + '/login', function (req, res) {
-    res.redirect("https://discord.com/api/oauth2/authorize?client_id=" + CLIENT_ID + "&scope=identify&response_type=code&redirect_uri=" + redirect + "&state=" + req.query.url);
-});
-router.get(baseUrl + '/discordAuth', function (req, res) {
-    if (req.query.code) {
-        user.sendCode(req.query.code.toString(), function (usrRes, newUsr) {
-            if (newUsr === void 0) { newUsr = false; }
-            if (!newUsr) {
-                req.session.user = usrRes;
-                if (req.query.state != undefined) {
-                    res.redirect("" + req.query.state);
-                }
-                else {
-                    res.redirect('/');
-                }
-            }
-            else {
-                req.session.newUsr = usrRes;
-                res.redirect('/sign-up');
-            }
-        });
-    }
-    else {
-        res.redirect('/');
-    }
-});
-router.get(baseUrl + '/user', function (req, res) {
-    res.send(req.session.user);
-});
-router.put(baseUrl + '/user/:id', function (req, res) {
-    hasPerms(req, 2, function (auth) {
-        if (auth) {
-            user.update(req.params.id, req.body, function (response) {
-                res.send(response);
-            });
-            return null;
-        }
-        else if (req.session.user[0]['discordId'] == req.params.id) {
-            req.session.user[0] = __assign(__assign({}, req.session.user[0]), req.body);
-            user.update(req.params.id, req.body, function (response) {
-                res.send(response);
-            });
-            return null;
-        }
-        else {
-            res.sendStatus(401);
-            return null;
-        }
-    });
-});
-router.post(baseUrl + '/newUser', function (req, res) {
-    if (req.session.newUsr[0]) {
-        var usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'], refresh_token: req.session.newUsr[0]['refresh_token'], avatar: req.session.newUsr[0]['avatar'], name: req.session.newUsr[0]['name'] };
-        user.newUser(usrData, function (result) {
-            // req.session.destroy(() => { });
-            log.createLog(req.session.newUsr[0]['discordId'], 'Created an account');
-            req.session.user = result;
-            res.send({ message: 'success' });
-        });
-    }
-    else {
-        res.sendStatus(400);
-    }
-});
-router.get(baseUrl + '/users', function (req, res) {
-    ranking.allUsers(function (result) {
-        res.send(result);
-    });
-});
-router.get(baseUrl + '/user/by-ss/:id', function (req, res) {
-    ranking.getUserSS(req.params.id, function (result) {
-        res.send(result);
-    });
-});
+// router.get(baseUrl + '/login', function (req, res) {
+//     res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&scope=identify&response_type=code&redirect_uri=${redirect}&state=${req.query.url}`);
+// });
+// router.get(baseUrl + '/discordAuth', function (req, res) {
+//     if (req.query.code) {
+//         user.sendCode(req.query.code.toString(), (usrRes, newUsr = false) => {
+//             if (!newUsr) {
+//                 req.session.user = usrRes;
+//                 if (req.query.state != undefined) {
+//                     res.redirect(`${req.query.state}`);
+//                 } else {
+//                     res.redirect('/');
+//                 }
+//             } else {
+//                 req.session.newUsr = usrRes;
+//                 res.redirect('/sign-up');
+//             }
+//         });
+//     } else {
+//         res.redirect('/');
+//     }
+// });
+// router.get(baseUrl + '/user', function (req, res) {
+//     res.send(req.session.user);
+// });
+// router.put(baseUrl + '/user/:id', function (req, res) {
+//     hasPerms(req, 2, auth => {
+//         if (auth) {
+//             user.update(req.params.id, req.body, (response) => {
+//                 res.send(response);
+//             });
+//             return null;
+//         } else if (req.session.user[0]['discordId'] == req.params.id) {
+//             req.session.user[0] = { ...req.session.user[0], ...req.body };
+//             user.update(req.params.id, req.body, (response) => {
+//                 res.send(response);
+//             });
+//             return null;
+//         } else {
+//             res.sendStatus(401);
+//             return null;
+//         }
+//     });
+// });
+// router.post(baseUrl + '/newUser', function (req, res) {
+//     if (req.session.newUsr[0]) {
+//         let usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'], refresh_token: req.session.newUsr[0]['refresh_token'], avatar: req.session.newUsr[0]['avatar'], name: req.session.newUsr[0]['name'] };
+//         user.newUser(usrData, (result) => {
+//             // req.session.destroy(() => { });
+//             log.createLog(req.session.newUsr[0]['discordId'], 'Created an account');
+//             req.session.user = result;
+//             res.send({ message: 'success' });
+//         });
+//     } else {
+//         res.sendStatus(400);
+//     }
+// });
+// router.get(baseUrl + '/users', function (req, res) {
+//     ranking.allUsers((result: any) => {
+//         res.send(result);
+//     });
+// });
+// router.get(baseUrl + '/user/by-ss/:id', function (req, res) {
+//     ranking.getUserSS(req.params.id, (result: any) => {
+//         res.send(result);
+//     })
+// });
 // router.get(baseUrl + '/user/:id', function (req, res) {
 //     ranking.getUser(req.params.id, (result: any) => {
 //         res.send(result);
 //     })
 // });
 // logout
-router.get(baseUrl + '/logout', function (req, res) {
-    req.session.destroy(function () { });
-    res.redirect('/');
-});
+// router.get(baseUrl + '/logout', function (req, res) {
+//     req.session.destroy(() => { });
+//     res.redirect('/');
+// });
 // Get all tournaments
 // router.get(baseUrl + '/tournaments', function (req, res) {
 //     if (req.session.user != null) {
@@ -263,39 +265,38 @@ router.get(baseUrl + '/logout', function (req, res) {
 //     });
 // });
 // save quals score
-router.post(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
-    tournament.checkKey(req.params.id, req.headers.authorization)
-        .then(function (isAuth) {
-        if (isAuth) {
-            req.body.tournamentId = req.params.id;
-            tournament.saveQualScore(req.body)
-                .then(function (response) {
-                res.send(response);
-            })
-                .catch(function (err) {
-                console.error(err);
-                res.sendStatus(500);
-            });
-            // res.send(req.body);
-        }
-        else {
-            res.sendStatus(401);
-        }
-    })
-        .catch(function (err) {
-        console.error(err);
-        res.sendStatus(500);
-    });
-});
+// router.post(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
+//     tournament.checkKey(req.params.id, req.headers.authorization)
+//         .then(isAuth => {
+//             if (isAuth) {
+//                 req.body.tournamentId = req.params.id;
+//                 tournament.saveQualScore(req.body)
+//                     .then(response => {
+//                         res.send(response)
+//                     })
+//                     .catch((err) => {
+//                         console.error(err);
+//                         res.sendStatus(500);
+//                     });
+//                 // res.send(req.body);
+//             } else {
+//                 res.sendStatus(401);
+//             }
+//         })
+//         .catch((err) => {
+//             console.error(err);
+//             res.sendStatus(500);
+//         });
+// });
 // get qualifiers scores
-router.get(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
-    tournament.getQualsScores(req.params.id)
-        .then(function (response) { return res.send(response); })
-        .catch(function (err) {
-        console.error(err);
-        res.sendStatus(500);
-    });
-});
+// router.get(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
+//     tournament.getQualsScores(req.params.id)
+//         .then(response => res.send(response))
+//         .catch(err => {
+//             console.error(err);
+//             res.sendStatus(500);
+//         })
+// });
 // bracket testing
 // router.get(baseUrl + '/tournament/:id/bracketTest', function (req, res) {
 //     tournament.generateBracket(req.params.id)
@@ -633,147 +634,137 @@ router.get(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
 //     }
 // });
 // Download pool
-router.get(baseUrl + '/download-pool/:id', function (req, res) {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(function (isAuth) {
-            tournament.downloadPool(req.params.id, isAuth)
-                .then(function (response) {
-                var data = JSON.stringify(response);
-                var filename = response.playlistTitle.replace(/[<>:"\/\\|?*]+/g, '').replace(/ /g, '_');
-                res.setHeader('Content-disposition', "attachment; filename= " + filename + ".json");
-                res.setHeader('Content-type', 'application/json');
-                res.send(data);
-            });
-            return null;
-        })
-            .catch(function (err) {
-            console.error(err);
-            res.sendStatus(500);
-        });
-    }
-    else {
-        isAdminOwner(req, req.params.id, function (auth) {
-            tournament.downloadPool(req.params.id, auth)
-                .then(function (response) {
-                var data = JSON.stringify(response);
-                var filename = response.playlistTitle.replace(/[<>:"\/\\|?*]+/g, '').replace(/ /g, '_');
-                res.setHeader('Content-disposition', "attachment; filename= " + filename + ".json");
-                res.setHeader('Content-type', 'application/json');
-                res.send(data);
-            });
-            return null;
-        });
-    }
-});
+// router.get(baseUrl + '/download-pool/:id', (req, res) => {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 tournament.downloadPool(req.params.id, isAuth)
+//                     .then(response => {
+//                         var data = JSON.stringify(response);
+//                         let filename = response.playlistTitle.replace(/[<>:"\/\\|?*]+/g, '').replace(/ /g, '_');
+//                         res.setHeader('Content-disposition', `attachment; filename= ${filename}.json`);
+//                         res.setHeader('Content-type', 'application/json');
+//                         res.send(data);
+//                     });
+//                 return null;
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.params.id, auth => {
+//             tournament.downloadPool(req.params.id, auth)
+//                 .then(response => {
+//                     var data = JSON.stringify(response);
+//                     let filename = response.playlistTitle.replace(/[<>:"\/\\|?*]+/g, '').replace(/ /g, '_');
+//                     res.setHeader('Content-disposition', `attachment; filename= ${filename}.json`);
+//                     res.setHeader('Content-type', 'application/json');
+//                     res.send(data);
+//                 });
+//             return null;
+//         });
+//     }
+// });
 // Add song
-router.post(baseUrl + '/tournament/:id/addSong', function (req, res) {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(function (isAuth) {
-            if (isAuth) {
-                tournament.addSong(req.body, function (response) {
-                    log.createLog(req.headers.authorization, "Added a song a map pool (" + req.body.poolId + ") for a tournament (" + req.body.tournamentId + ")");
-                    res.send(response);
-                });
-                // return null;
-            }
-            else {
-                res.sendStatus(401);
-                // return null;
-            }
-        })
-            .catch(function (err) {
-            console.error(err);
-            res.sendStatus(500);
-        });
-    }
-    else {
-        isAdminOwner(req, req.body.tournamentId, function (auth) {
-            if (auth) {
-                tournament.addSong(req.body, function (response) {
-                    log.createLog(req.session.user[0]['discordId'], "Added a song a map pool (" + req.body.poolId + ") for a tournament (" + req.body.tournamentId + ")");
-                    res.send(response);
-                });
-                return null;
-            }
-            else {
-                res.sendStatus(401);
-                return null;
-            }
-        });
-    }
-});
-router.post(baseUrl + '/tournament/:id/addSongByKey', function (req, res) {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(function (isAuth) {
-            if (isAuth) {
-                tournament.songByKey(req.body)
-                    .then(function (response) { return res.send(response); });
-            }
-            else {
-                res.sendStatus(401);
-            }
-        })
-            .catch(function (err) {
-            console.error(err);
-            res.sendStatus(500);
-        });
-    }
-    else {
-        isAdminOwner(req, req.body.tournamentId, function (auth) {
-            if (auth) {
-                tournament.songByKey(req.body)
-                    .then(function (response) { return res.send(response); });
-                return null;
-            }
-            else {
-                res.sendStatus(401);
-                return null;
-            }
-        });
-    }
-    return null;
-});
+// router.post(baseUrl + '/tournament/:id/addSong', function (req, res) {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 if (isAuth) {
+//                     tournament.addSong(req.body, (response) => {
+//                         log.createLog(req.headers.authorization, `Added a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
+//                         res.send(response);
+//                     });
+//                     // return null;
+//                 } else {
+//                     res.sendStatus(401);
+//                     // return null;
+//                 }
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.body.tournamentId, auth => {
+//             if (auth) {
+//                 tournament.addSong(req.body, (response) => {
+//                     log.createLog(req.session.user[0]['discordId'], `Added a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
+//                     res.send(response);
+//                 });
+//                 return null;
+//             } else {
+//                 res.sendStatus(401);
+//                 return null;
+//             }
+//         });
+//     }
+// });
+// router.post(baseUrl + '/tournament/:id/addSongByKey', (req, res) => {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 if (isAuth) {
+//                     tournament.songByKey(req.body)
+//                         .then(response => res.send(response));
+//                 } else {
+//                     res.sendStatus(401);
+//                 }
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.body.tournamentId, auth => {
+//             if (auth) {
+//                 tournament.songByKey(req.body)
+//                     .then(response => res.send(response));
+//                 return null;
+//             } else {
+//                 res.sendStatus(401);
+//                 return null;
+//             }
+//         });
+//     }
+//     return null;
+// });
 // Delete song from pool
-router.post(baseUrl + '/tournament/:id/deleteSong', function (req, res) {
-    if (req.headers.authorization != null) {
-        tournament.checkKey(req.params.id, req.headers.authorization)
-            .then(function (isAuth) {
-            if (isAuth) {
-                tournament.deleteSong(req.body.id, function (response) {
-                    log.createLog(req.headers.authorization, "Deleted a song a map pool (" + req.body.poolId + ") for a tournament (" + req.body.tournamentId + ")");
-                    res.send(response);
-                });
-                // return null;
-            }
-            else {
-                res.sendStatus(401);
-                // return null;
-            }
-        })
-            .catch(function (err) {
-            console.error(err);
-            res.sendStatus(500);
-        });
-    }
-    else {
-        isAdminOwner(req, req.body.tournamentId, function (auth) {
-            if (auth) {
-                tournament.deleteSong(req.body.id, function (response) {
-                    log.createLog(req.session.user[0]['discordId'], "Deleted a song a map pool (" + req.body.poolId + ") for a tournament (" + req.body.tournamentId + ")");
-                    res.send(response);
-                });
-                return null;
-            }
-            else {
-                res.sendStatus(401);
-                return null;
-            }
-        });
-    }
-});
+// router.post(baseUrl + '/tournament/:id/deleteSong', function (req, res) {
+//     if (req.headers.authorization != null) {
+//         tournament.checkKey(req.params.id, req.headers.authorization)
+//             .then(isAuth => {
+//                 if (isAuth) {
+//                     tournament.deleteSong(req.body.id, (response) => {
+//                         log.createLog(req.headers.authorization, `Deleted a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
+//                         res.send(response);
+//                     });
+//                     // return null;
+//                 } else {
+//                     res.sendStatus(401);
+//                     // return null;
+//                 }
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//                 res.sendStatus(500);
+//             });
+//     } else {
+//         isAdminOwner(req, req.body.tournamentId, auth => {
+//             if (auth) {
+//                 tournament.deleteSong(req.body.id, (response) => {
+//                     log.createLog(req.session.user[0]['discordId'], `Deleted a song a map pool (${req.body.poolId}) for a tournament (${req.body.tournamentId})`);
+//                     res.send(response);
+//                 });
+//                 return null;
+//             } else {
+//                 res.sendStatus(401);
+//                 return null;
+//             }
+//         });
+//     }
+// });
 // Calendar events
 router.get(baseUrl + '/events', function (req, res) {
     hasPerms(req, 3, function (auth) {
@@ -782,19 +773,19 @@ router.get(baseUrl + '/events', function (req, res) {
         }, auth);
     });
 });
-router.get(baseUrl + '/rankings', function (req, res) {
-    ranking.getRanks(req.query.page, req.query.perPage)
-        .then(function (response) {
-        res.send(response);
-    })
-        .catch(function (err) {
-        console.error(err);
-        res.sendStatus(500);
-    });
-    // ranking.getRanks((result: any) => {
-    //     res.send(result);
-    // });
-});
+// router.get(baseUrl + '/rankings', function (req, res) {
+//     ranking.getRanks(req.query.page, req.query.perPage)
+//         .then(response => {
+//             res.send(response);
+//         })
+//         .catch((err) => {
+//             console.error(err);
+//             res.sendStatus(500);
+//         })
+//     // ranking.getRanks((result: any) => {
+//     //     res.send(result);
+//     // });
+// });
 router.get(baseUrl + '/team', function (req, res) {
     ranking.getTeam(function (result) {
         res.send(result);
@@ -839,7 +830,7 @@ function hasPerms(req, level, callback) {
         user.getUserRoles(req.session.user[0].discordId, function (data) {
             if (data != null && data.length > 0) {
                 var userRoles = data.map(function (x) { return x.roleId; });
-                if (Math.min.apply(Math, userRoles) <= level) {
+                if (Math.min.apply(Math, __spread(userRoles)) <= level) {
                     return callback(true);
                 }
                 else {

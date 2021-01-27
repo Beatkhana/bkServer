@@ -4,6 +4,8 @@ import { staff } from "../models/tournament.models";
 import { authController } from "./auth.controller";
 import { controller } from "./controller";
 import { ParticipantsController } from "./participants";
+import { QualifiersController } from "./qualifiers";
+import { TAController } from "./ta.controller";
 // var newStaffRequestSchema = require('../schemas/newStaffRequest.json');
 
 export class TournamentController extends controller {
@@ -14,8 +16,9 @@ export class TournamentController extends controller {
         let user = await auth.getUser();
         let sqlWhere = "";
         let userRoles = "";
+        let isAuth = await auth.isAdmin || await auth.isStaff;
         switch (true) {
-            case await auth.isAdmin || await auth.isStaff:
+            case isAuth:
                 sqlWhere = ``;
                 break;
             case user != null:
@@ -59,7 +62,7 @@ export class TournamentController extends controller {
         ts.countries,
         ts.sort_method,
         ts.standard_cutoff,
-        ts.ta_url
+        ts.ta_url ${isAuth ? ', ts.ta_password, ts.ta_event_flags' : ''}
         FROM tournaments t
         LEFT JOIN tournament_settings ts ON ts.tournamentId = t.id  
         ${userRoles}
@@ -78,39 +81,36 @@ export class TournamentController extends controller {
         let imgName = data.imgName;
         imgName = imgName.toLowerCase();
         imgName = imgName.substring(0, imgName.indexOf('.')) + '.webp';
-        let savePath = this.env == 'development' ? '../app/src/assets/images/' : '../public/assets/images/';
+        let savePath = this.env == 'development' ? '../app/src/assets/images/' : __dirname + '/../public/assets/images/';
 
-        let imgErr = false;
+        data.image = imgName;
+        delete data.imgName;
 
-        if (!imgErr) {
-            data.image = imgName;
-            delete data.imgName;
+        try {
+            data.date = this.formatDate(data.date);
+            data.endDate = this.formatDate(data.endDate);
+        } catch (err) {
+            return this.clientError(res, 'Invalid Date')
+        }
 
-            try {
-                data.date = this.formatDate(data.date);
-                data.endDate = this.formatDate(data.endDate);
-            } catch (err) {
-                return this.clientError(res, 'Invalid Date')
-            }
+        try {
+            let result: any = await this.db.aQuery(`INSERT INTO tournaments SET ?`, [data]);
+            let hash = this.randHash(15);
+            
+            await this.db.aQuery('UPDATE tournaments SET image = ? WHERE id = ?', [`${result.insertId}_${hash}.webp`, result.insertId]);
+            await this.db.aQuery(`INSERT INTO tournament_settings SET tournamentId = ?`, [result.insertId]);
+            
+            const buf = Buffer.from(base64Img, 'base64');
+            const webpData = await sharp(buf)
+                .resize({ width: 550 })
+                .webp({ lossless: true, quality: 50 })
+                .toBuffer();
 
-            try {
-                let result: any = await this.db.aQuery(`INSERT INTO tournaments SET ?`, [data]);
-                const buf = Buffer.from(base64Img, 'base64');
-                const webpData = await sharp(buf)
-                    .resize({ width: 550 })
-                    .webp({ lossless: true, quality: 50 })
-                    .toBuffer();
-
-                let hash = this.randHash(15);
-                await sharp(webpData)
-                    .toFile(savePath + `${result.insertId}_${hash}.webp`);
-
-                await this.db.aQuery('UPDATE tournaments SET image = ? WHERE id = ?', [`${result.insertId}_${hash}.webp`, result.insertId]);
-                await this.db.aQuery(`INSERT INTO tournament_settings SET tournamentId = ?`, [result.insertId]);
-                return this.ok(res);
-            } catch (error) {
-                return this.fail(res, error);   
-            }
+            await sharp(webpData)
+                .toFile(savePath + `${result.insertId}_${hash}.webp`);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
         }
     }
 
@@ -161,7 +161,7 @@ export class TournamentController extends controller {
 
         try {
             await this.db.aQuery(`UPDATE tournaments SET ? WHERE ?? = ?`, [data.tournament, 'id', data.id]);
-            return res.send({data: data.tournament});
+            return res.send({ data: data.tournament });
         } catch (error) {
             return this.fail(res, error);
         }
@@ -202,10 +202,18 @@ export class TournamentController extends controller {
                     return this.fail(res, "Error Creating Seeds");
                 }
             }
+        } 
+        if (data.settings.ta_url != null && data.settings.ta_url != curSettings[0].ta_url) {
+            TAController.updateConnection(data.tournamentId, data.settings.ta_url, data.settings.ta_password);
+            QualifiersController.updateMaps(data.tournamentId);
+        }
+        console.log(data.settings.state, curSettings[0].state);
+        if (data.settings.state == 'qualifiers' && curSettings[0].state == "awaiting_start") {
+            QualifiersController.createEvent(data.tournamentId);
         }
         try {
             let result = await this.db.aQuery(`UPDATE tournament_settings SET ? WHERE ?? = ?`, [data.settings, 'id', data.settingsId]);
-            return res.send({data:result});
+            return res.send({ data: result });
         } catch (error) {
             return this.fail(res, error);
         }
@@ -228,7 +236,7 @@ export class TournamentController extends controller {
             for (let i = 0; i < qualified.length; i++) {
                 const user = qualified[i];
                 console.log(i, user.userId, tournamentId)
-                await this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [i+1, user.userId, tournamentId])
+                await this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [i + 1, user.userId, tournamentId])
                     .catch(err => {
                         console.error(err);
                         updateErr = true;

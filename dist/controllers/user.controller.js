@@ -48,6 +48,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -57,11 +68,33 @@ var controller_1 = require("./controller");
 var auth_controller_1 = require("./auth.controller");
 var sharp_1 = __importDefault(require("sharp"));
 var fetch = require('node-fetch');
+var FormData = require('form-data');
+var request = require('request');
 var userController = /** @class */ (function (_super) {
     __extends(userController, _super);
     function userController() {
-        return _super !== null && _super.apply(this, arguments) || this;
+        var _this = _super.call(this) || this;
+        _this.redirect = "";
+        if (_this.env == 'production') {
+            _this.redirect = encodeURIComponent('https://beatkhana.com/api/discordAuth');
+        }
+        else {
+            _this.redirect = encodeURIComponent('http://localhost:4200/api/discordAuth');
+        }
+        return _this;
     }
+    userController.prototype.me = function (req, res) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function () {
+            var tmp;
+            return __generator(this, function (_b) {
+                tmp = (_a = req.session) === null || _a === void 0 ? void 0 : _a.user;
+                if (tmp)
+                    delete tmp.refresh_token;
+                return [2 /*return*/, res.send(tmp)];
+            });
+        });
+    };
     userController.prototype.getUser = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
             var user;
@@ -78,9 +111,96 @@ var userController = /** @class */ (function (_super) {
             });
         });
     };
+    userController.prototype.allUsers = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var users;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.db.aQuery("SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, \n        CAST(`users`.`discordId` AS CHAR) as discordId,\n        CAST(`users`.`ssId` AS CHAR) as ssId,\n        `users`.`name`,\n        `users`.`twitchName`,\n        `users`.`avatar`,\n        `users`.`globalRank`,\n        `users`.`localRank`,\n        `users`.`country`,\n        `users`.`tourneyRank`,\n        `users`.`TR`,\n        `users`.`pronoun`, \n        GROUP_CONCAT(DISTINCT r.roleName SEPARATOR ', ') as roleNames\n        FROM users\n        LEFT JOIN roleassignment ra ON ra.userId = users.discordId\n        LEFT JOIN roles r ON r.roleId = ra.roleId\n        GROUP BY users.discordId")];
+                    case 1:
+                        users = _a.sent();
+                        return [2 /*return*/, res.send(users)];
+                }
+            });
+        });
+    };
+    userController.prototype.userBySS = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var result;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.db.aQuery("SELECT u.discordId, u.ssId, u.name, u.twitchName, u.avatar, u.globalRank, u.localRank, u.country, u.tourneyRank, u.TR, u.pronoun, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u\n        LEFT JOIN participants p ON p.userId = u.discordId\n        LEFT JOIN tournaments t ON p.tournamentId = t.id\n        WHERE u.ssId = ?\n        GROUP BY u.discordId", [req.params.id])];
+                    case 1:
+                        result = _a.sent();
+                        return [2 /*return*/, res.send(result)];
+                }
+            });
+        });
+    };
+    userController.prototype.updateUser = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var auth, isAuth, data, id, roleIds, roleError, insert, roleIds_1, roleIds_1_1, roleId, error_1, error_2;
+            var e_1, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        auth = new auth_controller_1.authController(req);
+                        return [4 /*yield*/, auth.hasAdminPerms];
+                    case 1:
+                        isAuth = (_b.sent()) || req.params.id == auth.userId;
+                        if (!isAuth)
+                            return [2 /*return*/, this.unauthorized(res)];
+                        data = req.body;
+                        id = req.params.id;
+                        roleIds = [];
+                        roleError = false;
+                        if (!(data.roleIds != null && data.roleIds.length > 0)) return [3 /*break*/, 6];
+                        roleIds = data.roleIds;
+                        insert = [];
+                        try {
+                            for (roleIds_1 = __values(roleIds), roleIds_1_1 = roleIds_1.next(); !roleIds_1_1.done; roleIds_1_1 = roleIds_1.next()) {
+                                roleId = roleIds_1_1.value;
+                                insert.push([id, roleId]);
+                            }
+                        }
+                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                        finally {
+                            try {
+                                if (roleIds_1_1 && !roleIds_1_1.done && (_a = roleIds_1.return)) _a.call(roleIds_1);
+                            }
+                            finally { if (e_1) throw e_1.error; }
+                        }
+                        _b.label = 2;
+                    case 2:
+                        _b.trys.push([2, 5, , 6]);
+                        return [4 /*yield*/, this.db.aQuery("DELETE FROM roleassignment WHERE userId = ?;", [id])];
+                    case 3:
+                        _b.sent();
+                        return [4 /*yield*/, this.db.aQuery("INSERT INTO roleassignment (userId, roleId) VALUES ?", [insert])];
+                    case 4:
+                        _b.sent();
+                        return [3 /*break*/, 6];
+                    case 5:
+                        error_1 = _b.sent();
+                        return [2 /*return*/, this.fail(res, error_1)];
+                    case 6:
+                        _b.trys.push([6, 8, , 9]);
+                        delete data.roleIds;
+                        return [4 /*yield*/, this.db.aQuery("UPDATE users SET ? WHERE discordId = ?", [data, id])];
+                    case 7:
+                        _b.sent();
+                        return [2 /*return*/, this.ok(res)];
+                    case 8:
+                        error_2 = _b.sent();
+                        return [2 /*return*/, this.fail(res, error_2)];
+                    case 9: return [2 /*return*/];
+                }
+            });
+        });
+    };
     userController.prototype.updateUserBadges = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, _a, insetData, error_1;
+            var auth, _a, insetData, error_3;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -116,8 +236,8 @@ var userController = /** @class */ (function (_super) {
                     // console.log(insetData);
                     return [2 /*return*/, this.ok(res)];
                     case 8:
-                        error_1 = _b.sent();
-                        return [2 /*return*/, this.fail(res, error_1)];
+                        error_3 = _b.sent();
+                        return [2 /*return*/, this.fail(res, error_3)];
                     case 9: return [2 /*return*/];
                 }
             });
@@ -125,7 +245,7 @@ var userController = /** @class */ (function (_super) {
     };
     userController.prototype.createBadge = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, data, base64String, base64Img, savePath, buf, webpData, error_2;
+            var auth, data, base64String, base64Img, savePath, buf, webpData, error_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -162,8 +282,8 @@ var userController = /** @class */ (function (_super) {
                         _a.sent();
                         return [2 /*return*/, this.ok(res)];
                     case 7:
-                        error_2 = _a.sent();
-                        return [2 /*return*/, this.fail(res, error_2)];
+                        error_4 = _a.sent();
+                        return [2 /*return*/, this.fail(res, error_4)];
                     case 8: return [2 /*return*/];
                 }
             });
@@ -171,7 +291,7 @@ var userController = /** @class */ (function (_super) {
     };
     userController.prototype.updateBadge = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, _a, data, base64String, base64Img, savePath, buf, webpData, error_3;
+            var auth, _a, data, base64String, base64Img, savePath, buf, webpData, error_5;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -217,8 +337,8 @@ var userController = /** @class */ (function (_super) {
                         _b.label = 9;
                     case 9: return [2 /*return*/, this.ok(res)];
                     case 10:
-                        error_3 = _b.sent();
-                        return [2 /*return*/, this.fail(res, error_3)];
+                        error_5 = _b.sent();
+                        return [2 /*return*/, this.fail(res, error_5)];
                     case 11: return [2 /*return*/];
                 }
             });
@@ -226,7 +346,7 @@ var userController = /** @class */ (function (_super) {
     };
     userController.prototype.deleteBadge = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, _a, error_4;
+            var auth, _a, error_6;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -250,8 +370,8 @@ var userController = /** @class */ (function (_super) {
                         _b.sent();
                         return [2 /*return*/, this.ok(res)];
                     case 6:
-                        error_4 = _b.sent();
-                        return [2 /*return*/, this.fail(res, error_4)];
+                        error_6 = _b.sent();
+                        return [2 /*return*/, this.fail(res, error_6)];
                     case 7: return [2 /*return*/];
                 }
             });
@@ -259,7 +379,7 @@ var userController = /** @class */ (function (_super) {
     };
     userController.prototype.getBadges = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, _a, badges, error_5;
+            var auth, _a, badges, error_7;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -283,8 +403,8 @@ var userController = /** @class */ (function (_super) {
                         badges = _b.sent();
                         return [2 /*return*/, res.send(badges)];
                     case 6:
-                        error_5 = _b.sent();
-                        return [2 /*return*/, this.fail(res, error_5)];
+                        error_7 = _b.sent();
+                        return [2 /*return*/, this.fail(res, error_7)];
                     case 7: return [2 /*return*/];
                 }
             });
@@ -316,7 +436,7 @@ var userController = /** @class */ (function (_super) {
     };
     userController.getSSData = function (id) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, error_6;
+            var response, error_8;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, fetch("https://new.scoresaber.com/api/player/" + id + "/full")];
@@ -328,10 +448,189 @@ var userController = /** @class */ (function (_super) {
                         return [4 /*yield*/, response.json()];
                     case 3: return [2 /*return*/, _a.sent()];
                     case 4:
-                        error_6 = _a.sent();
+                        error_8 = _a.sent();
                         // console.error(error);
                         return [2 /*return*/, null];
                     case 5: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    // discord auth
+    userController.prototype.login = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                res.redirect("https://discord.com/api/oauth2/authorize?client_id=" + this.CLIENT_ID + "&scope=identify&response_type=code&redirect_uri=" + this.redirect + "&state=" + req.query.url);
+                return [2 /*return*/];
+            });
+        });
+    };
+    userController.prototype.logOut = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                req.session.destroy(function () { });
+                res.redirect('/');
+                return [2 /*return*/];
+            });
+        });
+    };
+    userController.prototype.discordAuth = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var code, data, env, redirect, refresh_token_1;
+            var _this = this;
+            return __generator(this, function (_a) {
+                if (req.query.code) {
+                    code = req.query.code;
+                    data = new FormData();
+                    // beatkhana
+                    data.append('client_id', this.CLIENT_ID);
+                    data.append('client_secret', this.CLIENT_SECRET);
+                    data.append('grant_type', 'authorization_code');
+                    env = process.env.NODE_ENV || 'production';
+                    redirect = "";
+                    if (env == 'production') {
+                        redirect = 'https://beatkhana.com/api/discordAuth';
+                    }
+                    else {
+                        redirect = 'http://localhost:4200/api/discordAuth';
+                    }
+                    data.append('redirect_uri', redirect);
+                    data.append('scope', 'identify');
+                    data.append('code', code);
+                    refresh_token_1 = null;
+                    fetch('https://discord.com/api/oauth2/token', {
+                        method: 'POST',
+                        body: data,
+                    })
+                        .then(function (discordRes) { return discordRes.json(); })
+                        .then(function (info) {
+                        refresh_token_1 = info.refresh_token;
+                        return info;
+                    })
+                        .then(function (info) { return fetch('https://discord.com/api/users/@me', {
+                        headers: {
+                            authorization: info.token_type + " " + info.access_token,
+                        },
+                    }); })
+                        .then(function (userRes) { return userRes.json(); })
+                        .then(function (data) {
+                        _this.checkuser(data.id, refresh_token_1, data.avatar, data.username, function (userRes, newUser) {
+                            if (!newUser) {
+                                req.session.user = userRes;
+                                if (req.query.state != undefined) {
+                                    res.redirect("" + req.query.state);
+                                }
+                                else {
+                                    res.redirect('/');
+                                }
+                            }
+                            else {
+                                req.session.newUsr = userRes;
+                                res.redirect('/sign-up');
+                            }
+                        });
+                    })
+                        .catch(function (error) {
+                        console.error('Error:', error);
+                    });
+                }
+                else {
+                    res.redirect('/');
+                }
+                return [2 /*return*/];
+            });
+        });
+    };
+    userController.prototype.checkuser = function (discordId, refreshToken, avatar, name, callback) {
+        var _this = this;
+        if (discordId) {
+            var res = this.db.query("SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, users.*, GROUP_CONCAT(DISTINCT r.roleName SEPARATOR ', ') as roleNames\n            FROM users\n            LEFT JOIN roleassignment ra ON ra.userId = users.discordId\n            LEFT JOIN roles r ON r.roleId = ra.roleId\n            WHERE users.discordId = " + discordId + "\n            GROUP BY users.discordId", function (err, result) { return __awaiter(_this, void 0, void 0, function () {
+                var error_9;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            if (!(result.length > 0)) return [3 /*break*/, 5];
+                            result[0].discordId = discordId.toString();
+                            if (result[0].roleNames != null) {
+                                result[0].roleIds = result[0].roleIds.split(', ');
+                                result[0].roleNames = result[0].roleNames.split(', ');
+                            }
+                            else {
+                                result[0].roleIds = [];
+                                result[0].roleNames = [];
+                            }
+                            if (!(refreshToken != null)) return [3 /*break*/, 4];
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 3, , 4]);
+                            return [4 /*yield*/, this.db.asyncPreparedQuery('UPDATE users SET refresh_token = ? WHERE discordId = ?', [refreshToken, discordId])];
+                        case 2:
+                            _a.sent();
+                            return [3 /*break*/, 4];
+                        case 3:
+                            error_9 = _a.sent();
+                            throw error_9;
+                        case 4:
+                            callback(result);
+                            return [3 /*break*/, 6];
+                        case 5:
+                            result = [{
+                                    discordId: discordId.toString(),
+                                    refresh_token: refreshToken,
+                                    avatar: avatar,
+                                    name: name
+                                }];
+                            callback(result, true);
+                            _a.label = 6;
+                        case 6: return [2 /*return*/];
+                    }
+                });
+            }); });
+        }
+    };
+    userController.prototype.newUser = function (req, res) {
+        var _a, _b;
+        return __awaiter(this, void 0, void 0, function () {
+            var usrData, ssData, user, loggedUser, error_10;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        if (!(((_b = (_a = req.session) === null || _a === void 0 ? void 0 : _a.newUsr) === null || _b === void 0 ? void 0 : _b.length) > 0)) return [3 /*break*/, 6];
+                        usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'], refresh_token: req.session.newUsr[0]['refresh_token'], avatar: req.session.newUsr[0]['avatar'], name: req.session.newUsr[0]['name'] };
+                        return [4 /*yield*/, userController.getSSData(usrData.links.scoreSaber.split('u/')[1])];
+                    case 1:
+                        ssData = _c.sent();
+                        if (!usrData.avatar) {
+                            usrData.avatar = "-";
+                        }
+                        user = {
+                            discordId: usrData.discordId,
+                            ssId: ssData.playerInfo.playerId,
+                            name: ssData.playerInfo.playerName,
+                            twitchName: usrData.links.twitch.split('twitch.tv/')[1],
+                            avatar: usrData.avatar,
+                            globalRank: ssData.playerInfo.rank,
+                            localRank: ssData.playerInfo.countryRank,
+                            country: ssData.playerInfo.country,
+                            pronoun: usrData.links.pronoun,
+                            refresh_token: usrData.refresh_token
+                        };
+                        _c.label = 2;
+                    case 2:
+                        _c.trys.push([2, 4, , 5]);
+                        return [4 /*yield*/, this.db.aQuery("INSERT INTO users SET ?", [user])];
+                    case 3:
+                        _c.sent();
+                        loggedUser = user;
+                        loggedUser.roleIds = [];
+                        loggedUser.roleNames = [];
+                        return [2 /*return*/, res.send([loggedUser])];
+                    case 4:
+                        error_10 = _c.sent();
+                        return [2 /*return*/, this.fail(res, error_10)];
+                    case 5: return [3 /*break*/, 7];
+                    case 6: return [2 /*return*/, this.clientError(res, "Invalid discord data")];
+                    case 7: return [2 /*return*/];
                 }
             });
         });

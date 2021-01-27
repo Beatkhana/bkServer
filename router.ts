@@ -268,39 +268,39 @@ router.get(baseUrl, function (req, res) {
 // });
 
 // save quals score
-router.post(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
-    tournament.checkKey(req.params.id, req.headers.authorization)
-        .then(isAuth => {
-            if (isAuth) {
-                req.body.tournamentId = req.params.id;
-                tournament.saveQualScore(req.body)
-                    .then(response => {
-                        res.send(response)
-                    })
-                    .catch((err) => {
-                        console.error(err);
-                        res.sendStatus(500);
-                    });
-                // res.send(req.body);
-            } else {
-                res.sendStatus(401);
-            }
-        })
-        .catch((err) => {
-            console.error(err);
-            res.sendStatus(500);
-        });
-});
+// router.post(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
+//     tournament.checkKey(req.params.id, req.headers.authorization)
+//         .then(isAuth => {
+//             if (isAuth) {
+//                 req.body.tournamentId = req.params.id;
+//                 tournament.saveQualScore(req.body)
+//                     .then(response => {
+//                         res.send(response)
+//                     })
+//                     .catch((err) => {
+//                         console.error(err);
+//                         res.sendStatus(500);
+//                     });
+//                 // res.send(req.body);
+//             } else {
+//                 res.sendStatus(401);
+//             }
+//         })
+//         .catch((err) => {
+//             console.error(err);
+//             res.sendStatus(500);
+//         });
+// });
 
 // get qualifiers scores
-router.get(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
-    tournament.getQualsScores(req.params.id)
-        .then(response => res.send(response))
-        .catch(err => {
-            console.error(err);
-            res.sendStatus(500);
-        })
-});
+// router.get(baseUrl + '/tournament/:id/qualifiers', function (req, res) {
+//     tournament.getQualsScores(req.params.id)
+//         .then(response => res.send(response))
+//         .catch(err => {
+//             console.error(err);
+//             res.sendStatus(500);
+//         })
+// });
 
 // bracket testing
 // router.get(baseUrl + '/tournament/:id/bracketTest', function (req, res) {

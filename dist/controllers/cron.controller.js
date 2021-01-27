@@ -67,6 +67,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -96,13 +107,14 @@ var cronController = /** @class */ (function (_super) {
     };
     cronController.prototype.updateUsersDiscord = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var users, updated, _loop_1, this_1, _i, users_1, user;
+            var users, updated, _loop_1, this_1, users_1, users_1_1, user, e_1_1;
+            var e_1, _a;
             var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0: return [4 /*yield*/, this.db.aQuery('SELECT * FROM users')];
                     case 1:
-                        users = _a.sent();
+                        users = _b.sent();
                         updated = 0;
                         _loop_1 = function (user) {
                             var data, redirect, refresh_token_1, response, error_1;
@@ -171,19 +183,33 @@ var cronController = /** @class */ (function (_super) {
                             });
                         };
                         this_1 = this;
-                        _i = 0, users_1 = users;
-                        _a.label = 2;
+                        _b.label = 2;
                     case 2:
-                        if (!(_i < users_1.length)) return [3 /*break*/, 5];
-                        user = users_1[_i];
-                        return [5 /*yield**/, _loop_1(user)];
+                        _b.trys.push([2, 7, 8, 9]);
+                        users_1 = __values(users), users_1_1 = users_1.next();
+                        _b.label = 3;
                     case 3:
-                        _a.sent();
-                        _a.label = 4;
+                        if (!!users_1_1.done) return [3 /*break*/, 6];
+                        user = users_1_1.value;
+                        return [5 /*yield**/, _loop_1(user)];
                     case 4:
-                        _i++;
-                        return [3 /*break*/, 2];
+                        _b.sent();
+                        _b.label = 5;
                     case 5:
+                        users_1_1 = users_1.next();
+                        return [3 /*break*/, 3];
+                    case 6: return [3 /*break*/, 9];
+                    case 7:
+                        e_1_1 = _b.sent();
+                        e_1 = { error: e_1_1 };
+                        return [3 /*break*/, 9];
+                    case 8:
+                        try {
+                            if (users_1_1 && !users_1_1.done && (_a = users_1.return)) _a.call(users_1);
+                        }
+                        finally { if (e_1) throw e_1.error; }
+                        return [7 /*endfinally*/];
+                    case 9:
                         console.info("Discord update complete: " + updated + "/" + users.length);
                         return [2 /*return*/];
                 }
@@ -193,52 +219,53 @@ var cronController = /** @class */ (function (_super) {
     cronController.prototype.updateUsersSS = function () {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var users, curBadges, badgeAssignment, badgeLabels, updated, i, user, ssData, info, error_2, _loop_2, this_2, _i, _b, badge;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var users, curBadges, badgeAssignment, badgeLabels, updated, i, user, ssData, info, error_2, _loop_2, this_2, _b, _c, badge, e_2_1;
+            var e_2, _d;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0: return [4 /*yield*/, this.db.aQuery('SELECT * FROM users')];
                     case 1:
-                        users = _c.sent();
+                        users = _e.sent();
                         return [4 /*yield*/, this.db.aQuery("SELECT * FROM badges")];
                     case 2:
-                        curBadges = _c.sent();
+                        curBadges = _e.sent();
                         return [4 /*yield*/, this.db.aQuery("SELECT * FROM badge_assignment")];
                     case 3:
-                        badgeAssignment = _c.sent();
+                        badgeAssignment = _e.sent();
                         badgeLabels = curBadges.map(function (x) { return x.image; });
                         updated = 0;
                         i = 0;
-                        _c.label = 4;
+                        _e.label = 4;
                     case 4:
-                        if (!(i < users.length)) return [3 /*break*/, 16];
+                        if (!(i < users.length)) return [3 /*break*/, 20];
                         user = users[i];
                         if (!(i !== 0 && i % 60 == 0)) return [3 /*break*/, 6];
                         return [4 /*yield*/, this.delay(60000)];
                     case 5:
-                        _c.sent();
-                        _c.label = 6;
+                        _e.sent();
+                        _e.label = 6;
                     case 6: return [4 /*yield*/, user_controller_1.userController.getSSData(user.ssId)];
                     case 7:
-                        ssData = _c.sent();
-                        if (!(ssData != null && ((_a = ssData === null || ssData === void 0 ? void 0 : ssData.playerInfo) === null || _a === void 0 ? void 0 : _a.banned) != 1)) return [3 /*break*/, 15];
+                        ssData = _e.sent();
+                        if (!(ssData != null && ssData.playerInfo && ((_a = ssData === null || ssData === void 0 ? void 0 : ssData.playerInfo) === null || _a === void 0 ? void 0 : _a.banned) != 1)) return [3 /*break*/, 19];
                         info = {
                             globalRank: ssData.playerInfo.rank,
                             localRank: ssData.playerInfo.countryRank
                         };
-                        _c.label = 8;
+                        _e.label = 8;
                     case 8:
-                        _c.trys.push([8, 10, , 11]);
+                        _e.trys.push([8, 10, , 11]);
                         return [4 /*yield*/, this.db.aQuery("UPDATE users SET ? WHERE discordId = ?", [info, user.discordId])];
                     case 9:
-                        _c.sent();
+                        _e.sent();
                         updated++;
                         return [3 /*break*/, 11];
                     case 10:
-                        error_2 = _c.sent();
+                        error_2 = _e.sent();
                         console.log(error_2);
                         return [3 /*break*/, 11];
                     case 11:
-                        if (!(ssData.playerInfo.badges.length > 0)) return [3 /*break*/, 15];
+                        if (!(ssData.playerInfo.badges.length > 0)) return [3 /*break*/, 19];
                         _loop_2 = function (badge) {
                             var imgName, info_1, buff, savePath, webpData, result, error_3, curBadge, result, error_4;
                             return __generator(this, function (_a) {
@@ -306,22 +333,36 @@ var cronController = /** @class */ (function (_super) {
                             });
                         };
                         this_2 = this;
-                        _i = 0, _b = ssData.playerInfo.badges;
-                        _c.label = 12;
+                        _e.label = 12;
                     case 12:
-                        if (!(_i < _b.length)) return [3 /*break*/, 15];
-                        badge = _b[_i];
-                        return [5 /*yield**/, _loop_2(badge)];
+                        _e.trys.push([12, 17, 18, 19]);
+                        _b = (e_2 = void 0, __values(ssData.playerInfo.badges)), _c = _b.next();
+                        _e.label = 13;
                     case 13:
-                        _c.sent();
-                        _c.label = 14;
+                        if (!!_c.done) return [3 /*break*/, 16];
+                        badge = _c.value;
+                        return [5 /*yield**/, _loop_2(badge)];
                     case 14:
-                        _i++;
-                        return [3 /*break*/, 12];
+                        _e.sent();
+                        _e.label = 15;
                     case 15:
+                        _c = _b.next();
+                        return [3 /*break*/, 13];
+                    case 16: return [3 /*break*/, 19];
+                    case 17:
+                        e_2_1 = _e.sent();
+                        e_2 = { error: e_2_1 };
+                        return [3 /*break*/, 19];
+                    case 18:
+                        try {
+                            if (_c && !_c.done && (_d = _b.return)) _d.call(_b);
+                        }
+                        finally { if (e_2) throw e_2.error; }
+                        return [7 /*endfinally*/];
+                    case 19:
                         i++;
                         return [3 /*break*/, 4];
-                    case 16:
+                    case 20:
                         console.info("Score Saber update complete: " + updated + "/" + users.length);
                         return [2 /*return*/];
                 }

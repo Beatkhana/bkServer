@@ -10,6 +10,9 @@ export class MapPoolController extends controller {
         let auth = new authController(req);
         if (!(await auth.hasAdminPerms || await auth.tournamentMapPool)) return this.unauthorized(res);
         try {
+            if (req.body.is_qualifiers == 1) {
+                await this.db.aQuery(`UPDATE map_pools SET is_qualifiers = 0 WHERE tournamentId = ?`, [auth.tourneyId]);
+            }
             await this.db.aQuery(`INSERT INTO map_pools SET ?`, [req.body]);
             return this.ok(res);
         } catch (error) {
@@ -21,9 +24,11 @@ export class MapPoolController extends controller {
         let auth = new authController(req);
         let isAuth = await auth.hasAdminPerms || await auth.tournamentMapPool;
         
+        let mapOptions = [];
         let sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?`;
         if (isAuth) {
             sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE tournamentId = ?`;
+            mapOptions = await this.db.aQuery(`SELECT * FROM event_map_options WHERE tournament_id = ?`, [auth.tourneyId]);
         }
         const poolsRes: any = await this.db.aQuery(sql, [auth.tourneyId]);
         let mapPools = {};
@@ -31,8 +36,29 @@ export class MapPoolController extends controller {
         // if (poolsRes == undefined) return callback({});
         for (const song of poolsRes) {
             if (song.poolId in mapPools) {
-                mapPools[song.poolId].songs.push(
-                    {
+                let tmpSong: any = {
+                    id: song.songId,
+                    hash: song.songHash,
+                    name: song.songName,
+                    songAuthor: song.songAuthor,
+                    levelAuthor: song.levelAuthor,
+                    diff: song.songDiff,
+                    key: song.key,
+                    ssLink: song.ssLink,
+                    numNotes: song.numNotes
+                }
+                if (isAuth && mapOptions.find(x => x.map_id == song.songId)) {
+                    let map = mapOptions.find(x => x.map_id == song.songId)
+                    tmpSong.flags = map.flags;
+                    tmpSong.playerOptions = map.playerOptions;
+                    tmpSong.selectedCharacteristic = map.selCharacteristic;
+                    tmpSong.difficulty = map.difficulty;
+                }
+                mapPools[song.poolId].songs.push(tmpSong);
+            } else {
+                let songs = []
+                if (song.songId != null) {
+                    let tmpSong: any = {
                         id: song.songId,
                         hash: song.songHash,
                         name: song.songName,
@@ -42,23 +68,15 @@ export class MapPoolController extends controller {
                         key: song.key,
                         ssLink: song.ssLink,
                         numNotes: song.numNotes
-                    });
-            } else {
-                let songs = []
-                if (song.songId != null) {
-                    songs = [
-                        {
-                            id: song.songId,
-                            hash: song.songHash,
-                            name: song.songName,
-                            songAuthor: song.songAuthor,
-                            levelAuthor: song.levelAuthor,
-                            diff: song.songDiff,
-                            key: song.key,
-                            ssLink: song.ssLink,
-                            numNotes: song.numNotes
-                        }
-                    ]
+                    }
+                    if (isAuth && mapOptions.find(x => x.map_id == song.songId)) {
+                        let map = mapOptions.find(x => x.map_id == song.songId)
+                        tmpSong.flags = map.flags;
+                        tmpSong.playerOptions = map.playerOptions;
+                        tmpSong.selectedCharacteristic = map.selCharacteristic;
+                        tmpSong.difficulty = map.difficulty;
+                    }
+                    songs = [tmpSong];
                 }
                 mapPools[song.poolId] = {
                     id: song.poolId,
@@ -83,6 +101,11 @@ export class MapPoolController extends controller {
         let poolId = data.poolId;
         delete data.poolId;
         try {
+            if (req.body.is_qualifiers == 1) {
+                await this.db.aQuery(`UPDATE map_pools SET is_qualifiers = 0 WHERE tournamentId = ?`, [auth.tourneyId]);
+                // await this.db.aQuery(`DELETE FROM event_map_options WHERE tournament_id = ?`, [auth.tourneyId]);
+                // let mapIds = await this.db.aQuery(`SELECT id FROM pool_link WHERE poolId = ?`)
+            }
             await this.db.aQuery(`UPDATE map_pools SET ? WHERE id = ?`, [data, poolId]);
             return this.ok(res);
         } catch (error) {

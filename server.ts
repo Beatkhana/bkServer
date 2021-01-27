@@ -2,6 +2,7 @@ import express from 'express';
 import { cronController } from './controllers/cron.controller';
 import { debugLogger } from './controllers/debugLogger.controller';
 import { wss } from './controllers/event.controller';
+import { TAController } from './controllers/ta.controller';
 
 const router = require('./router')
 const app = express();
@@ -17,6 +18,7 @@ import { crons } from './crons';
 import { bracketRouter } from './routers/bracket.router';
 import { mapPoolRouter } from './routers/map_pool';
 import { participantsRouter } from './routers/participants';
+import { qualifiersRouter } from './routers/qualifiers';
 import { tournamentRouter } from './routers/tournament.router';
 import { tournamentListRouter } from './routers/tournamentList.router';
 import { userRouter } from './routers/user.router';
@@ -75,6 +77,7 @@ app.use('/api', participantsRouter);
 app.use('/api', mapPoolRouter);
 app.use('/api', tournamentRouter);
 app.use('/api', userRouter);
+app.use('/api', qualifiersRouter);
 app.use('/', router);
 
 const env = process.env.NODE_ENV || 'production';
@@ -108,6 +111,8 @@ server.on('upgrade', (request: any, socket: any, head: any) => {
 //     console.log("Server now listening on " + PORT);
 //     console.log('Running in ' + env + ' mode')
 // });
+let TACon = new TAController();
+TACon.init();
 
 // Crons???
 let cronCon: cronController = new cronController();
@@ -121,3 +126,14 @@ cronCon.setCrons();
 //     console.log("Running Cron: Discord users update");
 //     crons.updateUsersDiscord();
 // });
+process.on('exit', beforeClose);
+process.on('SIGINT', beforeClose);
+process.on('SIGUSR1', beforeClose);
+process.on('SIGUSR2', beforeClose);
+process.on('uncaughtException', beforeClose);
+
+function beforeClose() {
+    console.info("Server shutdown");
+    TACon.closeTa();
+    process.exit();
+}

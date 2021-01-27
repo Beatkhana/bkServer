@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import * as WebSocket from 'ws';
+import { client } from './client';
 
 const emitter: EventEmitter = new EventEmitter();
 const wss = new WebSocket.Server({ noServer: true, path: "/api/ws" });
@@ -8,26 +9,33 @@ emitter.setMaxListeners(1000);
 
 wss.on('connection', (ws: WebSocket) => {
     setInterval(() => heartbeat(ws), 20000);
-    // emitter.on('reschedule', (data) => {
-    //     ws.send(JSON.stringify({ reschdule: data }));
-    // });
-    // emitter.on('schedule', (data) => {
-    //     ws.send(JSON.stringify({ schedule: data }));
-    // });
-    // emitter.on('matchUpdate', (data) => {
-    //     ws.send(JSON.stringify({ matchUpdate: data }));
-    // });
-    // emitter.on('score', (data) => {
-    //     ws.send(JSON.stringify({ qualScore: data }));
-    // });
-    // emitter.on('packet', (data) => {
-    //     ws.send(JSON.stringify({ taPacket: data }));
-    // });
+    let tournamentId = null;
+    let taClient: client = null;
+    ws.on('message', (message) => {
+        try {
+            let data = JSON.parse(message);
+            if (data.setTournament) {
+                tournamentId = data.setTournament;
+                let tmp = { t: tournamentId};
+                emitter.emit("getTAState", tmp);
+                taClient = tmp.t?.taClient;
+                delete taClient?.State?.ServerSettings?.Password;
+                ws.send(JSON.stringify({ TA: taClient}));
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    });
     emitter.on('bracketUpdate', (data) => {
         ws.send(JSON.stringify({bracketUpdate: data}));
     });
     emitter.on('bracketMatch', (data) => {
         ws.send(JSON.stringify({bracketMatch: data}));
+    });
+    emitter.on('taEvent', (data) => {
+        if (tournamentId == data[0]) {
+            ws.send(JSON.stringify({ TA: data}));
+        }
     });
 });
 

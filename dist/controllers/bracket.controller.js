@@ -54,6 +54,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.bracketController = void 0;
 var auth_controller_1 = require("./auth.controller");
@@ -196,85 +207,122 @@ var bracketController = /** @class */ (function (_super) {
     bracketController.prototype.saveBracket = function (req, res) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var auth, id, data, matches, tempMatches, _i, tempMatches_1, match, tempMatches, _c, tempMatches_2, match, tempMatches, _d, tempMatches_3, match, sqlMatches, _e, matches_1, match, error_3;
-            return __generator(this, function (_f) {
-                switch (_f.label) {
+            var auth, id, data, matches, tempMatches, tempMatches_1, tempMatches_1_1, match, tempMatches, tempMatches_2, tempMatches_2_1, match, tempMatches, tempMatches_3, tempMatches_3_1, match, sqlMatches, matches_1, matches_1_1, match, error_3;
+            var e_1, _c, e_2, _d, e_3, _e, e_4, _f;
+            return __generator(this, function (_g) {
+                switch (_g.label) {
                     case 0:
                         auth = new auth_controller_1.authController(req);
                         id = req.params.id;
                         data = req.body;
                         return [4 /*yield*/, auth.hasAdminPerms];
                     case 1:
-                        if (!(_f.sent()))
+                        if (!(_g.sent()))
                             return [2 /*return*/, this.unauthorized(res)];
                         matches = [];
                         console.log(data);
                         if (!(((_a = data.customPlayers) === null || _a === void 0 ? void 0 : _a.length) > 0)) return [3 /*break*/, 3];
                         return [4 /*yield*/, this.generateBracket(id, data.customPlayers)];
                     case 2:
-                        tempMatches = _f.sent();
-                        for (_i = 0, tempMatches_1 = tempMatches; _i < tempMatches_1.length; _i++) {
-                            match = tempMatches_1[_i];
-                            matches.push({
-                                tournamentId: id,
-                                round: match.round,
-                                matchNum: match.matchNum,
-                                p1: match.p1,
-                                p2: match.p2,
-                                bye: +match.bye || 0
-                            });
+                        tempMatches = _g.sent();
+                        try {
+                            for (tempMatches_1 = __values(tempMatches), tempMatches_1_1 = tempMatches_1.next(); !tempMatches_1_1.done; tempMatches_1_1 = tempMatches_1.next()) {
+                                match = tempMatches_1_1.value;
+                                matches.push({
+                                    tournamentId: id,
+                                    round: match.round,
+                                    matchNum: match.matchNum,
+                                    p1: match.p1,
+                                    p2: match.p2,
+                                    bye: +match.bye || 0
+                                });
+                            }
+                        }
+                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                        finally {
+                            try {
+                                if (tempMatches_1_1 && !tempMatches_1_1.done && (_c = tempMatches_1.return)) _c.call(tempMatches_1);
+                            }
+                            finally { if (e_1) throw e_1.error; }
                         }
                         return [3 /*break*/, 7];
                     case 3:
                         if (!(((_b = data.players) === null || _b === void 0 ? void 0 : _b.length) > 0)) return [3 /*break*/, 5];
                         return [4 /*yield*/, this.generateBracket(id, null, data.players)];
                     case 4:
-                        tempMatches = _f.sent();
-                        for (_c = 0, tempMatches_2 = tempMatches; _c < tempMatches_2.length; _c++) {
-                            match = tempMatches_2[_c];
-                            matches.push({
-                                tournamentId: id,
-                                round: match.round,
-                                matchNum: match.matchNum,
-                                p1: match.p1,
-                                p2: match.p2,
-                                bye: +match.bye || 0
-                            });
+                        tempMatches = _g.sent();
+                        try {
+                            for (tempMatches_2 = __values(tempMatches), tempMatches_2_1 = tempMatches_2.next(); !tempMatches_2_1.done; tempMatches_2_1 = tempMatches_2.next()) {
+                                match = tempMatches_2_1.value;
+                                matches.push({
+                                    tournamentId: id,
+                                    round: match.round,
+                                    matchNum: match.matchNum,
+                                    p1: match.p1,
+                                    p2: match.p2,
+                                    bye: +match.bye || 0
+                                });
+                            }
+                        }
+                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                        finally {
+                            try {
+                                if (tempMatches_2_1 && !tempMatches_2_1.done && (_d = tempMatches_2.return)) _d.call(tempMatches_2);
+                            }
+                            finally { if (e_2) throw e_2.error; }
                         }
                         return [3 /*break*/, 7];
                     case 5: return [4 /*yield*/, this.generateBracket(id)];
                     case 6:
-                        tempMatches = _f.sent();
-                        for (_d = 0, tempMatches_3 = tempMatches; _d < tempMatches_3.length; _d++) {
-                            match = tempMatches_3[_d];
-                            matches.push({
-                                tournamentId: id,
-                                round: match.round,
-                                matchNum: match.matchNum,
-                                p1: match.p1,
-                                p2: match.p2,
-                                bye: +match.bye || 0
-                            });
+                        tempMatches = _g.sent();
+                        try {
+                            for (tempMatches_3 = __values(tempMatches), tempMatches_3_1 = tempMatches_3.next(); !tempMatches_3_1.done; tempMatches_3_1 = tempMatches_3.next()) {
+                                match = tempMatches_3_1.value;
+                                matches.push({
+                                    tournamentId: id,
+                                    round: match.round,
+                                    matchNum: match.matchNum,
+                                    p1: match.p1,
+                                    p2: match.p2,
+                                    bye: +match.bye || 0
+                                });
+                            }
                         }
-                        _f.label = 7;
+                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                        finally {
+                            try {
+                                if (tempMatches_3_1 && !tempMatches_3_1.done && (_e = tempMatches_3.return)) _e.call(tempMatches_3);
+                            }
+                            finally { if (e_3) throw e_3.error; }
+                        }
+                        _g.label = 7;
                     case 7:
                         sqlMatches = [];
-                        for (_e = 0, matches_1 = matches; _e < matches_1.length; _e++) {
-                            match = matches_1[_e];
-                            sqlMatches.push(Object.values(match));
+                        try {
+                            for (matches_1 = __values(matches), matches_1_1 = matches_1.next(); !matches_1_1.done; matches_1_1 = matches_1.next()) {
+                                match = matches_1_1.value;
+                                sqlMatches.push(Object.values(match));
+                            }
                         }
-                        _f.label = 8;
+                        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                        finally {
+                            try {
+                                if (matches_1_1 && !matches_1_1.done && (_f = matches_1.return)) _f.call(matches_1);
+                            }
+                            finally { if (e_4) throw e_4.error; }
+                        }
+                        _g.label = 8;
                     case 8:
-                        _f.trys.push([8, 11, , 12]);
+                        _g.trys.push([8, 11, , 12]);
                         return [4 /*yield*/, this.db.asyncPreparedQuery('DELETE FROM bracket WHERE tournamentId = ?', [id])];
                     case 9:
-                        _f.sent();
+                        _g.sent();
                         return [4 /*yield*/, this.db.asyncPreparedQuery('INSERT INTO bracket (tournamentId, round, matchNum, p1, p2, bye) VALUES ?', [sqlMatches])];
                     case 10:
-                        _f.sent();
+                        _g.sent();
                         return [3 /*break*/, 12];
                     case 11:
-                        error_3 = _f.sent();
+                        error_3 = _g.sent();
                         return [2 /*return*/, this.fail(res, error_3)];
                     case 12: return [2 /*return*/, this.ok(res)];
                 }
@@ -283,12 +331,13 @@ var bracketController = /** @class */ (function (_super) {
     };
     bracketController.prototype.generateBracket = function (id, players, users) {
         return __awaiter(this, void 0, void 0, function () {
-            var settings, rand, participants, temp, i, _i, participants_1, participant, matches;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var settings, rand, participants, temp, i, participants_1, participants_1_1, participant, e_5_1, matches;
+            var e_5, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0: return [4 /*yield*/, this.getSettings(id)];
                     case 1:
-                        settings = _a.sent();
+                        settings = _b.sent();
                         rand = false;
                         if (settings.bracket_sort_method == 'random') {
                             settings.bracket_sort_method = 'discordId';
@@ -301,7 +350,7 @@ var bracketController = /** @class */ (function (_super) {
                                 console.error(err);
                             })];
                     case 2:
-                        participants = _a.sent();
+                        participants = _b.sent();
                         return [3 /*break*/, 6];
                     case 3:
                         if (!(players && !users)) return [3 /*break*/, 4];
@@ -314,9 +363,9 @@ var bracketController = /** @class */ (function (_super) {
                                 console.error(err);
                             })];
                     case 5:
-                        temp = _a.sent();
+                        temp = _b.sent();
                         participants = this.mapOrder(temp, users, "discordId");
-                        _a.label = 6;
+                        _b.label = 6;
                     case 6:
                         if (rand) {
                             this.shuffle(participants);
@@ -325,35 +374,49 @@ var bracketController = /** @class */ (function (_super) {
                             participants.length = settings.bracket_limit;
                         return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = 0 WHERE tournamentId = ?", [id])];
                     case 7:
-                        _a.sent();
-                        if (!(settings.bracket_sort_method != 'seed' && !players)) return [3 /*break*/, 11];
+                        _b.sent();
+                        if (!(settings.bracket_sort_method != 'seed' && !players)) return [3 /*break*/, 15];
                         i = 1;
-                        _i = 0, participants_1 = participants;
-                        _a.label = 8;
+                        _b.label = 8;
                     case 8:
-                        if (!(_i < participants_1.length)) return [3 /*break*/, 11];
-                        participant = participants_1[_i];
-                        return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE id = ?", [i, participant.participantId])];
+                        _b.trys.push([8, 13, 14, 15]);
+                        participants_1 = __values(participants), participants_1_1 = participants_1.next();
+                        _b.label = 9;
                     case 9:
-                        _a.sent();
-                        i++;
-                        _a.label = 10;
+                        if (!!participants_1_1.done) return [3 /*break*/, 12];
+                        participant = participants_1_1.value;
+                        return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE id = ?", [i, participant.participantId])];
                     case 10:
-                        _i++;
-                        return [3 /*break*/, 8];
+                        _b.sent();
+                        i++;
+                        _b.label = 11;
                     case 11:
-                        if (!(settings.type == 'single_elim')) return [3 /*break*/, 13];
-                        return [4 /*yield*/, this.winnersRoundMatches(settings, participants, !!players)];
-                    case 12:
-                        matches = _a.sent();
-                        return [3 /*break*/, 15];
+                        participants_1_1 = participants_1.next();
+                        return [3 /*break*/, 9];
+                    case 12: return [3 /*break*/, 15];
                     case 13:
-                        if (!(settings.type == 'double_elim')) return [3 /*break*/, 15];
-                        return [4 /*yield*/, this.doubleElimMatches(settings, participants, !!players)];
+                        e_5_1 = _b.sent();
+                        e_5 = { error: e_5_1 };
+                        return [3 /*break*/, 15];
                     case 14:
-                        matches = _a.sent();
-                        _a.label = 15;
-                    case 15: return [2 /*return*/, matches];
+                        try {
+                            if (participants_1_1 && !participants_1_1.done && (_a = participants_1.return)) _a.call(participants_1);
+                        }
+                        finally { if (e_5) throw e_5.error; }
+                        return [7 /*endfinally*/];
+                    case 15:
+                        if (!(settings.type == 'single_elim')) return [3 /*break*/, 17];
+                        return [4 /*yield*/, this.winnersRoundMatches(settings, participants, !!players)];
+                    case 16:
+                        matches = _b.sent();
+                        return [3 /*break*/, 19];
+                    case 17:
+                        if (!(settings.type == 'double_elim')) return [3 /*break*/, 19];
+                        return [4 /*yield*/, this.doubleElimMatches(settings, participants, !!players)];
+                    case 18:
+                        matches = _b.sent();
+                        _b.label = 19;
+                    case 19: return [2 /*return*/, matches];
                 }
             });
         });
@@ -808,50 +871,60 @@ var bracketController = /** @class */ (function (_super) {
     bracketController.prototype.bracketData = function (id) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var bracketData, matches, _i, bracketData_1, row, match;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var bracketData, matches, bracketData_1, bracketData_1_1, row, match;
+            var e_6, _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0: return [4 /*yield*/, this.db.aQuery("SELECT bracket.*,\n        u1.globalRank as p1Rank,\n        u2.globalRank as p2Rank,\n        u1.name as p1Name,\n        u2.name as p2Name,\n        u1.country as p1Country,\n        u2.country as p2Country,\n        u1.avatar as p1Avatar,\n        u2.avatar as p2Avatar,\n        u1.twitchName as p1Twitch,\n        u2.twitchName as p2Twitch,\n        par1.seed as p1Seed,\n        par2.seed as p2Seed\n        \n        FROM bracket\n        LEFT JOIN users u1 ON bracket.p1 = u1.discordId\n        LEFT JOIN users u2 ON bracket.p2 = u2.discordId\n        LEFT JOIN participants par1 ON (u1.discordId = par1.userId AND bracket.tournamentId = par1.tournamentId)\n        LEFT JOIN participants par2 ON (u2.discordId = par2.userId AND bracket.tournamentId = par2.tournamentId)\n        WHERE bracket.tournamentId = ? ", [id])];
                     case 1:
-                        bracketData = _c.sent();
+                        bracketData = _d.sent();
                         matches = [];
-                        for (_i = 0, bracketData_1 = bracketData; _i < bracketData_1.length; _i++) {
-                            row = bracketData_1[_i];
-                            match = {
-                                id: row.id,
-                                status: row.status,
-                                matchNum: row.matchNum,
-                                tournamentId: row.tournamentId,
-                                p1: {
-                                    id: row.p1,
-                                    ssId: row.p1ssId,
-                                    name: row.p1Name,
-                                    avatar: row.p1Avatar ? "/" + row.p1Avatar + (((_a = row.p1Avatar) === null || _a === void 0 ? void 0 : _a.substring(0, 2)) == 'a_' ? '.gif' : '.webp') : null,
-                                    score: row.p1Score,
-                                    country: row.p1Country,
-                                    seed: row.p1Seed,
-                                    forfeit: row.p1Forfeit,
-                                    twitch: row.p1Twitch,
-                                    rank: row.p1Rank,
-                                },
-                                p2: {
-                                    id: row.p2,
-                                    ssId: row.p2ssId,
-                                    name: row.p2Name,
-                                    avatar: row.p2Avatar ? "/" + row.p2Avatar + (((_b = row.p2Avatar) === null || _b === void 0 ? void 0 : _b.substring(0, 2)) == 'a_' ? '.gif' : '.webp') : null,
-                                    score: row.p2Score,
-                                    country: row.p2Country,
-                                    seed: row.p2Seed,
-                                    forfeit: row.p2Forfeit,
-                                    twitch: row.p2Twitch,
-                                    rank: row.p2Rank,
-                                },
-                                round: row.round,
-                                bye: row.bye,
-                                time: row.time,
-                                best_of: row.best_of
-                            };
-                            matches.push(match);
+                        try {
+                            for (bracketData_1 = __values(bracketData), bracketData_1_1 = bracketData_1.next(); !bracketData_1_1.done; bracketData_1_1 = bracketData_1.next()) {
+                                row = bracketData_1_1.value;
+                                match = {
+                                    id: row.id,
+                                    status: row.status,
+                                    matchNum: row.matchNum,
+                                    tournamentId: row.tournamentId,
+                                    p1: {
+                                        id: row.p1,
+                                        ssId: row.p1ssId,
+                                        name: row.p1Name,
+                                        avatar: row.p1Avatar ? "/" + row.p1Avatar + (((_a = row.p1Avatar) === null || _a === void 0 ? void 0 : _a.substring(0, 2)) == 'a_' ? '.gif' : '.webp') : null,
+                                        score: row.p1Score,
+                                        country: row.p1Country,
+                                        seed: row.p1Seed,
+                                        forfeit: row.p1Forfeit,
+                                        twitch: row.p1Twitch,
+                                        rank: row.p1Rank,
+                                    },
+                                    p2: {
+                                        id: row.p2,
+                                        ssId: row.p2ssId,
+                                        name: row.p2Name,
+                                        avatar: row.p2Avatar ? "/" + row.p2Avatar + (((_b = row.p2Avatar) === null || _b === void 0 ? void 0 : _b.substring(0, 2)) == 'a_' ? '.gif' : '.webp') : null,
+                                        score: row.p2Score,
+                                        country: row.p2Country,
+                                        seed: row.p2Seed,
+                                        forfeit: row.p2Forfeit,
+                                        twitch: row.p2Twitch,
+                                        rank: row.p2Rank,
+                                    },
+                                    round: row.round,
+                                    bye: row.bye,
+                                    time: row.time,
+                                    best_of: row.best_of
+                                };
+                                matches.push(match);
+                            }
+                        }
+                        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                        finally {
+                            try {
+                                if (bracketData_1_1 && !bracketData_1_1.done && (_c = bracketData_1.return)) _c.call(bracketData_1);
+                            }
+                            finally { if (e_6) throw e_6.error; }
                         }
                         return [2 /*return*/, matches];
                 }
@@ -924,12 +997,22 @@ var bracketController = /** @class */ (function (_super) {
     };
     bracketController.prototype.seeding = function (numPlayers) {
         var nextPlayer = function (player) {
+            var e_7, _a;
             var out = [];
             var length = player.length * 2 + 1;
-            for (var _i = 0, player_1 = player; _i < player_1.length; _i++) {
-                var value = player_1[_i];
-                out.push(value);
-                out.push(length - value);
+            try {
+                for (var player_1 = __values(player), player_1_1 = player_1.next(); !player_1_1.done; player_1_1 = player_1.next()) {
+                    var value = player_1_1.value;
+                    out.push(value);
+                    out.push(length - value);
+                }
+            }
+            catch (e_7_1) { e_7 = { error: e_7_1 }; }
+            finally {
+                try {
+                    if (player_1_1 && !player_1_1.done && (_a = player_1.return)) _a.call(player_1);
+                }
+                finally { if (e_7) throw e_7.error; }
             }
             return out;
         };

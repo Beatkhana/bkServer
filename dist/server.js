@@ -7,6 +7,7 @@ var express_1 = __importDefault(require("express"));
 var cron_controller_1 = require("./controllers/cron.controller");
 var debugLogger_controller_1 = require("./controllers/debugLogger.controller");
 var event_controller_1 = require("./controllers/event.controller");
+var ta_controller_1 = require("./controllers/ta.controller");
 var router = require('./router');
 var app = express_1.default();
 var path = require('path');
@@ -17,6 +18,7 @@ var cron = require('node-cron');
 var bracket_router_1 = require("./routers/bracket.router");
 var map_pool_1 = require("./routers/map_pool");
 var participants_1 = require("./routers/participants");
+var qualifiers_1 = require("./routers/qualifiers");
 var tournament_router_1 = require("./routers/tournament.router");
 var tournamentList_router_1 = require("./routers/tournamentList.router");
 var user_router_1 = require("./routers/user.router");
@@ -72,6 +74,7 @@ app.use('/api', participants_1.participantsRouter);
 app.use('/api', map_pool_1.mapPoolRouter);
 app.use('/api', tournament_router_1.tournamentRouter);
 app.use('/api', user_router_1.userRouter);
+app.use('/api', qualifiers_1.qualifiersRouter);
 app.use('/', router);
 var env = process.env.NODE_ENV || 'production';
 var mainDir = env == 'development' ? 'dist/public' : 'public';
@@ -97,6 +100,8 @@ server.on('upgrade', function (request, socket, head) {
 //     console.log("Server now listening on " + PORT);
 //     console.log('Running in ' + env + ' mode')
 // });
+var TACon = new ta_controller_1.TAController();
+TACon.init();
 // Crons???
 var cronCon = new cron_controller_1.cronController();
 cronCon.setCrons();
@@ -108,3 +113,13 @@ cronCon.setCrons();
 //     console.log("Running Cron: Discord users update");
 //     crons.updateUsersDiscord();
 // });
+process.on('exit', beforeClose);
+process.on('SIGINT', beforeClose);
+process.on('SIGUSR1', beforeClose);
+process.on('SIGUSR2', beforeClose);
+process.on('uncaughtException', beforeClose);
+function beforeClose() {
+    console.info("Server shutdown");
+    TACon.closeTa();
+    process.exit();
+}

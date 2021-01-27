@@ -14,10 +14,19 @@ export class database {
         // console.log(env);
         if (!con) {
             if (env == 'production') {
+                // con = mysql.createPool({
+                //     host: "localhost",
+                //     user: "dan",
+                //     password: "root",
+                //     database: "bk",
+                //     connectionLimit: 100,
+                //     charset: 'utf8mb4',
+                //     timezone: 'utc'
+                // });
                 con = mysql.createPool({
                     host: "localhost",
                     user: "dan",
-                    password: "root",
+                    password: "test",
                     database: "bk",
                     connectionLimit: 100,
                     charset: 'utf8mb4',

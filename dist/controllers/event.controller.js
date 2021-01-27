@@ -29,26 +29,35 @@ exports.wss = wss;
 emitter.setMaxListeners(1000);
 wss.on('connection', function (ws) {
     setInterval(function () { return heartbeat(ws); }, 20000);
-    // emitter.on('reschedule', (data) => {
-    //     ws.send(JSON.stringify({ reschdule: data }));
-    // });
-    // emitter.on('schedule', (data) => {
-    //     ws.send(JSON.stringify({ schedule: data }));
-    // });
-    // emitter.on('matchUpdate', (data) => {
-    //     ws.send(JSON.stringify({ matchUpdate: data }));
-    // });
-    // emitter.on('score', (data) => {
-    //     ws.send(JSON.stringify({ qualScore: data }));
-    // });
-    // emitter.on('packet', (data) => {
-    //     ws.send(JSON.stringify({ taPacket: data }));
-    // });
+    var tournamentId = null;
+    var taClient = null;
+    ws.on('message', function (message) {
+        var _a, _b, _c;
+        try {
+            var data = JSON.parse(message);
+            if (data.setTournament) {
+                tournamentId = data.setTournament;
+                var tmp = { t: tournamentId };
+                emitter.emit("getTAState", tmp);
+                taClient = (_a = tmp.t) === null || _a === void 0 ? void 0 : _a.taClient;
+                (_c = (_b = taClient === null || taClient === void 0 ? void 0 : taClient.State) === null || _b === void 0 ? void 0 : _b.ServerSettings) === null || _c === void 0 ? true : delete _c.Password;
+                ws.send(JSON.stringify({ TA: taClient }));
+            }
+        }
+        catch (error) {
+            console.error(error);
+        }
+    });
     emitter.on('bracketUpdate', function (data) {
         ws.send(JSON.stringify({ bracketUpdate: data }));
     });
     emitter.on('bracketMatch', function (data) {
         ws.send(JSON.stringify({ bracketMatch: data }));
+    });
+    emitter.on('taEvent', function (data) {
+        if (tournamentId == data[0]) {
+            ws.send(JSON.stringify({ TA: data }));
+        }
     });
 });
 function heartbeat(ws) {

@@ -48,12 +48,36 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __spreadArrays = (this && this.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spread = (this && this.__spread) || function () {
+    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
+    return ar;
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -64,6 +88,8 @@ var sharp_1 = __importDefault(require("sharp"));
 var auth_controller_1 = require("./auth.controller");
 var controller_1 = require("./controller");
 var participants_1 = require("./participants");
+var qualifiers_1 = require("./qualifiers");
+var ta_controller_1 = require("./ta.controller");
 // var newStaffRequestSchema = require('../schemas/newStaffRequest.json');
 var TournamentController = /** @class */ (function (_super) {
     __extends(TournamentController, _super);
@@ -72,46 +98,43 @@ var TournamentController = /** @class */ (function (_super) {
     }
     TournamentController.prototype.getTournament = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, user, sqlWhere, userRoles, _a, _b, tournament;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var auth, user, sqlWhere, userRoles, isAuth, _a, tournament;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         auth = new auth_controller_1.authController(req);
                         if (!auth.tourneyId)
                             return [2 /*return*/, this.clientError(res, 'Not tournament Id provided')];
                         return [4 /*yield*/, auth.getUser()];
                     case 1:
-                        user = _c.sent();
+                        user = _b.sent();
                         sqlWhere = "";
                         userRoles = "";
-                        _a = true;
                         return [4 /*yield*/, auth.isAdmin];
                     case 2:
-                        _b = (_c.sent());
-                        if (_b) return [3 /*break*/, 4];
+                        _a = (_b.sent());
+                        if (_a) return [3 /*break*/, 4];
                         return [4 /*yield*/, auth.isStaff];
                     case 3:
-                        _b = (_c.sent());
-                        _c.label = 4;
+                        _a = (_b.sent());
+                        _b.label = 4;
                     case 4:
-                        switch (_a) {
-                            case _b: return [3 /*break*/, 5];
-                            case user != null: return [3 /*break*/, 6];
+                        isAuth = _a;
+                        switch (true) {
+                            case isAuth:
+                                sqlWhere = "";
+                                break;
+                            case user != null:
+                                sqlWhere = "AND (ts.public = 1 OR owner = ? OR tra.role_id IS NOT NULL)";
+                                userRoles = "LEFT JOIN tournament_role_assignment tra ON tra.tournament_id = t.id AND tra.user_id = " + user.discordId;
+                                break;
+                            default:
+                                sqlWhere = "AND ts.public = 1";
+                                break;
                         }
-                        return [3 /*break*/, 7];
+                        return [4 /*yield*/, this.db.aQuery("SELECT t.id as tournamentId,\n        t.name,\n        t.image,\n        t.date as startDate,\n        t.endDate,\n        t.discord,\n        t.twitchLink,\n        t.prize,\n        t.info,\n        CAST(t.owner AS CHAR) as owner,\n        t.archived,\n        t.first,\n        t.second,\n        t.third,\n        t.is_mini,\n        ts.id as settingsId,\n        ts.public_signups,\n        ts.public,\n        ts.state,\n        ts.type,\n        ts.has_bracket,\n        ts.has_map_pool,\n        ts.signup_comment,\n        ts.comment_required,\n        ts.show_signups,\n        ts.bracket_sort_method,\n        ts.bracket_limit,\n        ts.quals_cutoff,\n        ts.show_quals,\n        ts.has_quals,\n        ts.countries,\n        ts.sort_method,\n        ts.standard_cutoff,\n        ts.ta_url " + (isAuth ? ', ts.ta_password, ts.ta_event_flags' : '') + "\n        FROM tournaments t\n        LEFT JOIN tournament_settings ts ON ts.tournamentId = t.id  \n        " + userRoles + "\n        WHERE t.id = ? " + sqlWhere, [auth.tourneyId, user === null || user === void 0 ? void 0 : user.discordId])];
                     case 5:
-                        sqlWhere = "";
-                        return [3 /*break*/, 8];
-                    case 6:
-                        sqlWhere = "AND (ts.public = 1 OR owner = ? OR tra.role_id IS NOT NULL)";
-                        userRoles = "LEFT JOIN tournament_role_assignment tra ON tra.tournament_id = t.id AND tra.user_id = " + user.discordId;
-                        return [3 /*break*/, 8];
-                    case 7:
-                        sqlWhere = "AND ts.public = 1";
-                        return [3 /*break*/, 8];
-                    case 8: return [4 /*yield*/, this.db.aQuery("SELECT t.id as tournamentId,\n        t.name,\n        t.image,\n        t.date as startDate,\n        t.endDate,\n        t.discord,\n        t.twitchLink,\n        t.prize,\n        t.info,\n        CAST(t.owner AS CHAR) as owner,\n        t.archived,\n        t.first,\n        t.second,\n        t.third,\n        t.is_mini,\n        ts.id as settingsId,\n        ts.public_signups,\n        ts.public,\n        ts.state,\n        ts.type,\n        ts.has_bracket,\n        ts.has_map_pool,\n        ts.signup_comment,\n        ts.comment_required,\n        ts.show_signups,\n        ts.bracket_sort_method,\n        ts.bracket_limit,\n        ts.quals_cutoff,\n        ts.show_quals,\n        ts.has_quals,\n        ts.countries,\n        ts.sort_method,\n        ts.standard_cutoff,\n        ts.ta_url\n        FROM tournaments t\n        LEFT JOIN tournament_settings ts ON ts.tournamentId = t.id  \n        " + userRoles + "\n        WHERE t.id = ? " + sqlWhere, [auth.tourneyId, user === null || user === void 0 ? void 0 : user.discordId])];
-                    case 9:
-                        tournament = _c.sent();
+                        tournament = _b.sent();
                         if (tournament.length == 0)
                             return [2 /*return*/, this.notFound(res, "Tournament Not Found")];
                         return [2 /*return*/, res.send(tournament)];
@@ -339,15 +362,21 @@ var TournamentController = /** @class */ (function (_super) {
                         }
                         _a.label = 6;
                     case 6:
-                        _a.trys.push([6, 8, , 9]);
-                        return [4 /*yield*/, this.db.aQuery("UPDATE tournament_settings SET ? WHERE ?? = ?", [data.settings, 'id', data.settingsId])];
+                        if (data.settings.ta_url != null && data.settings.ta_url != curSettings[0].ta_url) {
+                            ta_controller_1.TAController.updateConnection(data.tournamentId, data.settings.ta_url, data.settings.ta_password);
+                            qualifiers_1.QualifiersController.updateMaps(data.tournamentId);
+                        }
+                        _a.label = 7;
                     case 7:
+                        _a.trys.push([7, 9, , 10]);
+                        return [4 /*yield*/, this.db.aQuery("UPDATE tournament_settings SET ? WHERE ?? = ?", [data.settings, 'id', data.settingsId])];
+                    case 8:
                         result = _a.sent();
                         return [2 /*return*/, res.send({ data: result })];
-                    case 8:
+                    case 9:
                         error_4 = _a.sent();
                         return [2 /*return*/, this.fail(res, error_4)];
-                    case 9: return [2 /*return*/];
+                    case 10: return [2 /*return*/];
                 }
             });
         });
@@ -355,38 +384,53 @@ var TournamentController = /** @class */ (function (_super) {
     // non quals seed
     TournamentController.prototype.seedPlayers = function (tournamentId, cutoff, method) {
         return __awaiter(this, void 0, void 0, function () {
-            var updateErr_1, participants, qualified, _i, participants_2, user, i, user;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var updateErr_1, participants, qualified, participants_2, participants_2_1, user, e_1_1, i, user;
+            var e_1, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
-                        if (!(method == 'date')) return [3 /*break*/, 10];
+                        if (!(method == 'date')) return [3 /*break*/, 14];
                         updateErr_1 = false;
                         return [4 /*yield*/, participants_1.ParticipantsController.allParticipants(tournamentId)];
                     case 1:
-                        participants = _a.sent();
+                        participants = _b.sent();
                         participants.sort(function (a, b) { return a.participantId - b.participantId; });
                         qualified = participants.slice(0, cutoff + 1);
-                        _i = 0, participants_2 = participants;
-                        _a.label = 2;
+                        _b.label = 2;
                     case 2:
-                        if (!(_i < participants_2.length)) return [3 /*break*/, 5];
-                        user = participants_2[_i];
+                        _b.trys.push([2, 7, 8, 9]);
+                        participants_2 = __values(participants), participants_2_1 = participants_2.next();
+                        _b.label = 3;
+                    case 3:
+                        if (!!participants_2_1.done) return [3 /*break*/, 6];
+                        user = participants_2_1.value;
                         return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = 0, position = 0 WHERE userId = ? AND tournamentId = ?", [user.userId, tournamentId])
                                 .catch(function (err) {
                                 console.error(err);
                                 updateErr_1 = true;
                             })];
-                    case 3:
-                        _a.sent();
-                        _a.label = 4;
                     case 4:
-                        _i++;
-                        return [3 /*break*/, 2];
+                        _b.sent();
+                        _b.label = 5;
                     case 5:
+                        participants_2_1 = participants_2.next();
+                        return [3 /*break*/, 3];
+                    case 6: return [3 /*break*/, 9];
+                    case 7:
+                        e_1_1 = _b.sent();
+                        e_1 = { error: e_1_1 };
+                        return [3 /*break*/, 9];
+                    case 8:
+                        try {
+                            if (participants_2_1 && !participants_2_1.done && (_a = participants_2.return)) _a.call(participants_2);
+                        }
+                        finally { if (e_1) throw e_1.error; }
+                        return [7 /*endfinally*/];
+                    case 9:
                         i = 0;
-                        _a.label = 6;
-                    case 6:
-                        if (!(i < qualified.length)) return [3 /*break*/, 9];
+                        _b.label = 10;
+                    case 10:
+                        if (!(i < qualified.length)) return [3 /*break*/, 13];
                         user = qualified[i];
                         console.log(i, user.userId, tournamentId);
                         return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [i + 1, user.userId, tournamentId])
@@ -394,14 +438,14 @@ var TournamentController = /** @class */ (function (_super) {
                                 console.error(err);
                                 updateErr_1 = true;
                             })];
-                    case 7:
-                        _a.sent();
-                        _a.label = 8;
-                    case 8:
+                    case 11:
+                        _b.sent();
+                        _b.label = 12;
+                    case 12:
                         i++;
-                        return [3 /*break*/, 6];
-                    case 9: return [2 /*return*/, !updateErr_1];
-                    case 10: return [2 /*return*/];
+                        return [3 /*break*/, 10];
+                    case 13: return [2 /*return*/, !updateErr_1];
+                    case 14: return [2 /*return*/];
                 }
             });
         });
@@ -409,33 +453,52 @@ var TournamentController = /** @class */ (function (_super) {
     // quals seed
     TournamentController.prototype.seedPlayersByQuals = function (tournamentId, cutoff) {
         return __awaiter(this, void 0, void 0, function () {
-            var pools, qualsPool, qualsScores, _i, qualsScores_1, user, _loop_1, _a, _b, score, _c, qualsScores_2, user, users, i, user, temp, updateErr, _d, users_1, user;
+            var pools, qualsPool, qualsScores, qualsScores_1, qualsScores_1_1, user, _loop_1, _a, _b, score, qualsScores_2, qualsScores_2_1, user, e_2_1, users, i, user, temp, updateErr, users_1, users_1_1, user, e_3_1;
+            var e_4, _c, e_5, _d, e_2, _e, e_3, _f;
             var _this = this;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            return __generator(this, function (_g) {
+                switch (_g.label) {
                     case 0: return [4 /*yield*/, this.getMapPools(tournamentId)];
                     case 1:
-                        pools = _e.sent();
+                        pools = _g.sent();
                         qualsPool = Object.values(pools).find(function (x) { return x.is_qualifiers == 1; });
                         return [4 /*yield*/, this.getQualsScores(tournamentId)];
                     case 2:
-                        qualsScores = _e.sent();
+                        qualsScores = _g.sent();
                         console.log(qualsScores);
-                        for (_i = 0, qualsScores_1 = qualsScores; _i < qualsScores_1.length; _i++) {
-                            user = qualsScores_1[_i];
-                            _loop_1 = function (score) {
-                                if (qualsPool.songs.find(function (x) { return x.hash == score.songHash; }).numNotes != 0) {
-                                    score.percentage = score.score / (qualsPool.songs.find(function (x) { return x.hash == score.songHash; }).numNotes * 920 - 7245);
+                        try {
+                            for (qualsScores_1 = __values(qualsScores), qualsScores_1_1 = qualsScores_1.next(); !qualsScores_1_1.done; qualsScores_1_1 = qualsScores_1.next()) {
+                                user = qualsScores_1_1.value;
+                                _loop_1 = function (score) {
+                                    if (qualsPool.songs.find(function (x) { return x.hash == score.songHash; }).numNotes != 0) {
+                                        score.percentage = score.score / (qualsPool.songs.find(function (x) { return x.hash == score.songHash; }).numNotes * 920 - 7245);
+                                    }
+                                    else {
+                                        score.percentage = 0;
+                                    }
+                                    score.score = Math.round(score.score / 2);
+                                };
+                                try {
+                                    for (_a = (e_5 = void 0, __values(user.scores)), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                        score = _b.value;
+                                        _loop_1(score);
+                                    }
                                 }
-                                else {
-                                    score.percentage = 0;
+                                catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                                finally {
+                                    try {
+                                        if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
+                                    }
+                                    finally { if (e_5) throw e_5.error; }
                                 }
-                                score.score = Math.round(score.score / 2);
-                            };
-                            for (_a = 0, _b = user.scores; _a < _b.length; _a++) {
-                                score = _b[_a];
-                                _loop_1(score);
                             }
+                        }
+                        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                        finally {
+                            try {
+                                if (qualsScores_1_1 && !qualsScores_1_1.done && (_c = qualsScores_1.return)) _c.call(qualsScores_1);
+                            }
+                            finally { if (e_4) throw e_4.error; }
                         }
                         qualsScores.sort(function (a, b) {
                             var sumA = _this.sumProperty(a.scores, 'score');
@@ -466,23 +529,37 @@ var TournamentController = /** @class */ (function (_super) {
                                 return b.avgPercentage - a.avgPercentage;
                             }
                         });
-                        _c = 0, qualsScores_2 = qualsScores;
-                        _e.label = 3;
+                        _g.label = 3;
                     case 3:
-                        if (!(_c < qualsScores_2.length)) return [3 /*break*/, 6];
-                        user = qualsScores_2[_c];
+                        _g.trys.push([3, 8, 9, 10]);
+                        qualsScores_2 = __values(qualsScores), qualsScores_2_1 = qualsScores_2.next();
+                        _g.label = 4;
+                    case 4:
+                        if (!!qualsScores_2_1.done) return [3 /*break*/, 7];
+                        user = qualsScores_2_1.value;
                         return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = 0 WHERE userId = ? AND tournamentId = ?", [user.discordId, tournamentId])
                                 .catch(function (err) {
                                 console.error(err);
                                 updateErr = true;
                             })];
-                    case 4:
-                        _e.sent();
-                        _e.label = 5;
                     case 5:
-                        _c++;
-                        return [3 /*break*/, 3];
+                        _g.sent();
+                        _g.label = 6;
                     case 6:
+                        qualsScores_2_1 = qualsScores_2.next();
+                        return [3 /*break*/, 4];
+                    case 7: return [3 /*break*/, 10];
+                    case 8:
+                        e_2_1 = _g.sent();
+                        e_2 = { error: e_2_1 };
+                        return [3 /*break*/, 10];
+                    case 9:
+                        try {
+                            if (qualsScores_2_1 && !qualsScores_2_1.done && (_e = qualsScores_2.return)) _e.call(qualsScores_2);
+                        }
+                        finally { if (e_2) throw e_2.error; }
+                        return [7 /*endfinally*/];
+                    case 10:
                         users = [];
                         for (i = 0; i < cutoff; i++) {
                             user = qualsScores[i];
@@ -493,23 +570,37 @@ var TournamentController = /** @class */ (function (_super) {
                             users.push(temp);
                         }
                         updateErr = false;
-                        _d = 0, users_1 = users;
-                        _e.label = 7;
-                    case 7:
-                        if (!(_d < users_1.length)) return [3 /*break*/, 10];
-                        user = users_1[_d];
+                        _g.label = 11;
+                    case 11:
+                        _g.trys.push([11, 16, 17, 18]);
+                        users_1 = __values(users), users_1_1 = users_1.next();
+                        _g.label = 12;
+                    case 12:
+                        if (!!users_1_1.done) return [3 /*break*/, 15];
+                        user = users_1_1.value;
                         return [4 /*yield*/, this.db.asyncPreparedQuery("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [user.seed, user.discordId, tournamentId])
                                 .catch(function (err) {
                                 console.error(err);
                                 updateErr = true;
                             })];
-                    case 8:
-                        _e.sent();
-                        _e.label = 9;
-                    case 9:
-                        _d++;
-                        return [3 /*break*/, 7];
-                    case 10: return [2 /*return*/, !updateErr];
+                    case 13:
+                        _g.sent();
+                        _g.label = 14;
+                    case 14:
+                        users_1_1 = users_1.next();
+                        return [3 /*break*/, 12];
+                    case 15: return [3 /*break*/, 18];
+                    case 16:
+                        e_3_1 = _g.sent();
+                        e_3 = { error: e_3_1 };
+                        return [3 /*break*/, 18];
+                    case 17:
+                        try {
+                            if (users_1_1 && !users_1_1.done && (_f = users_1.return)) _f.call(users_1);
+                        }
+                        finally { if (e_3) throw e_3.error; }
+                        return [7 /*endfinally*/];
+                    case 18: return [2 /*return*/, !updateErr];
                 }
             });
         });
@@ -518,9 +609,10 @@ var TournamentController = /** @class */ (function (_super) {
     TournamentController.prototype.getMapPools = function (tournamentId, isAuth) {
         if (isAuth === void 0) { isAuth = false; }
         return __awaiter(this, void 0, void 0, function () {
-            var sql, poolsRes, mapPools, _i, poolsRes_1, song, songs;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var sql, poolsRes, mapPools, poolsRes_1, poolsRes_1_1, song, songs;
+            var e_6, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         sql = "SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?";
                         if (isAuth) {
@@ -528,51 +620,60 @@ var TournamentController = /** @class */ (function (_super) {
                         }
                         return [4 /*yield*/, this.db.asyncPreparedQuery(sql, [tournamentId])];
                     case 1:
-                        poolsRes = _a.sent();
+                        poolsRes = _b.sent();
                         mapPools = {};
-                        for (_i = 0, poolsRes_1 = poolsRes; _i < poolsRes_1.length; _i++) {
-                            song = poolsRes_1[_i];
-                            if (song.poolId in mapPools) {
-                                mapPools[song.poolId].songs.push({
-                                    id: song.songId,
-                                    hash: song.songHash,
-                                    name: song.songName,
-                                    songAuthor: song.songAuthor,
-                                    levelAuthor: song.levelAuthor,
-                                    diff: song.songDiff,
-                                    key: song.key,
-                                    ssLink: song.ssLink,
-                                    numNotes: song.numNotes
-                                });
-                            }
-                            else {
-                                songs = [];
-                                if (song.songId != null) {
-                                    songs = [
-                                        {
-                                            id: song.songId,
-                                            hash: song.songHash,
-                                            name: song.songName,
-                                            songAuthor: song.songAuthor,
-                                            levelAuthor: song.levelAuthor,
-                                            diff: song.songDiff,
-                                            key: song.key,
-                                            ssLink: song.ssLink,
-                                            numNotes: song.numNotes
-                                        }
-                                    ];
+                        try {
+                            for (poolsRes_1 = __values(poolsRes), poolsRes_1_1 = poolsRes_1.next(); !poolsRes_1_1.done; poolsRes_1_1 = poolsRes_1.next()) {
+                                song = poolsRes_1_1.value;
+                                if (song.poolId in mapPools) {
+                                    mapPools[song.poolId].songs.push({
+                                        id: song.songId,
+                                        hash: song.songHash,
+                                        name: song.songName,
+                                        songAuthor: song.songAuthor,
+                                        levelAuthor: song.levelAuthor,
+                                        diff: song.songDiff,
+                                        key: song.key,
+                                        ssLink: song.ssLink,
+                                        numNotes: song.numNotes
+                                    });
                                 }
-                                mapPools[song.poolId] = {
-                                    id: song.poolId,
-                                    tournamentId: song.tournamentId,
-                                    poolName: song.poolName,
-                                    image: song.image,
-                                    description: song.description,
-                                    live: !!+song.live,
-                                    is_qualifiers: song.is_qualifiers,
-                                    songs: songs
-                                };
+                                else {
+                                    songs = [];
+                                    if (song.songId != null) {
+                                        songs = [
+                                            {
+                                                id: song.songId,
+                                                hash: song.songHash,
+                                                name: song.songName,
+                                                songAuthor: song.songAuthor,
+                                                levelAuthor: song.levelAuthor,
+                                                diff: song.songDiff,
+                                                key: song.key,
+                                                ssLink: song.ssLink,
+                                                numNotes: song.numNotes
+                                            }
+                                        ];
+                                    }
+                                    mapPools[song.poolId] = {
+                                        id: song.poolId,
+                                        tournamentId: song.tournamentId,
+                                        poolName: song.poolName,
+                                        image: song.image,
+                                        description: song.description,
+                                        live: !!+song.live,
+                                        is_qualifiers: song.is_qualifiers,
+                                        songs: songs
+                                    };
+                                }
                             }
+                        }
+                        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                        finally {
+                            try {
+                                if (poolsRes_1_1 && !poolsRes_1_1.done && (_a = poolsRes_1.return)) _a.call(poolsRes_1);
+                            }
+                            finally { if (e_6) throw e_6.error; }
                         }
                         return [2 /*return*/, mapPools];
                 }
@@ -582,12 +683,13 @@ var TournamentController = /** @class */ (function (_super) {
     // to move to quals controller when done
     TournamentController.prototype.getQualsScores = function (id) {
         return __awaiter(this, void 0, void 0, function () {
-            var qualsScores, scores, _loop_2, _i, qualsScores_3, score;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var qualsScores, scores, _loop_2, qualsScores_3, qualsScores_3_1, score;
+            var e_7, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0: return [4 /*yield*/, this.db.asyncPreparedQuery("SELECT p.userId as discordId, p.forfeit, q.score, q.percentage, pl.*, u.* FROM participants p\n        LEFT JOIN users u ON u.discordId = p.userId\n        LEFT JOIN qualifier_scores q ON p.userId = q.userId \n        LEFT JOIN map_pools mp ON mp.tournamentId = p.tournamentId\n        LEFT JOIN pool_link pl ON (pl.songHash = q.songHash AND pl.poolId = mp.id)\n        LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId\n        WHERE ts.show_quals = 1 AND ts.show_quals = 1 AND p.tournamentId = ? AND mp.live = 1 AND mp.is_qualifiers AND mp.tournamentId = ? AND (q.tournamentId IS NULL OR q.tournamentId = ?)", [id, id, id])];
                     case 1:
-                        qualsScores = _a.sent();
+                        qualsScores = _b.sent();
                         scores = [];
                         _loop_2 = function (score) {
                             if (scores.some(function (x) { return x.discordId == score.discordId; })) {
@@ -642,9 +744,18 @@ var TournamentController = /** @class */ (function (_super) {
                                 scores.push(temp);
                             }
                         };
-                        for (_i = 0, qualsScores_3 = qualsScores; _i < qualsScores_3.length; _i++) {
-                            score = qualsScores_3[_i];
-                            _loop_2(score);
+                        try {
+                            for (qualsScores_3 = __values(qualsScores), qualsScores_3_1 = qualsScores_3.next(); !qualsScores_3_1.done; qualsScores_3_1 = qualsScores_3.next()) {
+                                score = qualsScores_3_1.value;
+                                _loop_2(score);
+                            }
+                        }
+                        catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                        finally {
+                            try {
+                                if (qualsScores_3_1 && !qualsScores_3_1.done && (_a = qualsScores_3.return)) _a.call(qualsScores_3);
+                            }
+                            finally { if (e_7) throw e_7.error; }
                         }
                         return [2 /*return*/, scores];
                 }
@@ -731,12 +842,13 @@ var TournamentController = /** @class */ (function (_super) {
     // tournament role assignment
     TournamentController.prototype.getStaff = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var data, users, _loop_3, _i, data_1, user;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var data, users, _loop_3, data_1, data_1_1, user;
+            var e_8, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0: return [4 /*yield*/, this.db.aQuery("SELECT \n            u.discordId, \n            u.ssId, \n            u.name, \n            u.twitchName, \n            u.avatar, \n            u.globalRank, \n            u.localRank, \n            u.country, \n            u.tourneyRank, \n            u.TR, \n            u.pronoun,\n            tr.role_name,\n            tr.id as role_id\n        FROM users u\n        JOIN tournament_role_assignment tra ON tra.user_id = u.discordId AND tra.tournament_id = ?\n        JOIN tournament_roles tr ON tr.id = tra.role_id", [req.params.tourneyId])];
                     case 1:
-                        data = _a.sent();
+                        data = _b.sent();
                         users = [];
                         _loop_3 = function (user) {
                             var existingUser = users.find(function (x) { return x.discordId == user.discordId; });
@@ -763,9 +875,18 @@ var TournamentController = /** @class */ (function (_super) {
                                 });
                             }
                         };
-                        for (_i = 0, data_1 = data; _i < data_1.length; _i++) {
-                            user = data_1[_i];
-                            _loop_3(user);
+                        try {
+                            for (data_1 = __values(data), data_1_1 = data_1.next(); !data_1_1.done; data_1_1 = data_1.next()) {
+                                user = data_1_1.value;
+                                _loop_3(user);
+                            }
+                        }
+                        catch (e_8_1) { e_8 = { error: e_8_1 }; }
+                        finally {
+                            try {
+                                if (data_1_1 && !data_1_1.done && (_a = data_1.return)) _a.call(data_1);
+                            }
+                            finally { if (e_8) throw e_8.error; }
                         }
                         return [2 /*return*/, res.send(users)];
                 }
@@ -774,14 +895,15 @@ var TournamentController = /** @class */ (function (_super) {
     };
     TournamentController.prototype.addStaff = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var auth, insertData, _loop_4, _i, _a, user, error_6;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var auth, insertData, _loop_4, _a, _b, user, error_6;
+            var e_9, _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
                         auth = new auth_controller_1.authController(req);
                         return [4 /*yield*/, auth.hasAdminPerms];
                     case 1:
-                        if (!(_b.sent()))
+                        if (!(_d.sent()))
                             return [2 /*return*/, this.unauthorized(res)];
                         if (!req.params.tourneyId)
                             return [2 /*return*/, this.clientError(res, "No tournament id provided")];
@@ -790,24 +912,33 @@ var TournamentController = /** @class */ (function (_super) {
                         insertData = [];
                         _loop_4 = function (user) {
                             var curUser = user.roleIds.map(function (x) { return [user.userId, x, req.params.tourneyId]; });
-                            insertData = __spreadArrays(insertData, curUser);
+                            insertData = __spread(insertData, curUser);
                         };
-                        for (_i = 0, _a = req.body.users; _i < _a.length; _i++) {
-                            user = _a[_i];
-                            _loop_4(user);
+                        try {
+                            for (_a = __values(req.body.users), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                user = _b.value;
+                                _loop_4(user);
+                            }
                         }
-                        _b.label = 2;
+                        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            }
+                            finally { if (e_9) throw e_9.error; }
+                        }
+                        _d.label = 2;
                     case 2:
-                        _b.trys.push([2, 5, , 6]);
+                        _d.trys.push([2, 5, , 6]);
                         return [4 /*yield*/, this.db.aQuery("DELETE FROM tournament_role_assignment WHERE tournament_id = ?", [req.params.tourneyId])];
                     case 3:
-                        _b.sent();
+                        _d.sent();
                         return [4 /*yield*/, this.db.aQuery("INSERT INTO tournament_role_assignment (user_id, role_id, tournament_id) VALUES ?", [insertData])];
                     case 4:
-                        _b.sent();
+                        _d.sent();
                         return [2 /*return*/, this.ok(res)];
                     case 5:
-                        error_6 = _b.sent();
+                        error_6 = _d.sent();
                         return [2 /*return*/, this.fail(res, error_6)];
                     case 6: return [2 /*return*/];
                 }
