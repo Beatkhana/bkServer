@@ -207,7 +207,7 @@ export class TournamentController extends controller {
         if (data.settings.ta_url != null && data.settings.ta_url != curSettings[0].ta_url) {
             TAController.updateConnection(data.tournamentId, data.settings.ta_url, data.settings.ta_password);
         }
-        QualifiersController.updateMaps(data.tournamentId);
+        await QualifiersController.updateMaps(data.tournamentId);
         
         try {
             let result = await this.db.aQuery(`UPDATE tournament_settings SET ? WHERE ?? = ?`, [data.settings, 'id', data.settingsId]);
