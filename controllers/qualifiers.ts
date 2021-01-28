@@ -170,10 +170,10 @@ export class QualifiersController extends controller {
 
     static async updateMaps(tournamentId: string) {
         let db = new database();
-        let maps = db.aQuery(`SELECT pl.id FROM pool_link pl JOIN map_pools mp ON mp.id = pl.poolId WHERE mp.is_qualifiers = 1 AND tournamentId = ?`, [tournamentId]);
-        if ((await maps).length > -1) {
+        let maps = await db.aQuery(`SELECT pl.id FROM pool_link pl JOIN map_pools mp ON mp.id = pl.poolId WHERE mp.is_qualifiers = 1 AND tournamentId = ?`, [tournamentId]);
+        if (maps.length > 0) {
             await db.aQuery(`DELETE FROM event_map_options WHERE tournament_id = ?`, [tournamentId]);
-            await db.aQuery(`INSERT INTO event_map_options (tournament_id, map_id) VALUES ?`, [(await maps).map(x => [tournamentId, x.id])]);
+            await db.aQuery(`INSERT INTO event_map_options (tournament_id, map_id) VALUES ?`, [maps.map(x => [tournamentId, x.id])]);
         }
     }
 
