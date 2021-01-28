@@ -187,7 +187,7 @@ export class QualifiersController extends controller {
         JOIN event_map_options emo ON emo.map_id = s.id 
         WHERE mp.tournamentId = ? AND mp.is_qualifiers = 1`, [tournamentId]);
         let qualMaps = [];
-
+        console.log(songs);
         for (const song of songs) {
             let gm: GameplayModifiers = { Options: song.flags };
             let map: GameplayParameters = {
@@ -207,6 +207,7 @@ export class QualifiersController extends controller {
             };
             qualMaps.push(map);
         }
+        console.log(qualMaps);
         TAController.createEvent(tournamentId, qualMaps, `${tournament[0].name} Qualifiers`, settings[0].ta_event_flags);
     }
 
