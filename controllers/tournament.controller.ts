@@ -62,6 +62,7 @@ export class TournamentController extends controller {
         ts.countries,
         ts.sort_method,
         ts.standard_cutoff,
+        ts.qual_attempts,
         ts.ta_url ${isAuth ? ', ts.ta_password, ts.ta_event_flags' : ''}
         FROM tournaments t
         LEFT JOIN tournament_settings ts ON ts.tournamentId = t.id  
@@ -205,14 +206,18 @@ export class TournamentController extends controller {
         } 
         if (data.settings.ta_url != null && data.settings.ta_url != curSettings[0].ta_url) {
             TAController.updateConnection(data.tournamentId, data.settings.ta_url, data.settings.ta_password);
-            QualifiersController.updateMaps(data.tournamentId);
         }
-        // console.log(data.settings.state, curSettings[0].state);
-        if (data.settings.state == 'qualifiers' && curSettings[0].state == "awaiting_start") {
-            QualifiersController.createEvent(data.tournamentId);
-        }
+        QualifiersController.updateMaps(data.tournamentId);
+        
         try {
             let result = await this.db.aQuery(`UPDATE tournament_settings SET ? WHERE ?? = ?`, [data.settings, 'id', data.settingsId]);
+            if (data.settings.state == 'qualifiers' && curSettings[0].state == "awaiting_start") {
+                QualifiersController.createEvent(data.tournamentId);
+            } else if (data.settings.state != 'qualifiers') {
+                TAController.deleteEvent(data.tournamentId);
+            } else if (data.settings.state == 'qualifiers') {
+                QualifiersController.updateEvent(data.tournamentId);
+            }
             return res.send({ data: result });
         } catch (error) {
             return this.fail(res, error);

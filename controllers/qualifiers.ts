@@ -124,6 +124,7 @@ export class QualifiersController extends controller {
         if (!await auth.hasAdminPerms) return this.unauthorized(res);
         try {
             for (const song of req.body) {
+                if (!song.flags) song.flags = 0;
                 await this.db.aQuery(`UPDATE event_map_options SET flags = ?, playerOptions = ?, difficulty = ?, selCharacteristic = ? WHERE tournament_id = ? AND map_id = ?`, [song.flags, song.playerOptions, song.difficulty, song.selectedCharacteristic, auth.tourneyId, song.id]);
             }
             return this.ok(res);
@@ -134,13 +135,19 @@ export class QualifiersController extends controller {
 
     static async taScore(score: SubmitScore, tournamentId: string) {
         let db = new database();
+        let settings: any = await db.aQuery(`SELECT * FROM settings WHERE tournamentId = ?`, [tournamentId]);
+        if (settings.length < 1) return;
+        settings = settings[0];
+        if (settings.state !='qualifiers') return;
         let user: any = await db.aQuery(`SELECT u.discordId FROM participants p JOIN users u ON u.discordId = p.userId WHERE u.ssId = ?`, [score.Score.UserId]);
         if (user.length < 1) return;
         user = user[0];
         let levelHash = score.Score.Parameters.Beatmap.LevelId.replace(`custom_level_`, "");
         let map = await db.aQuery(`SELECT * FROM pool_link pl JOIN map_pools mp ON mp.id = pl.poolId WHERE pl.songHash = ? AND mp.tournamentId = ?`, [levelHash, tournamentId]);
         if (map.length < 1) return;
-        console.log(user);
+        // console.log(user);
+        let curScore = await db.aQuery(`SELECT * FROM qualifier_scores WHERE tournamentId = ? AND userId = ? AND songHash = ?`, [tournamentId, user.discordId, levelHash]);
+        if (curScore[0] && curScore[0].attempt >= settings.qual_attempts && settings.qual_attempts != 0) return;
         let qualScore = {
             tournamentId: tournamentId,
             userId: user.discordId,
@@ -149,9 +156,13 @@ export class QualifiersController extends controller {
             percentage: 0,
             maxScore: 0
         }
-        console.log(qualScore);
+        // console.log(qualScore);
         try {
-            await db.aQuery(`INSERT INTO qualifier_scores SET ?`, [qualScore]);
+            await db.aQuery(`INSERT INTO qualifier_scores SET ?
+            ON DUPLICATE KEY UPDATE
+            score = GREATEST(score, VALUES(score)),
+            percentage = GREATEST(percentage, VALUES(percentage)),
+            maxScore = GREATEST(maxScore, VALUES(maxScore))`, [qualScore]);
         } catch (error) {
             console.error(error);
         }
@@ -160,8 +171,10 @@ export class QualifiersController extends controller {
     static async updateMaps(tournamentId: string) {
         let db = new database();
         let maps = db.aQuery(`SELECT pl.id FROM pool_link pl JOIN map_pools mp ON mp.id = pl.poolId WHERE mp.is_qualifiers = 1 AND tournamentId = ?`, [tournamentId]);
-        await db.aQuery(`DELETE FROM event_map_options WHERE tournament_id = ?`, [tournamentId]);
-        await db.aQuery(`INSERT INTO event_map_options (tournament_id, map_id) VALUES ?`, [(await maps).map(x => [tournamentId, x.id])]);
+        if ((await maps).length > -1) {
+            await db.aQuery(`DELETE FROM event_map_options WHERE tournament_id = ?`, [tournamentId]);
+            await db.aQuery(`INSERT INTO event_map_options (tournament_id, map_id) VALUES ?`, [(await maps).map(x => [tournamentId, x.id])]);
+        }
     }
 
     static async createEvent(tournamentId) {
@@ -194,7 +207,40 @@ export class QualifiersController extends controller {
             };
             qualMaps.push(map);
         }
-        TAController.createEvent(tournamentId, qualMaps, `${tournament[0].name} Qualifiers`);
+        TAController.createEvent(tournamentId, qualMaps, `${tournament[0].name} Qualifiers`, settings[0].ta_event_flags);
+    }
+
+    static async updateEvent(tournamentId) {
+        let db = new database();
+        let tournament = await db.aQuery(`SELECT * FROM tournaments WHERE id = ?`, [tournamentId]);
+        let settings = await db.aQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [tournamentId]);
+
+        let songs = await db.aQuery(`SELECT s.*, emo.* FROM pool_link s 
+        JOIN map_pools mp ON mp.id = s.poolId 
+        JOIN event_map_options emo ON emo.map_id = s.id 
+        WHERE mp.tournamentId = ? AND mp.is_qualifiers = 1`, [tournamentId]);
+        let qualMaps = [];
+
+        for (const song of songs) {
+            let gm: GameplayModifiers = { Options: song.flags };
+            let map: GameplayParameters = {
+                Beatmap: {
+                    Name: song.songName,
+                    LevelId: `custom_level_${song.songHash.toUpperCase()}`,
+                    Characteristic: {
+                        SerializedName: song.selCharacteristic,
+                        Difficulties: [song.difficulty]
+                    },
+                    Difficulty: song.difficulty,
+                },
+                PlayerSettings: {
+                    Options: song.playerOptions,
+                },
+                GameplayModifiers: gm,
+            };
+            qualMaps.push(map);
+        }
+        TAController.updateEvent(tournamentId, qualMaps, `${tournament[0].name} Qualifiers`, settings[0].ta_event_flags);
     }
 
 }

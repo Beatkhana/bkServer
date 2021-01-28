@@ -1,3 +1,4 @@
+import { QualifierEvent } from "../models/TA/qualifierEvent";
 import { client } from "./client";
 import { controller } from "./controller";
 import { taWebSocket } from "./ta.websocket";
@@ -34,10 +35,24 @@ export class TAController extends controller {
         }
     }
 
-    static createEvent(tournamentId, maps, name) {
+    static createEvent(tournamentId, maps, name, flags) {
         let clientI = wsClients.findIndex(x => x.tournamentId == tournamentId);
         if (clientI > -1) {
-            wsClients[clientI].createEvent(name, maps);
+            wsClients[clientI].createEvent(name, tournamentId, maps, flags);
+        }
+    }
+
+    static deleteEvent(tournamentId) {
+        let clientI = wsClients.findIndex(x => x.tournamentId == tournamentId);
+        if (clientI > -1) {
+            wsClients[clientI].deleteEvent(tournamentId);
+        }
+    }
+
+    static updateEvent(tournamentId, maps, name, flags) {
+        let clientI = wsClients.findIndex(x => x.tournamentId == tournamentId);
+        if (clientI > -1) {
+            wsClients[clientI].updateEvent(tournamentId, maps, name, flags);
         }
     }
 

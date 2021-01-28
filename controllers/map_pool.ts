@@ -180,8 +180,8 @@ export class MapPoolController extends controller {
         let songName = bsData.metadata.songName.replace(" ", "+");
         let songHash = bsData.hash;
 
-        let ssData = await rp.get(`https://scoresaber.com/?search=${songName}`)
-            .then(async html => {
+        let ssData = await rp.get(`https://scoresaber.com/?search=${encodeURI(songName)}`)
+            .then(async (html: string | Buffer) => {
                 let $ = cheerio.load(html);
 
                 let defaultLeaderboard = "";
@@ -189,7 +189,7 @@ export class MapPoolController extends controller {
 
                 let ssLink = "";
 
-                await $("table.ranking tr").each((i, e) => {
+                $("table.ranking tr").each((i, e) => {
                     if ($(e).find('img').attr('src')) {
                         let curHash = $(e).find('img').attr('src').replace("/imports/images/songs/", "").replace(".png", "");
                         if (curHash.toLowerCase() == songHash.toLowerCase()) {

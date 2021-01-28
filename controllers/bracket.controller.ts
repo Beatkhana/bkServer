@@ -81,7 +81,7 @@ export class bracketController extends controller {
         let data = req.body;
         if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
         let matches: Array<match> = [];
-        console.log(data);
+        // console.log(data);
 
         if (data.customPlayers?.length > 0) {
             let tempMatches = await this.generateBracket(id, data.customPlayers);

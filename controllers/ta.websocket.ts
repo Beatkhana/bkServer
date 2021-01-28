@@ -26,10 +26,10 @@ export class taWebSocket extends controller {
         this.url = url;
         this.taClient = new client();
         this.password = password;
-        if (!this.password || this.password == "") {
-            // this.close();
-        } else {
-        }
+        // if (!this.password || this.password == "") {
+        //     // this.close();
+        // } else {
+        // }
         this.ws = new WebSocket(`ws://${url}`);
         this.init();
     }
@@ -51,8 +51,8 @@ export class taWebSocket extends controller {
             this.handlePacket(JSON.parse(event.data));
         });
         this.ws.onclose = () => {
+            console.error(`Socket Closed - ${this.taClient?.State?.ServerSettings?.ServerName} - ${this.tournamentId}`);
             this.taClient = new client();
-            console.error(`Socket Closed - ${this.taClient?.State?.ServerSettings?.ServerName}`);
             this.close();
             setTimeout(() => {
                 this.ws = new WebSocket(`ws://${this.url}`);
@@ -60,7 +60,7 @@ export class taWebSocket extends controller {
             }, 300000);
         };
         this.ws.onerror = (err) => {
-            console.error("Socket Error");
+            console.error("Socket Error", err.message);
             this.ws = null;
         }
     }
@@ -123,22 +123,32 @@ export class taWebSocket extends controller {
         }
     }
 
-    createEvent(name: string, maps: GameplayParameters[] = []) {
-        // if (this.taClient.State.Events.length != 0) return null;
+    createEvent(name: string, tournamentId, maps: GameplayParameters[] = [], flags: number) {
+        if (this.taClient.State.Events.find(x => x.Guild.Id == tournamentId)) {
+            let event = this.taClient.State.Events.find(x => x.Guild.Id == tournamentId);
+            console.log(event);
+            let SpecificPacket: TAEvent = {
+                Type: EventType.QualifierEventDeleted,
+                ChangedObject: event,
+            };
+            this.ws.send(
+                JSON.stringify(new Packet(SpecificPacket, PacketType.Event))
+            );
+        }
 		let qualEvent: QualifierEvent = {
 			EventId: uuidv4(),
 			Name: name,
 			Guild: {
-				Id: "592472886246113300",
+				Id: tournamentId,
 				Name: "BeatKhana!",
 			},
 			InfoChannel: {
-				Id: "686910892847530091",
+				Id: "0",
 				Name: "the-corporation",
 			},
-			QualifierMaps: [],
+			QualifierMaps: maps,
 			SendScoresToInfoChannel: false,
-			Flags: 0,
+			Flags: flags,
 		};
 		let SpecificPacket: TAEvent = {
 			Type: EventType.QualifierEventCreated,
@@ -147,16 +157,55 @@ export class taWebSocket extends controller {
 		this.ws.send(
 			JSON.stringify(new Packet(SpecificPacket, PacketType.Event))
         );
-        qualEvent.QualifierMaps = maps;
-        SpecificPacket = {
-			Type: EventType.QualifierEventUpdated,
-			ChangedObject: qualEvent,
-        };
-        this.ws.send(
-			JSON.stringify(new Packet(SpecificPacket, PacketType.Event))
-        );
-        console.log("created event");
-	}
+    }
+
+    updateEvent(tournamentId, maps: GameplayParameters[], name: string, flags: number) {
+        let event = this.taClient?.State?.Events?.find(x => x.Guild.Id == tournamentId);
+        if (event) {
+            let qualEvent: QualifierEvent = {
+                EventId: event.EventId,
+                Name: name,
+                Guild: {
+                    Id: tournamentId,
+                    Name: "BeatKhana!",
+                },
+                InfoChannel: {
+                    Id: "0",
+                    Name: "the-corporation",
+                },
+                QualifierMaps: maps,
+                SendScoresToInfoChannel: false,
+                Flags: flags,
+            };
+            let SpecificPacket: TAEvent = {
+                Type: EventType.QualifierEventUpdated,
+                ChangedObject: qualEvent,
+            };
+            this.ws.send(
+                JSON.stringify(new Packet(SpecificPacket, PacketType.Event))
+            );
+            // let SpecificPacket: TAEvent = {
+            //     Type: EventType.QualifierEventUpdated,
+            //     ChangedObject: newEvent,
+            // };
+            // this.ws.send(
+            //     JSON.stringify(new Packet(SpecificPacket, PacketType.Event))
+            // );
+        }
+    }
+    
+    deleteEvent(tournamentId) {
+        let event = this.taClient?.State?.Events?.find(x => x.Guild.Id == tournamentId);
+        if (event) {
+            let SpecificPacket: TAEvent = {
+                Type: EventType.QualifierEventDeleted,
+                ChangedObject: event,
+            };
+            this.ws.send(
+                JSON.stringify(new Packet(SpecificPacket, PacketType.Event))
+            );
+        }
+    }
 
     close() {
         if (this.ws?.readyState == 1) {
