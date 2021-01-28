@@ -207,7 +207,7 @@ export class TournamentController extends controller {
             TAController.updateConnection(data.tournamentId, data.settings.ta_url, data.settings.ta_password);
             QualifiersController.updateMaps(data.tournamentId);
         }
-        console.log(data.settings.state, curSettings[0].state);
+        // console.log(data.settings.state, curSettings[0].state);
         if (data.settings.state == 'qualifiers' && curSettings[0].state == "awaiting_start") {
             QualifiersController.createEvent(data.tournamentId);
         }
