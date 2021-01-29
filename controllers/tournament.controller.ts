@@ -213,10 +213,8 @@ export class TournamentController extends controller {
             if (data.settings.state == 'qualifiers' && curSettings[0].state == "awaiting_start") {
                 QualifiersController.createEvent(data.tournamentId);
             } else if (data.settings.state != 'qualifiers') {
-                await QualifiersController.updateMaps(data.tournamentId);
                 TAController.deleteEvent(data.tournamentId);
             } else if (data.settings.state == 'qualifiers') {
-                await QualifiersController.updateMaps(data.tournamentId);
                 QualifiersController.updateEvent(data.tournamentId);
             }
             return res.send({ data: result });

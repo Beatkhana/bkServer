@@ -123,6 +123,7 @@ export class QualifiersController extends controller {
         let auth = new authController(req);
         if (!await auth.hasAdminPerms) return this.unauthorized(res);
         try {
+            await QualifiersController.updateMaps(auth.tourneyId);
             for (const song of req.body) {
                 if (!song.flags) song.flags = 0;
                 await this.db.aQuery(`UPDATE event_map_options SET flags = ?, playerOptions = ?, difficulty = ?, selCharacteristic = ? WHERE tournament_id = ? AND map_id = ?`, [song.flags, song.playerOptions, song.difficulty, song.selectedCharacteristic, auth.tourneyId, song.id]);
@@ -135,7 +136,7 @@ export class QualifiersController extends controller {
 
     static async taScore(score: SubmitScore, tournamentId: string) {
         let db = new database();
-        let settings: any = await db.aQuery(`SELECT * FROM settings WHERE tournamentId = ?`, [tournamentId]);
+        let settings: any = await db.aQuery(`SELECT * FROM tournament_settings WHERE tournamentId = ?`, [tournamentId]);
         if (settings.length < 1) return;
         settings = settings[0];
         if (settings.state !='qualifiers') return;
@@ -148,13 +149,16 @@ export class QualifiersController extends controller {
         // console.log(user);
         let curScore = await db.aQuery(`SELECT * FROM qualifier_scores WHERE tournamentId = ? AND userId = ? AND songHash = ?`, [tournamentId, user.discordId, levelHash]);
         if (curScore[0] && curScore[0].attempt >= settings.qual_attempts && settings.qual_attempts != 0) return;
+        let attempt = 0;
+        if (curScore[0] && curScore[0].attempt) attempt = curScore[0].attempt + 1;
         let qualScore = {
             tournamentId: tournamentId,
             userId: user.discordId,
             songHash: levelHash,
             score: score.Score._Score,
             percentage: 0,
-            maxScore: 0
+            maxScore: 0,
+            attempt: attempt
         }
         // console.log(qualScore);
         try {
@@ -162,7 +166,8 @@ export class QualifiersController extends controller {
             ON DUPLICATE KEY UPDATE
             score = GREATEST(score, VALUES(score)),
             percentage = GREATEST(percentage, VALUES(percentage)),
-            maxScore = GREATEST(maxScore, VALUES(maxScore))`, [qualScore]);
+            maxScore = GREATEST(maxScore, VALUES(maxScore)),
+            attempt = GREATEST(attempt, VALUES(attempt))`, [qualScore]);
         } catch (error) {
             console.error(error);
         }
@@ -187,7 +192,7 @@ export class QualifiersController extends controller {
         JOIN event_map_options emo ON emo.map_id = s.id 
         WHERE mp.tournamentId = ? AND mp.is_qualifiers = 1`, [tournamentId]);
         let qualMaps = [];
-        console.log(songs);
+        // console.log(songs);
         for (const song of songs) {
             let gm: GameplayModifiers = { Options: song.flags };
             let map: GameplayParameters = {
@@ -207,7 +212,7 @@ export class QualifiersController extends controller {
             };
             qualMaps.push(map);
         }
-        console.log(qualMaps);
+        // console.log(qualMaps);
         TAController.createEvent(tournamentId, qualMaps, `${tournament[0].name} Qualifiers`, settings[0].ta_event_flags);
     }
 
