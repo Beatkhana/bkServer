@@ -18,7 +18,7 @@ export class ParticipantsController extends controller {
         p.seed,
         p.position,
         ${isAuth ? 'p.comment,' : ''}
-        ${userId != null ? 'IF(p.userId = "' + userId + '", p.comment, null) as comment,' : ''}
+        ${userId != null && !isAuth ? 'IF(p.userId = "' + userId + '", p.comment, null) as comment,' : ''}
         CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
         CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
         \`u\`.\`name\`,

@@ -57,7 +57,7 @@ export class bracketController extends controller {
         if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
         if (!req.body.img) return this.clientError(res, "Please provide a valid best of value");
         try {
-            console.log(req.body.img);
+            // console.log(req.body.img);
             let savePath = this.env == 'development' ? '../app/src/assets/overlay/' : __dirname + '/../public/assets/overlay/';
             // let base64Img = req.body.img.split(';base64,').pop();
             // const buf = await Buffer.from(base64Img, 'base64');

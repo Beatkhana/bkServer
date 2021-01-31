@@ -149,7 +149,7 @@ export class QualifiersController extends controller {
         // console.log(user);
         let curScore = await db.aQuery(`SELECT * FROM qualifier_scores WHERE tournamentId = ? AND userId = ? AND songHash = ?`, [tournamentId, user.discordId, levelHash]);
         if (curScore[0] && curScore[0].attempt >= settings.qual_attempts && settings.qual_attempts != 0) return;
-        let attempt = 0;
+        let attempt = 1;
         if (curScore[0] && curScore[0].attempt) attempt = curScore[0].attempt + 1;
         let qualScore = {
             tournamentId: tournamentId,
