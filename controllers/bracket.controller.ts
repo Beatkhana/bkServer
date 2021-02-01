@@ -64,10 +64,10 @@ export class bracketController extends controller {
             // const webpData = await sharp(buf)
             //     .toFile(savePath+req.params.id+'.svg');
 
-            fs.writeFile(savePath+req.params.id+'.svg', req.body.img, function (err) {
+            fs.writeFile(savePath + auth.tourneyId + '.svg', req.body.img, function (err) {
                 if (err) return console.log(err);
                 // console.log('Hello World > helloworld.txt');
-              });
+            });
             // await this.db.aQuery('UPDATE bracket SET best_of = ? WHERE id = ?', [req.body.best_of, req.params.id]);
             return this.ok(res);
         } catch (error) {
@@ -77,7 +77,7 @@ export class bracketController extends controller {
 
     async saveBracket(req: express.Request, res: express.Response) {
         let auth = new authController(req);
-        let id = req.params.id;
+        let id = auth.tourneyId;
         let data = req.body;
         if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
         let matches: Array<match> = [];

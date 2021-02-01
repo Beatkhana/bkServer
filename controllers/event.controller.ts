@@ -19,13 +19,13 @@ wss.on('connection', (ws: WebSocket) => {
             let data = JSON.parse(message);
             if (data.setTournament) {
                 tournamentId = data.setTournament;
-                let tmp = { t: tournamentId};
+                let tmp = { t: tournamentId };
                 emitter.emit("getTAState", tmp);
                 taClient = tmp.t?.taClient;
                 delete taClient?.State?.ServerSettings?.Password;
-                ws.send(JSON.stringify({ TA: taClient}));
+                ws.send(JSON.stringify({ TA: taClient }));
             }
-            console.log(data);
+            // console.log(data);
             if (data.overlay) {
                 sendAll(data);
                 // ws.send(JSON.stringify(data));
@@ -35,20 +35,20 @@ wss.on('connection', (ws: WebSocket) => {
         }
     });
     emitter.on('bracketUpdate', (data) => {
-        ws.send(JSON.stringify({bracketUpdate: data}));
+        ws.send(JSON.stringify({ bracketUpdate: data }));
     });
     emitter.on('bracketMatch', (data) => {
-        ws.send(JSON.stringify({bracketMatch: data}));
+        ws.send(JSON.stringify({ bracketMatch: data }));
     });
     emitter.on('taEvent', (data) => {
         if (tournamentId == data[0]) {
-            ws.send(JSON.stringify({ TA: data}));
+            ws.send(JSON.stringify({ TA: data }));
         }
     });
 });
 
 function heartbeat(ws: WebSocket) {
-    ws.send(JSON.stringify({ heatbeat: []}));
+    ws.send(JSON.stringify({ heatbeat: [] }));
 }
 
 function sendAll(message) {
