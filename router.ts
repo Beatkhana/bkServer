@@ -303,20 +303,40 @@ router.get(baseUrl, function (req, res) {
 // });
 
 // bracket testing
-// router.get(baseUrl + '/tournament/:id/bracketTest', function (req, res) {
-//     tournament.generateBracket(req.params.id)
-//         .then(response => {
-//             res.send(response);
-//         })
-//         .catch((err) => {
-//             console.error(err);
-//             res.sendStatus(500);
-//         })
-// });
+let players = [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15"
+    // "16"
+];
+router.get(baseUrl + '/tournament/:id/bracketTest', async function (req, res) {
+    // tournament.generateBracket(req.params.id, players)
+    //     .then(response => {
+    //         res.send(response);
+    //     })
+    //     .catch((err) => {
+    //         console.error(err);
+    //         res.sendStatus(500);
+    //     })
+    let bracketCon = new bracketController();
+    return res.send(await bracketCon.testBracket(req.params.id, players));
+});
 
 //get bracket
 // router.get(baseUrl + '/tournament/:id/bracket', async function (req, res) {
-//     let bracketCon = new bracketController();
+// let bracketCon = new bracketController();
 //     return res.send( await bracketCon.getBracket({req:req, res: res}));
 // });
 

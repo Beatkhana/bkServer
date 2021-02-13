@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import * as WebSocket from 'ws';
+import { bracketMatch } from '../models/bracket.model';
 import { client } from './client';
 
 const emitter: EventEmitter = new EventEmitter();
@@ -26,19 +27,19 @@ wss.on('connection', (ws: WebSocket) => {
                 ws.send(JSON.stringify({ TA: taClient }));
             }
             // console.log(data);
-            if (data.overlay) {
-                sendAll(data);
-                // ws.send(JSON.stringify(data));
-            }
+            // if (data.overlay) {
+            //     sendAll(data);
+            //     // ws.send(JSON.stringify(data));
+            // }
         } catch (error) {
             console.error(error);
         }
     });
-    emitter.on('bracketUpdate', (data) => {
-        ws.send(JSON.stringify({ bracketUpdate: data }));
-    });
-    emitter.on('bracketMatch', (data) => {
-        ws.send(JSON.stringify({ bracketMatch: data }));
+    // emitter.on('bracketUpdate', (data) => {
+    //     ws.send(JSON.stringify({ bracketUpdate: data }));
+    // });
+    emitter.on('bracketMatch', (data: bracketMatch) => {
+        if (tournamentId == data.tournamentId) ws.send(JSON.stringify({ bracketMatch: data }));
     });
     emitter.on('taEvent', (data) => {
         if (tournamentId == data[0]) {
