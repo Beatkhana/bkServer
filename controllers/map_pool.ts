@@ -23,7 +23,7 @@ export class MapPoolController extends controller {
     async getPools(req: express.Request, res: express.Response) {
         let auth = new authController(req);
         let isAuth = await auth.hasAdminPerms || await auth.tournamentMapPool;
-        
+
         let mapOptions = [];
         let sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?`;
         if (isAuth) {
@@ -117,16 +117,18 @@ export class MapPoolController extends controller {
         let auth = new authController(req);
         let isAuth = await auth.hasAdminPerms || await auth.tournamentMapPool;
         if (!req.params.id) return this.clientError(res, "Please provide a map pool ID");
-        let pool: any = await this.db.aQuery(`SELECT map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, pool_link.songHash FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE (map_pools.live = ? OR map_pools.live = 1) AND map_pools.id = ?`, [+!isAuth, req.params.id]);
+        let pool: any = await this.db.aQuery(`SELECT map_pools.id, map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, pool_link.songHash FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE (map_pools.live = ? OR map_pools.live = 1) AND map_pools.id = ?`, [+!isAuth, req.params.id]);
         if (!pool[0]) return this.clientError(res, "Invalid Map Pool ID");
         let tournamentName = await this.db.aQuery(`SELECT name FROM tournaments WHERE id = ?`, [pool[0].tournamentId]);
         let curSongs = pool.map(e => { return { hash: e.songHash } });
+        // console.log(pool[0]);
         let playlist = {
             playlistTitle: `${tournamentName[0].name}_${pool[0].poolName}`,
             playlistAuthor: `${tournamentName[0].name} Through BeatKhana!`,
             playlistDescription: pool[0].description,
             image: pool[0].image,
-            songs: curSongs
+            songs: curSongs,
+            syncURL: `https://beatkhana.com/api/download-pool/${pool[0].id}`
         }
 
         var data = JSON.stringify(playlist);
@@ -162,7 +164,7 @@ export class MapPoolController extends controller {
             return this.fail(res, error);
         }
     }
-    
+
     async addSongBS(req: express.Request, res: express.Response) {
         let auth = new authController(req);
         let isAuth = await auth.hasAdminPerms || await auth.tournamentMapPool;
