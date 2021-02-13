@@ -97,10 +97,10 @@ export class TournamentController extends controller {
         try {
             let result: any = await this.db.aQuery(`INSERT INTO tournaments SET ?`, [data]);
             let hash = this.randHash(15);
-            
+
             await this.db.aQuery('UPDATE tournaments SET image = ? WHERE id = ?', [`${result.insertId}_${hash}.webp`, result.insertId]);
             await this.db.aQuery(`INSERT INTO tournament_settings SET tournamentId = ?`, [result.insertId]);
-            
+
             const buf = Buffer.from(base64Img, 'base64');
             const webpData = await sharp(buf)
                 .resize({ width: 550 })
@@ -203,11 +203,11 @@ export class TournamentController extends controller {
                     return this.fail(res, "Error Creating Seeds");
                 }
             }
-        } 
+        }
         if (data.settings.ta_url != null && data.settings.ta_url != curSettings[0].ta_url) {
             TAController.updateConnection(data.tournamentId, data.settings.ta_url, data.settings.ta_password);
         }
-        
+
         try {
             let result = await this.db.aQuery(`UPDATE tournament_settings SET ? WHERE ?? = ?`, [data.settings, 'id', data.settingsId]);
             if (data.settings.state == 'qualifiers' && curSettings[0].state == "awaiting_start") {
@@ -442,17 +442,19 @@ export class TournamentController extends controller {
         let auth = new authController(req);
         // if (!auth.userId) return this.clientError(res, "No user logged in");
         if (!auth.tourneyId) return this.clientError(res, "No Tournament ID provided");
+        let isAdmin = await auth.hasAdminPerms;
         let settings = await this.getSettings(auth.tourneyId);
-        if (!settings.public_signups) return this.unauthorized(res, "Signups are not enabled for this tournament.");
+        if (!settings.public_signups && !isAdmin) return this.unauthorized(res, "Signups are not enabled for this tournament.");
         let curUser = await auth.getUser();
         let countries = null;
         if (settings.countries != '') countries = settings.countries.toLowerCase().replace(' ', '').split(',');
         if (countries != null && !countries.includes(curUser.country.toLowerCase())) return this.unauthorized(res, "Signups are country restricted");
         // if (!req.body.userId && !await auth.hasAdminPerms) req.body.userId = auth.userId;
-        if (req.body.userId && !await auth.hasAdminPerms) req.body.userId = auth.userId;
+        if (req.body.userId && !isAdmin) req.body.userId = auth.userId;
         if (!req.body.userId && auth.userId) req.body.userId = auth.userId;
         try {
             let result = await this.db.aQuery(`INSERT INTO participants SET ?`, [req.body]);
+            if (settings.show_signups) this.emitter.emit("newParticipant", [auth.tourneyId, req.body]);
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);

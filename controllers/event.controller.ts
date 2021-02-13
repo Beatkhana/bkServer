@@ -43,7 +43,12 @@ wss.on('connection', (ws: WebSocket) => {
     });
     emitter.on('taEvent', (data) => {
         if (tournamentId == data[0]) {
-            ws.send(JSON.stringify({ TA: data }));
+            ws.send(JSON.stringify({ TA: data[1] }));
+        }
+    });
+    emitter.on('newParticipant', (data) => {
+        if (tournamentId == data[0]) {
+            ws.send(JSON.stringify({ newParticipant: data[1] }));
         }
     });
 });
