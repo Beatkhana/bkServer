@@ -9,6 +9,8 @@ mapPoolRouter.get('/download-pool/:id', (req, res) => mapPoolCon.downloadPool(re
 
 mapPoolRouter.put('/tournament/:tourneyId/map-pools', (req, res) => mapPoolCon.updatePool(req, res));
 
+mapPoolRouter.delete('/tournament/:tourneyId/map-pools/:poolId', (req, res) => mapPoolCon.deletePool(req, res));
+
 mapPoolRouter.post('/tournament/:tourneyId/addPool', (req, res) => mapPoolCon.addPool(req, res));
 mapPoolRouter.post('/tournament/:tourneyId/deleteSong', (req, res) => mapPoolCon.deleteSong(req, res));
 mapPoolRouter.post('/tournament/:tourneyId/addSong', (req, res) => mapPoolCon.addSongSS(req, res));

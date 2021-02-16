@@ -280,4 +280,15 @@ export class MapPoolController extends controller {
         }
     }
 
+    async deletePool(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!(await auth.hasAdminPerms || await auth.tournamentMapPool)) return this.unauthorized(res);
+        try {
+            await this.db.aQuery(`DELETE FROM map_pools WHERE id = ?`, [req.params.poolId]);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+
 }
