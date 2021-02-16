@@ -133,7 +133,7 @@ export class MapPoolController extends controller {
 
         var data = JSON.stringify(playlist);
         let filename = playlist.playlistTitle.replace(/[<>:"\/\\|?*]+/g, '').replace(/ /g, '_');
-        res.setHeader('Content-disposition', `attachment; filename= ${filename}.json`);
+        res.setHeader('Content-disposition', `attachment; filename= ${filename}.bplist`);
         res.setHeader('Content-type', 'application/json');
         return res.send(data);
     }
