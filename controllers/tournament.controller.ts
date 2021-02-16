@@ -223,6 +223,28 @@ export class TournamentController extends controller {
         }
     }
 
+    // TODO
+    // async recalcQuals(req: express.Request, res: express.Response) {
+    //     let auth = new authController(req);
+    //     if (!await auth.hasAdminPerms) return this.unauthorized(res);
+    //     let data = req.body;
+    //     let curSettings: any = await this.db.aQuery("SELECT * FROM tournament_settings WHERE id = ?", [data.settingsId]);
+    //     let seeding: any = await this.seedPlayersByQuals(data.tournamentId, data.settings.quals_cutoff);
+    //     if (data.settings.state == 'main_stage' && curSettings[0].state == "qualifiers") {
+    //         if (!seeding) {
+    //             return this.fail(res, "Error Creating Seeds");
+    //         }
+    //     } else if (data.settings.state == 'main_stage' && curSettings[0].state == "awaiting_start") {
+    //         if (data.settings.type == 'battle_royale') {
+    //             let seeding: any = await this.seedPlayers(data.tournamentId, data.settings.standard_cutoff, 'date');
+    //             if (!seeding) {
+    //                 return this.fail(res, "Error Creating Seeds");
+    //             }
+    //         }
+    //     }
+    //     return this.ok(res);
+    // }
+
     // non quals seed
     private async seedPlayers(tournamentId: string, cutoff, method: string) {
         if (method == 'date') {

@@ -1,5 +1,6 @@
 import express from "express";
 import { database } from "../database";
+import { dbParticipant, participant } from "../models/participants.model";
 import { authController } from "./auth.controller";
 import { controller } from "./controller";
 
@@ -12,7 +13,7 @@ export class ParticipantsController extends controller {
         let battleRoyale = settings.state == 'main_stage' && settings.type == 'battle_royale';
         let isAuth = await auth.hasAdminPerms;
         let userId = auth.userId;
-        let result = await this.db.aQuery(`SELECT p.id AS participantId,
+        let result: participant[] = await this.db.aQuery(`SELECT p.id AS participantId,
         CAST(p.userId AS CHAR) as userId,
         p.forfeit,
         p.seed,
@@ -33,8 +34,32 @@ export class ParticipantsController extends controller {
         FROM participants p
         LEFT JOIN users u ON u.discordId = p.userId
         LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
-        WHERE p.tournamentId = ? ${!battleRoyale ? '' : 'AND p.seed != 0'} ${isAuth ? '' : 'AND ts.show_signups = 1'}`, [auth.tourneyId]);
+        WHERE p.tournamentId = ? ${isAuth ? '' : 'AND ts.show_signups = 1'}`, [auth.tourneyId]);
         return res.send(result);
+    }
+
+    async updateAll(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!await auth.hasAdminPerms) return this.unauthorized(res);
+        let participants: participant[] = req.body;
+        try {
+            let promises = []
+            for (const user of participants) {
+                let participant: dbParticipant = {
+                    tournamentId: auth.tourneyId,
+                    userId: user.discordId,
+                    comment: user.comment,
+                    forfeit: user.forfeit,
+                    seed: user.seed,
+                    position: user.position
+                }
+                promises.push(this.db.aQuery(`UPDATE participants SET ? WHERE id = ?`, [participant, user.participantId]));
+            }
+            await Promise.all(promises);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
     }
 
     async getAllParticipants(req: express.Request, res: express.Response) {
