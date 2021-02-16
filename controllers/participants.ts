@@ -43,6 +43,7 @@ export class ParticipantsController extends controller {
         if (!await auth.hasAdminPerms) return this.unauthorized(res);
         let participants: participant[] = req.body;
         try {
+            await this.db.aQuery(`UPDATE participants SET seed = 0, position = 0, forfeit = 0 WHERE tournamentId = ?`, [auth.tourneyId]);
             let promises = []
             for (const user of participants) {
                 let participant: dbParticipant = {
