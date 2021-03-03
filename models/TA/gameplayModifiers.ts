@@ -1,5 +1,5 @@
 export class GameplayModifiers {
-    Options: GameOptions;
+    options: GameOptions;
 }
 
 export enum GameOptions {

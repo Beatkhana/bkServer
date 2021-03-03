@@ -23,7 +23,7 @@ wss.on('connection', (ws: WebSocket) => {
                 let tmp = { t: tournamentId };
                 emitter.emit("getTAState", tmp);
                 taClient = tmp.t?.taClient;
-                delete taClient?.State?.ServerSettings?.Password;
+                delete taClient?.State?.serverSettings?.password;
                 ws.send(JSON.stringify({ TA: taClient }));
             }
             // console.log(data);

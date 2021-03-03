@@ -14,7 +14,7 @@ export class client {
     port: number;
     url: string;
 
-    public Self: User | undefined;
+    public Self: Coordinator | undefined;
     public State: State | undefined;
 
     public isConnected = false;
@@ -22,66 +22,66 @@ export class client {
     public matchId = false;
 
     constructor(connectResponse?: ConnectResponse) {
-        if(connectResponse && connectResponse.Type == ResponseType.Success) {
-            this.Self = connectResponse.Self;
-            this.State = connectResponse.State;
-            delete this.State.ServerSettings.Password;
+        if (connectResponse && connectResponse.response.type == ResponseType.Success) {
+            this.Self = connectResponse.player ?? connectResponse.coordinator;
+            this.State = connectResponse.state;
+            delete this.State.serverSettings.password;
             this.isConnected = true;
         }
     }
 
     coordinatorAdded(data: Coordinator) {
-        if(!this.isConnected) return;
-        let index = this.State.Coordinators.findIndex(x => x.Id == data.Id);
-        if(index == -1) this.State.Coordinators.push(data);
+        if (!this.isConnected) return;
+        let index = this.State.coordinators.findIndex(x => x.id == data.id);
+        if (index == -1) this.State.coordinators.push(data);
     }
 
     coordinatorLeft(data: Coordinator) {
-        let index = this.State.Coordinators.findIndex(x => x.Id == data.Id);
-        if(index > -1) this.State.Coordinators.splice(index, 1);
+        let index = this.State.coordinators.findIndex(x => x.id == data.id);
+        if (index > -1) this.State.coordinators.splice(index, 1);
     }
 
     matchCreated(match: Match) {
         // console.log(match);
-        if (!this.State.Matches.find(x => x.Guid == match.Guid)) this.State.Matches.push(match);
+        if (!this.State.matches.find(x => x.guid == match.guid)) this.State.matches.push(match);
     }
 
     matchUpdated(match: Match) {
-        let index = this.State.Matches.findIndex(x => x.Guid == match.Guid);
-        if(index > -1) this.State.Matches[index] = match;
+        let index = this.State.matches.findIndex(x => x.guid == match.guid);
+        if (index > -1) this.State.matches[index] = match;
     }
 
     matchDeleted(match: Match) {
-        let index = this.State.Matches.findIndex(x => x.Guid == match.Guid);
-        if(index > -1) this.State.Matches.splice(index, 1);
+        let index = this.State.matches.findIndex(x => x.guid == match.guid);
+        if (index > -1) this.State.matches.splice(index, 1);
     }
 
     playerAdded(player: Player) {
-        this.State.Players.push(player);
+        this.State.players.push(player);
     }
 
     playerUpdated(player: Player) {
-        let index = this.State.Players.findIndex(x => x.Id == player.Id);
-        if(index > -1) this.State.Players[index] = player;
+        let index = this.State.players.findIndex(x => x.id == player.id);
+        if (index > -1) this.State.players[index] = player;
     }
 
     playerLeft(player: Player) {
-        let index = this.State.Players.findIndex(x => x.Id == player.Id);
-        if(index > -1) this.State.Players.splice(index, 1);
+        let index = this.State.players.findIndex(x => x.id == player.id);
+        if (index > -1) this.State.players.splice(index, 1);
     }
 
     qualifierEventCreated(event: QualifierEvent) {
-        let index = this.State.Events.findIndex(x => x.EventId == event.EventId);
-        if(index == -1) this.State.Events.push(event);
+        let index = this.State.events.findIndex(x => x.eventId == event.eventId);
+        if (index == -1) this.State.events.push(event);
     }
 
     qualifierEventUpdated(event: QualifierEvent) {
-        let index = this.State.Events.findIndex(x => x.EventId == event.EventId);
-        if(index > -1) this.State.Events[index] = event;
+        let index = this.State.events.findIndex(x => x.eventId == event.eventId);
+        if (index > -1) this.State.events[index] = event;
     }
 
     qualifierEventDeleted(event: QualifierEvent) {
-        let index = this.State.Events.findIndex(x => x.EventId == event.EventId);
-        if(index > -1) this.State.Events.splice(index, 1);
+        let index = this.State.events.findIndex(x => x.eventId == event.eventId);
+        if (index > -1) this.State.events.splice(index, 1);
     }
 }

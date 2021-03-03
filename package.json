@@ -30,6 +30,7 @@
         "mysql": "^2.18.1",
         "node-cron": "^2.0.3",
         "node-fetch": "^2.6.1",
+        "protobuf-typescript": "^6.8.8",
         "request": "^2.88.2",
         "request-promise": "^4.2.5",
         "requests": "^0.3.0",

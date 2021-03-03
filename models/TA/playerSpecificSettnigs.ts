@@ -1,5 +1,5 @@
 export interface PlayerSpecificSettings {
-    Options?: PlayerOptions;
+    options?: PlayerOptions;
 }
 
 export enum PlayerOptions {

@@ -1,9 +1,11 @@
 import { QualifierEvent } from "../models/TA/qualifierEvent";
 import { client } from "./client";
 import { controller } from "./controller";
+import { taSocket } from "./ta.socket";
 import { taWebSocket } from "./ta.websocket";
 
-let wsClients: taWebSocket[] = [];
+// let wsClients: taWebSocket[] = [];
+let taClients: taSocket[] = [];
 
 export class TAController extends controller {
 
@@ -13,51 +15,51 @@ export class TAController extends controller {
         this.taEnabledTournaments = await this.db.aQuery(`SELECT tournamentId, ta_url, ta_password FROM tournament_settings WHERE ta_url IS NOT NULL`);
         this.connectToTA();
         this.emitter.on("getTAState", (data) => {
-            data.t = wsClients.find(x => x.tournamentId == data.t);
+            data.t = taClients.find(x => x.tournamentId == data.t);
         });
     }
 
     connectToTA() {
         for (const tournament of this.taEnabledTournaments) {
-            let tmp = new taWebSocket(tournament.tournamentId, tournament.ta_url, tournament.ta_password);
-            wsClients.push(tmp);
+            let tmp = new taSocket(tournament.tournamentId, tournament.ta_url, tournament.ta_password);
+            taClients.push(tmp);
         }
     }
 
-    static updateConnection(tournamentId, url, password) {
-        let clientI = wsClients.findIndex(x => x.tournamentId == tournamentId);
+    static async updateConnection(tournamentId, url, password) {
+        let clientI = taClients.findIndex(x => x.tournamentId == tournamentId);
         if (clientI > -1) {
-            wsClients[clientI].close();
-            wsClients.splice(clientI, 1);
-            wsClients.push(new taWebSocket(tournamentId, url, password));
-        } else {
-            wsClients.push(new taWebSocket(tournamentId, url, password));
+            await taClients[clientI].close();
+            taClients.splice(clientI, 1);
+            if (url != "") taClients.push(new taSocket(tournamentId, url, password));
+        } else if (url != "") {
+            taClients.push(new taSocket(tournamentId, url, password));
         }
     }
 
     static createEvent(tournamentId, maps, name, flags) {
-        let clientI = wsClients.findIndex(x => x.tournamentId == tournamentId);
+        let clientI = taClients.findIndex(x => x.tournamentId == tournamentId);
         if (clientI > -1) {
-            wsClients[clientI].createEvent(name, tournamentId, maps, flags);
+            taClients[clientI].createEvent(name, tournamentId, maps, flags);
         }
     }
 
     static deleteEvent(tournamentId) {
-        let clientI = wsClients.findIndex(x => x.tournamentId == tournamentId);
+        let clientI = taClients.findIndex(x => x.tournamentId == tournamentId);
         if (clientI > -1) {
-            wsClients[clientI].deleteEvent(tournamentId);
+            taClients[clientI].deleteEvent(tournamentId);
         }
     }
 
     static updateEvent(tournamentId, maps, name, flags) {
-        let clientI = wsClients.findIndex(x => x.tournamentId == tournamentId);
+        let clientI = taClients.findIndex(x => x.tournamentId == tournamentId);
         if (clientI > -1) {
-            wsClients[clientI].updateEvent(tournamentId, maps, name, flags);
+            taClients[clientI].updateEvent(tournamentId, maps, name, flags);
         }
     }
 
     public async closeTa() {
-        for (const client of wsClients) {
+        for (const client of taClients) {
             client.close()
         }
     }

@@ -3,6 +3,7 @@ import { cronController } from './controllers/cron.controller';
 import { debugLogger } from './controllers/debugLogger.controller';
 import { wss } from './controllers/event.controller';
 import { TAController } from './controllers/ta.controller';
+import { taSocket } from './controllers/ta.socket';
 
 const router = require('./router')
 const app = express();
@@ -117,6 +118,8 @@ TACon.init();
 // Crons???
 let cronCon: cronController = new cronController();
 cronCon.setCrons();
+
+// let taSocketThing = new taSocket('', '', '');
 // cron.schedule("0 * * * *", () => {
 //     console.log("Running Cron: Update users");
 //     crons.updateSSData();

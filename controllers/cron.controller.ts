@@ -11,7 +11,7 @@ const fetch = require('node-fetch');
 export class cronController extends controller {
 
     public setCrons() {
-        cron.schedule("*/10 * * * *", () => {
+        cron.schedule("30 * * * *", () => {
             console.info("Running cron - Update discord data");
             this.updateUsersDiscord();
         });
@@ -140,7 +140,7 @@ export class cronController extends controller {
                         let curBadge = curBadges.find(x => x.image == imgName);
                         if (!badgeAssignment.find(x => x.badgeId == curBadge.id)) {
                             try {
-                                let result: any = await this.db.aQuery(`INSERT INTO badge_assignment (badgeId, userId) VALUES (?)`, [[curBadge.id,user.discordId]]);
+                                let result: any = await this.db.aQuery(`INSERT INTO badge_assignment (badgeId, userId) VALUES (?)`, [[curBadge.id, user.discordId]]);
                                 badgeAssignment.push({
                                     id: result.insertId,
                                     badgeId: curBadge.id,
@@ -152,7 +152,7 @@ export class cronController extends controller {
                         }
                     }
                 }
-            } 
+            }
         }
         console.info(`Score Saber update complete: ${updated}/${users.length}`);
     }

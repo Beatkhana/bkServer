@@ -1,11 +1,11 @@
 import type { GameplayParameters } from "./gameplayParameters";
 
 export interface Score {
-    EventId: string;
-    Parameters: GameplayParameters;
-    UserId: number;
-    Username: string;
-    _Score: number;
-    FullCombo: boolean;
-    Color: string;
+    eventId: string;
+    parameters: GameplayParameters;
+    userId: number;
+    username: string;
+    score: number;
+    fullCombo: boolean;
+    color: string;
 }
