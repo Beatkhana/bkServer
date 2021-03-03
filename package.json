@@ -6,7 +6,7 @@
     "scripts": {
         "postinstall": "npx tsc",
         "dev": "NODE_ENV=development nodemon server.ts",
-        "start": "node dist/server.js"
+        "start": "mv ./protobuf ./dist/ && node dist/server.js"
     },
     "dependencies": {
         "@types/cheerio": "^0.22.21",
