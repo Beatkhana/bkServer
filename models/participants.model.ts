@@ -5,7 +5,7 @@ export interface participant {
     seed: number;
     position: number;
     discordId: string;
-    ssId: string;
+    ssId?: string;
     name: string;
     twitchName: string;
     avatar: string;

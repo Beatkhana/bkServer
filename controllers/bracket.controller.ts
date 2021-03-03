@@ -147,8 +147,8 @@ export class bracketController extends controller {
             CAST(p.userId AS CHAR) as userId,
             p.forfeit,
             p.seed as seed,
-            CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
-            CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
+            discordId,
+            ssId,
             \`u\`.\`name\`,
             \`u\`.\`twitchName\`,
             \`u\`.\`avatar\`,
@@ -170,8 +170,8 @@ export class bracketController extends controller {
             participants = players;
         } else if (!players && users) {
             let temp = await this.db.asyncPreparedQuery(`SELECT 
-            CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
-            CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
+            discordId,
+            ssId,
             \`u\`.\`name\`,
             \`u\`.\`twitchName\`,
             \`u\`.\`avatar\`,
@@ -268,8 +268,8 @@ export class bracketController extends controller {
             CAST(p.userId AS CHAR) as userId,
             p.forfeit,
             p.seed as seed,
-            CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
-            CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
+            discordId,
+            ssId,
             \`u\`.\`name\`,
             \`u\`.\`twitchName\`,
             \`u\`.\`avatar\`,
@@ -291,8 +291,8 @@ export class bracketController extends controller {
             participants = players;
         } else if (!players && users) {
             let temp = await this.db.asyncPreparedQuery(`SELECT 
-            CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
-            CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
+            discordId,
+            ssId,
             \`u\`.\`name\`,
             \`u\`.\`twitchName\`,
             \`u\`.\`avatar\`,

@@ -56,7 +56,7 @@ export interface qualsScore {
 
 export class qualScore {
     tournamentId: string;
-    ssId: string;
+    ssId?: string;
     songHash: string;
     score: string;
     totalScore: string;
@@ -101,7 +101,7 @@ export interface bslMatch {
 
 export interface staff {
     discordId: string;
-    ssId: string;
+    ssId?: string;
     name: string;
     twitchName: string;
     avatar: string;
@@ -111,7 +111,7 @@ export interface staff {
     tourneyRank: number;
     TR: number;
     pronoun: string;
-    roles: {id: number, role: string}[];
+    roles: { id: number, role: string }[];
 }
 
 export interface newStaffRequest {

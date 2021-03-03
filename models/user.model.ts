@@ -1,6 +1,6 @@
 export interface updateUser {
     discordId: string,
-    ssId: string,
+    ssId?: string,
     name: string,
     twitchName: string,
     pronoun: string,
@@ -9,7 +9,7 @@ export interface updateUser {
 
 export interface User {
     discordId: string;
-    ssId: string;
+    ssId?: string;
     name: string;
     twitchName: string;
     avatar: string;
@@ -26,7 +26,7 @@ export interface User {
 
 export interface userAPI {
     discordId: string;
-    ssId: string;
+    ssId?: string;
     name: string;
     twitchName: string;
     avatar: string;

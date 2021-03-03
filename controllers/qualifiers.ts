@@ -12,29 +12,29 @@ export class QualifiersController extends controller {
 
     // legacy method
     async saveScore(req: express.Request, res: express.Response) {
-        let auth = new authController(req);
-        let data: qualsScore = req.body;
-        if (!await auth.validApiKey) return this.unauthorized(res);
-        const tournamentSettings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [data.tournamentId]);
-        if (tournamentSettings.length <= 0 || (tournamentSettings[0].state != 'qualifiers' && !!tournamentSettings[0].public)) return res.send({ error: 'invalid tournament settings' });
-        const userInfo: any = await this.db.asyncPreparedQuery("SELECT p.*, u.discordId FROM participants p LEFT JOIN users u ON u.discordId = p.userId WHERE u.ssId = ? AND p.tournamentId = ?", [data.ssId, data.tournamentId]);
-        if (userInfo.length <= 0) return res.send({ error: "invalid user" });
-        delete data.ssId;
-        data.userId = userInfo[0].discordId;
-        const mapPool: any = await this.db.asyncPreparedQuery("SELECT pl.songHash FROM pool_link pl LEFT JOIN map_pools mp ON pl.poolId = mp.id WHERE mp.tournamentId = ? AND is_qualifiers = 1 AND live = 1", [data.tournamentId]);
-        // console.log(mapPool.some(x=> x.songHash == data.songHash));
-        if (!mapPool.some(x => x.songHash.toLowerCase() == data.songHash.toLowerCase())) return res.send({ error: "invalid song hash" });
-        data.percentage = +data.score / +data.totalScore;
-        if (data.percentage >= 1) return res.send({ error: "invalid score" });
-        data.maxScore = data.totalScore;
-        delete data.totalScore;
-        let savedData: any = await this.db.asyncPreparedQuery(`INSERT INTO qualifier_scores SET ?
-        ON DUPLICATE KEY UPDATE
-        score = GREATEST(score, VALUES(score)),
-        percentage = GREATEST(percentage, VALUES(percentage)),
-        maxScore = GREATEST(maxScore, VALUES(maxScore))`, [data, +data.score, data.percentage, data.maxScore]);
-        if (savedData.insertId == 0) return res.send({ error: 'Did not beat score' });
-        return res.send({ data: "score saved successfully", flag: false });
+        // let auth = new authController(req);
+        // let data: qualsScore = req.body;
+        // if (!await auth.validApiKey) return this.unauthorized(res);
+        // const tournamentSettings: any = await this.db.asyncPreparedQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [data.tournamentId]);
+        // if (tournamentSettings.length <= 0 || (tournamentSettings[0].state != 'qualifiers' && !!tournamentSettings[0].public)) return res.send({ error: 'invalid tournament settings' });
+        // const userInfo: any = await this.db.asyncPreparedQuery("SELECT p.*, u.discordId FROM participants p LEFT JOIN users u ON u.discordId = p.userId WHERE u.ssId = ? AND p.tournamentId = ?", [data.ssId, data.tournamentId]);
+        // if (userInfo.length <= 0) return res.send({ error: "invalid user" });
+        // delete data.ssId;
+        // data.userId = userInfo[0].discordId;
+        // const mapPool: any = await this.db.asyncPreparedQuery("SELECT pl.songHash FROM pool_link pl LEFT JOIN map_pools mp ON pl.poolId = mp.id WHERE mp.tournamentId = ? AND is_qualifiers = 1 AND live = 1", [data.tournamentId]);
+        // // console.log(mapPool.some(x=> x.songHash == data.songHash));
+        // if (!mapPool.some(x => x.songHash.toLowerCase() == data.songHash.toLowerCase())) return res.send({ error: "invalid song hash" });
+        // data.percentage = +data.score / +data.totalScore;
+        // if (data.percentage >= 1) return res.send({ error: "invalid score" });
+        // data.maxScore = data.totalScore;
+        // delete data.totalScore;
+        // let savedData: any = await this.db.asyncPreparedQuery(`INSERT INTO qualifier_scores SET ?
+        // ON DUPLICATE KEY UPDATE
+        // score = GREATEST(score, VALUES(score)),
+        // percentage = GREATEST(percentage, VALUES(percentage)),
+        // maxScore = GREATEST(maxScore, VALUES(maxScore))`, [data, +data.score, data.percentage, data.maxScore]);
+        // if (savedData.insertId == 0) return res.send({ error: 'Did not beat score' });
+        // return res.send({ data: "score saved successfully", flag: false });
     }
 
     async getScores(req: express.Request, res: express.Response) {
@@ -140,7 +140,13 @@ export class QualifiersController extends controller {
         if (settings.length < 1) return;
         settings = settings[0];
         if (settings.state != 'qualifiers') return;
-        let user: any = await db.aQuery(`SELECT u.discordId FROM participants p JOIN users u ON u.discordId = p.userId WHERE u.ssId = ?`, [score.score.userId]);
+        let user: any;
+        if (score.score.userId.includes('quest_')) {
+            let tmpId = await db.aQuery(`SELECT * FROM quest_ids WHERE qId = ?`, [score.score.userId.split('_')[1]]);
+            user = await db.aQuery(`SELECT u.discordId FROM participants p JOIN users u ON u.discordId = p.userId WHERE u.discordId = ?`, [tmpId[0].userId]);
+        } else {
+            user = await db.aQuery(`SELECT u.discordId FROM participants p JOIN users u ON u.discordId = p.userId WHERE u.ssId = ?`, [score.score.userId]);
+        }
         if (user.length < 1) return;
         user = user[0];
         let levelHash = score.score.parameters.beatmap.levelId.replace(`custom_level_`, "");
@@ -247,6 +253,72 @@ export class QualifiersController extends controller {
             qualMaps.push(map);
         }
         TAController.updateEvent(tournamentId, qualMaps, `${tournament[0].name} Qualifiers`, settings[0].ta_event_flags);
+    }
+
+    static async getQualsScores(tourneyId: string) {
+        let db = new database();
+        const qualsScores: any = await db.asyncPreparedQuery(`SELECT p.userId as discordId, p.forfeit, q.score, q.percentage, pl.*, u.* FROM participants p
+        LEFT JOIN users u ON u.discordId = p.userId
+        LEFT JOIN qualifier_scores q ON p.userId = q.userId 
+        LEFT JOIN map_pools mp ON mp.tournamentId = p.tournamentId
+        LEFT JOIN pool_link pl ON (pl.songHash = q.songHash AND pl.poolId = mp.id)
+        LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
+        WHERE ts.show_quals = 1 AND ts.show_quals = 1 AND p.tournamentId = ? AND mp.live = 1 AND mp.is_qualifiers AND mp.tournamentId = ? AND (q.tournamentId IS NULL OR q.tournamentId = ?)`, [tourneyId, tourneyId, tourneyId]);
+        // WHERE ts.public = 1 AND ts.show_quals = 1 AND p.tournamentId = ?`, [id]);
+        let scores = [];
+        for (const score of qualsScores) {
+            if (scores.some(x => x.discordId == score.discordId)) {
+                //do thing
+                let pIndex = scores.findIndex(x => x.discordId == score.discordId);
+                scores[pIndex].scores.push({
+                    score: +score.score,
+                    percentage: +score.percentage,
+                    poolId: score.poolId,
+                    songHash: score.songHash,
+                    songName: score.songName,
+                    songAuthor: score.songAuthor,
+                    levelAuthor: score.levelAuthor,
+                    songDiff: score.songDiff,
+                    key: score.key,
+                    ssLink: score.ssLink
+                })
+            } else {
+                let curScore = []
+                if (score.score != null) {
+                    curScore = [
+                        {
+                            score: +score.score,
+                            percentage: +score.percentage,
+                            poolId: score.poolId,
+                            songHash: score.songHash,
+                            songName: score.songName,
+                            songAuthor: score.songAuthor,
+                            levelAuthor: score.levelAuthor,
+                            songDiff: score.songDiff,
+                            key: score.key,
+                            ssLink: score.ssLink
+                        }
+                    ]
+                }
+                let temp = {
+                    discordId: score.discordId,
+                    ssId: score.ssId,
+                    name: score.name,
+                    twitchName: score.twitchName,
+                    avatar: score.avatar,
+                    globalRank: score.globalRank,
+                    localRank: score.localRank,
+                    country: score.country,
+                    tourneyRank: score.tourneyRank,
+                    TR: score.TR,
+                    pronoun: score.pronoun,
+                    forfeit: score.forfeit,
+                    scores: curScore,
+                }
+                scores.push(temp);
+            }
+        }
+        return scores;
     }
 
 }

@@ -7,14 +7,14 @@ import fs from 'fs';
 export class rankings {
     db = new database();
 
-    constructor () {}
+    constructor() { }
 
-    allUsers(callback:Function) {
-        var data:any = [];
-        
+    allUsers(callback: Function) {
+        var data: any = [];
+
         const result = this.db.query(`SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, 
-        CAST(\`users\`.\`discordId\` AS CHAR) as discordId,
-        CAST(\`users\`.\`ssId\` AS CHAR) as ssId,
+        discordId,
+        ssId,
         \`users\`.\`name\`,
         \`users\`.\`twitchName\`,
         \`users\`.\`avatar\`,
@@ -28,15 +28,15 @@ export class rankings {
         FROM users
         LEFT JOIN roleassignment ra ON ra.userId = users.discordId
         LEFT JOIN roles r ON r.roleId = ra.roleId
-        GROUP BY users.discordId`,(err, result: any) => {
+        GROUP BY users.discordId`, (err, result: any) => {
             return callback(result);
         });
     }
 
-    getTeam(callback:Function) {
+    getTeam(callback: Function) {
         const result = this.db.query(`SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, 
-        CAST(\`users\`.\`discordId\` AS CHAR) as discordId,
-        CAST(\`users\`.\`ssId\` AS CHAR) as ssId,
+        discordId,
+        ssId,
         \`users\`.\`name\`,
         \`users\`.\`twitchName\`,
         \`users\`.\`avatar\`,
@@ -51,9 +51,9 @@ export class rankings {
         LEFT JOIN roleassignment ra ON ra.userId = users.discordId
         LEFT JOIN roles r ON r.roleId = ra.roleId
         WHERE r.roleId = 1 OR r.roleId = 2 OR r.roleId = 6
-        GROUP BY users.discordId`,(err, result: any) => {
+        GROUP BY users.discordId`, (err, result: any) => {
             result.map(e => {
-                e.roleIds = e.roleIds.split(', ').map(x=>+x);
+                e.roleIds = e.roleIds.split(', ').map(x => +x);
                 e.roleNames = e.roleNames.split(', ');
             })
             return callback(result);
@@ -69,7 +69,7 @@ export class rankings {
         // });
     }
 
-    getUser(userId:string, callback:Function) {
+    getUser(userId: string, callback: Function) {
         this.db.preparedQuery(`SELECT u.discordId, u.ssId, u.name, u.twitchName, u.avatar, u.globalRank, u.localRank, u.country, u.tourneyRank, u.TR, u.pronoun, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u
         LEFT JOIN participants p ON p.userId = u.discordId
         LEFT JOIN tournaments t ON p.tournamentId = t.id
@@ -81,7 +81,7 @@ export class rankings {
         });
     }
 
-    getUserSS(userId:string, callback:Function) {
+    getUserSS(userId: string, callback: Function) {
         this.db.preparedQuery(`SELECT u.discordId, u.ssId, u.name, u.twitchName, u.avatar, u.globalRank, u.localRank, u.country, u.tourneyRank, u.TR, u.pronoun, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u
         LEFT JOIN participants p ON p.userId = u.discordId
         LEFT JOIN tournaments t ON p.tournamentId = t.id

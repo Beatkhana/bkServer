@@ -8,6 +8,8 @@ const FormData = require('form-data');
 
 const request = require('request');
 
+import crypto from "crypto";
+
 export class userController extends controller {
 
     redirect = "";
@@ -35,8 +37,8 @@ export class userController extends controller {
 
     async allUsers(req: express.Request, res: express.Response) {
         let users = await this.db.aQuery(`SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, 
-        CAST(\`users\`.\`discordId\` AS CHAR) as discordId,
-        CAST(\`users\`.\`ssId\` AS CHAR) as ssId,
+        discordId,
+        ssId,
         \`users\`.\`name\`,
         \`users\`.\`twitchName\`,
         \`users\`.\`avatar\`,
@@ -352,19 +354,20 @@ export class userController extends controller {
     async newUser(req: express.Request, res: express.Response) {
         if (req.session?.newUsr?.length > 0) {
             let usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'], refresh_token: req.session.newUsr[0]['refresh_token'], avatar: req.session.newUsr[0]['avatar'], name: req.session.newUsr[0]['name'] };
-            let ssData = await userController.getSSData(usrData.links.scoreSaber.split('u/')[1]);
+            let ssData = null;
+            if (usrData.links.scoreSaber) ssData = await userController.getSSData(usrData.links.scoreSaber.split('u/')[1]);
             if (!usrData.avatar) {
                 usrData.avatar = "-";
             }
             let user = {
                 discordId: usrData.discordId,
-                ssId: ssData.playerInfo.playerId,
-                name: ssData.playerInfo.playerName,
+                ssId: ssData?.playerInfo?.playerId,
+                name: usrData.name,
                 twitchName: usrData.links.twitch.split('twitch.tv/')[1],
                 avatar: usrData.avatar,
-                globalRank: ssData.playerInfo.rank,
-                localRank: ssData.playerInfo.countryRank,
-                country: ssData.playerInfo.country,
+                globalRank: ssData?.playerInfo?.rank ?? 0,
+                localRank: ssData?.playerInfo?.countryRank ?? 0,
+                country: ssData?.playerInfo?.country ?? '',
                 pronoun: usrData.links.pronoun,
                 refresh_token: usrData.refresh_token
             };
@@ -373,13 +376,47 @@ export class userController extends controller {
                 let loggedUser: any = user;
                 loggedUser.roleIds = [];
                 loggedUser.roleNames = [];
+                req.session.user = [loggedUser];
                 return res.send([loggedUser]);
             } catch (error) {
-                return this.fail(res, error);   
+                return this.fail(res, error);
             }
         } else {
             return this.clientError(res, "Invalid discord data");
         }
+    }
+
+    async questId(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!auth.userId) return this.clientError(res, "User not logged in");
+
+        let ids = await this.db.aQuery(`SELECT * FROM quest_ids WHERE userId = ?`, [auth.userId]);
+        let curId = 0;
+        if (ids.length < 1) {
+            let id = this.generate(20);
+            while (!await this.db.aQuery(`INSERT INTO quest_ids SET userId = ?, qId = ?`, [auth.userId, id])) {
+                id = this.generate(20);
+            }
+            curId = id;
+        } else {
+            curId = ids[0].qId;
+        }
+
+        res.setHeader('Content-disposition', `attachment; filename= secret.txt`);
+        res.setHeader('Content-type', 'text/plain; charset=UTF-8');
+        return res.send(`quest_${curId}`);
+    }
+
+    private generate(n) {
+        var add = 1, max = 12 - add;
+        if (n > max) {
+            return this.generate(max) + this.generate(n - max);
+        }
+        max = Math.pow(10, n + add);
+        var min = max / 10; // Math.pow(10, n) basically
+        var number = Math.floor(Math.random() * (max - min + 1)) + min;
+
+        return ("" + number).substring(add);
     }
 
 }

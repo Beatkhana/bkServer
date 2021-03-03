@@ -94,6 +94,7 @@ export class cronController extends controller {
         // let ssData: ssResponse = await userController.getSSData("76561198333869741");
         for (let i = 0; i < users.length; i++) {
             const user = users[i];
+            if (!user.ssId) continue;
             if (i !== 0 && i % 60 == 0) await this.delay(60000);
             let ssData: ssResponse = await userController.getSSData(user.ssId);
             // console.log(ssData)

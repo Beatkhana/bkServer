@@ -15,11 +15,12 @@ export class crons {
         try {
             let db = new database();
             let uA = new userAuth();
-            db.query(`SELECT CAST(discordId AS CHAR) as discordId, CAST(ssId AS CHAR) as ssId FROM users`, async (err, res) => {
+            db.query(`discordId, ssId FROM users`, async (err, res) => {
                 // console.log(res)
                 // console.log(err)
                 let completed = 0;
                 for (const user of res) {
+                    if (!user.ssId) continue;
                     uA.getSSData(user.ssId, (data) => {
                         if (data) {
                             let info = {};

@@ -25,6 +25,7 @@ userRouter.put('/user/:id', (req, res) => userCon.updateUser(req, res));
 // discord auth
 userRouter.get('/login', (req, res) => userCon.login(req, res));
 userRouter.get('/logout', (req, res) => userCon.logOut(req, res));
+userRouter.get('/quest', (req, res) => userCon.questId(req, res));
 userRouter.get('/discordAuth', (req, res) => userCon.discordAuth(req, res));
 
 userRouter.post('/newUser', (req, res) => userCon.newUser(req, res));

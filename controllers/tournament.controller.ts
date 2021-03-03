@@ -277,7 +277,7 @@ export class TournamentController extends controller {
     async seedPlayersByQuals(tournamentId: string, cutoff) {
         const pools: any = await this.getMapPools(tournamentId);
         let qualsPool: any = Object.values(pools).find((x: any) => x.is_qualifiers == 1);
-        let qualsScores = await this.getQualsScores(tournamentId);
+        let qualsScores = await QualifiersController.getQualsScores(tournamentId);
         console.log(qualsScores);
         for (const user of qualsScores) {
             for (const score of user.scores) {
@@ -396,70 +396,7 @@ export class TournamentController extends controller {
     }
 
     // to move to quals controller when done
-    async getQualsScores(id: string) {
-        const qualsScores: any = await this.db.asyncPreparedQuery(`SELECT p.userId as discordId, p.forfeit, q.score, q.percentage, pl.*, u.* FROM participants p
-        LEFT JOIN users u ON u.discordId = p.userId
-        LEFT JOIN qualifier_scores q ON p.userId = q.userId 
-        LEFT JOIN map_pools mp ON mp.tournamentId = p.tournamentId
-        LEFT JOIN pool_link pl ON (pl.songHash = q.songHash AND pl.poolId = mp.id)
-        LEFT JOIN tournament_settings ts ON ts.tournamentId = p.tournamentId
-        WHERE ts.show_quals = 1 AND ts.show_quals = 1 AND p.tournamentId = ? AND mp.live = 1 AND mp.is_qualifiers AND mp.tournamentId = ? AND (q.tournamentId IS NULL OR q.tournamentId = ?)`, [id, id, id]);
-        // WHERE ts.public = 1 AND ts.show_quals = 1 AND p.tournamentId = ?`, [id]);
-        let scores = [];
-        for (const score of qualsScores) {
-            if (scores.some(x => x.discordId == score.discordId)) {
-                //do thing
-                let pIndex = scores.findIndex(x => x.discordId == score.discordId);
-                scores[pIndex].scores.push({
-                    score: +score.score,
-                    percentage: +score.percentage,
-                    poolId: score.poolId,
-                    songHash: score.songHash,
-                    songName: score.songName,
-                    songAuthor: score.songAuthor,
-                    levelAuthor: score.levelAuthor,
-                    songDiff: score.songDiff,
-                    key: score.key,
-                    ssLink: score.ssLink
-                })
-            } else {
-                let curScore = []
-                if (score.score != null) {
-                    curScore = [
-                        {
-                            score: +score.score,
-                            percentage: +score.percentage,
-                            poolId: score.poolId,
-                            songHash: score.songHash,
-                            songName: score.songName,
-                            songAuthor: score.songAuthor,
-                            levelAuthor: score.levelAuthor,
-                            songDiff: score.songDiff,
-                            key: score.key,
-                            ssLink: score.ssLink
-                        }
-                    ]
-                }
-                let temp = {
-                    discordId: score.discordId,
-                    ssId: score.ssId,
-                    name: score.name,
-                    twitchName: score.twitchName,
-                    avatar: score.avatar,
-                    globalRank: score.globalRank,
-                    localRank: score.localRank,
-                    country: score.country,
-                    tourneyRank: score.tourneyRank,
-                    TR: score.TR,
-                    pronoun: score.pronoun,
-                    forfeit: score.forfeit,
-                    scores: curScore,
-                }
-                scores.push(temp);
-            }
-        }
-        return scores;
-    }
+
 
     async signUp(req: express.Request, res: express.Response) {
         let auth = new authController(req);

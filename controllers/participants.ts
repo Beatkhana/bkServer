@@ -20,8 +20,8 @@ export class ParticipantsController extends controller {
         p.position,
         ${isAuth ? 'p.comment,' : ''}
         ${userId != null && !isAuth ? 'IF(p.userId = "' + userId + '", p.comment, null) as comment,' : ''}
-        CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
-        CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
+        discordId,
+        ssId,
         \`u\`.\`name\`,
         \`u\`.\`twitchName\`,
         \`u\`.\`avatar\`,
@@ -127,8 +127,8 @@ export class ParticipantsController extends controller {
         p.seed,
         p.position,
         p.comment,
-        CAST(\`u\`.\`discordId\` AS CHAR) as discordId,
-        CAST(\`u\`.\`ssId\` AS CHAR) as ssId,
+        discordId,
+        ssId,
         \`u\`.\`name\`,
         \`u\`.\`twitchName\`,
         \`u\`.\`avatar\`,

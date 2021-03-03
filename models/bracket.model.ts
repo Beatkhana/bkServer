@@ -15,7 +15,7 @@ export interface bracketMatch {
 
 export interface matchPlayer {
     id: string;
-    ssId: string;
+    ssId?: string;
     name: string;
     avatar: string;
     score: number;
