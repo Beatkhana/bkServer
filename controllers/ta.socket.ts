@@ -70,7 +70,7 @@ export class taSocket extends controller {
 
     async handlePacket(data: Buffer) {
         let packet = await Packet.fromBytes(data);
-        console.log(packet);
+        // console.log(packet);
         if (!packet) return;
         if (packet.Type == PacketType.ConnectResponse) {
             let connectResponse = packet.SpecificPacket as ConnectResponse;
