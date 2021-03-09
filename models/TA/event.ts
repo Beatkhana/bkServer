@@ -11,14 +11,14 @@ export class TAEvent {
     static async ParseFrom(buffer: Buffer) {
         const root = await load(__dirname + '/../../protobuf/Models/Packets/event.proto');
 
-        const conRes = root.lookupType("TournamentAssistantShared.Models.Packets.Event");
+        const eventPack = root.lookupType("TournamentAssistantShared.Models.Packets.Event");
 
-        var errMsg = conRes.verify(buffer);
+        var errMsg = eventPack.verify(buffer);
         if (errMsg)
             throw Error(errMsg);
 
-        const message = conRes.decode(buffer);
-        let event: protoEvent = conRes.toObject(message) as protoEvent;
+        const message = eventPack.decode(buffer);
+        let event: protoEvent = eventPack.toObject(message) as protoEvent;
         // console.log(event.type)
         switch (event.type) {
             case EventType.PlayerAdded:

@@ -135,6 +135,7 @@ export class QualifiersController extends controller {
     }
 
     static async taScore(score: SubmitScore, tournamentId: string) {
+        console.log(score, tournamentId);
         let db = new database();
         let settings: any = await db.aQuery(`SELECT * FROM tournament_settings WHERE tournamentId = ?`, [tournamentId]);
         if (settings.length < 1) return;
@@ -143,10 +144,11 @@ export class QualifiersController extends controller {
         let user: any;
         if (score.score.userId.includes('quest_')) {
             let tmpId = await db.aQuery(`SELECT * FROM quest_ids WHERE qId = ?`, [score.score.userId.split('_')[1]]);
-            user = await db.aQuery(`SELECT u.discordId FROM participants p JOIN users u ON u.discordId = p.userId WHERE u.discordId = ?`, [tmpId[0].userId]);
+            user = await db.aQuery(`SELECT u.discordId FROM participants p JOIN users u ON u.discordId = p.userId WHERE u.discordId = ? AND p.tournamentId = ?`, [tmpId[0].userId, tournamentId]);
         } else {
-            user = await db.aQuery(`SELECT u.discordId FROM participants p JOIN users u ON u.discordId = p.userId WHERE u.ssId = ?`, [score.score.userId]);
+            user = await db.aQuery(`SELECT u.discordId FROM participants p JOIN users u ON u.discordId = p.userId WHERE u.ssId = ? AND p.tournamentId = ?`, [score.score.userId, tournamentId]);
         }
+        console.log(user);
         if (user.length < 1) return;
         user = user[0];
         let levelHash = score.score.parameters.beatmap.levelId.replace(`custom_level_`, "");

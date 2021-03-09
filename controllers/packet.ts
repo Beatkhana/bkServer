@@ -17,24 +17,28 @@ import { SubmitScore } from '../models/TA/submitScore';
 export class Packet {
 
     Size: number = 0;
-    SpecificPacketSize: number = 44;
-    Id: string = "";
-    From: string = "";
+    // SpecificPacketSize: number = 44;
+    // Id: string = "";
+    // From: string = "";
 
     Type: PacketType;
     SpecificPacket: Packet;
 
-    constructor(specificPacket: any, type: PacketType) {
+    constructor(specificPacket: any, type: PacketType, size: number) {
         this.Type = type;
         this.SpecificPacket = specificPacket;
+        this.Size = size;
     }
 
-    public static async fromBytes(buffer: Buffer): Promise<{ Type: number, SpecificPacket: any }> {
+    public static async fromBytes(buffer: Buffer): Promise<Packet> {
+        // console.log(buffer.toString());
+        // console.log(buffer.toString().slice(0, 4))
         let pktType: PacketType = buffer.readUInt8(4);
-        let sizeBytes = buffer.readUInt8(8);
+        let sizeBytes = buffer.readUInt32LE(8);
 
         let specificPacketSize = sizeBytes;
         let specificPacket = null;
+        console.log(PacketType[pktType], sizeBytes, buffer.length)
         if (specificPacketSize > 0) {
             switch (pktType) {
                 case PacketType.Command:
@@ -90,10 +94,12 @@ export class Packet {
                     break;
             }
             // console.log(specificPacket);
-            return {
-                Type: pktType,
-                SpecificPacket: specificPacket
-            }
+            return new Packet(specificPacket, pktType, buffer.length);
+            // return {
+            //     Type: pktType,
+            //     SpecificPacket: specificPacket,
+            //     Size: sizeBytes + 44
+            // }
         }
         return null;
     }
@@ -102,6 +108,12 @@ export class Packet {
         let buffArray: Uint8Array[] = [Buffer.from("moon"), this.toBytesInt32(type), this.toBytesInt32(buf.length), Uint8Array.from(uuidParse(NIL_UUID)), Uint8Array.from(uuidParse(NIL_UUID)), buf];
         let bufToSend = Buffer.concat(buffArray);
         return bufToSend;
+    }
+
+    public static potentiallyValid(buffer: Buffer) {
+        if (buffer.length.toString().slice(0, 4) != 'moon') return false;
+        let sizeBytes = buffer.readUInt32LE(8);
+        return (sizeBytes + 44) <= buffer.length;
     }
 
     isPacket(packet: string) {
