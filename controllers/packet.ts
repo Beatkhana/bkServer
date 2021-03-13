@@ -30,7 +30,7 @@ export class Packet {
         this.Size = size;
     }
 
-    public static async fromBytes(buffer: Buffer): Promise<Packet> {
+    public static fromBytes(buffer: Buffer): Packet {
         // console.log(buffer.toString());
         // console.log(buffer.toString().slice(0, 4))
         let pktType: PacketType = buffer.readUInt8(4);
@@ -38,53 +38,53 @@ export class Packet {
 
         let specificPacketSize = sizeBytes;
         let specificPacket = null;
-        console.log(PacketType[pktType], sizeBytes, buffer.length)
+        // console.log(PacketType[pktType], sizeBytes, buffer.length);
         if (specificPacketSize > 0) {
             switch (pktType) {
                 case PacketType.Command:
-                    specificPacket = await Command.ParseFrom(buffer.slice(44));
+                    specificPacket = Command.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.Connect:
-                    specificPacket = await Connect.ParseFrom(buffer.slice(44));
+                    specificPacket = Connect.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.ConnectResponse:
-                    specificPacket = await ConnectResponse.ParseFrom(buffer.slice(44));
+                    specificPacket = ConnectResponse.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.Event:
-                    specificPacket = await TAEvent.ParseFrom(buffer.slice(44));
+                    specificPacket = TAEvent.ParseFrom(buffer.slice(44));
                     break;
                 // case PacketType.File:
                 //     specificPacket = Models.Packets.File.ParseFrom(buffer.slice(44));
                 //     break;
                 case PacketType.ForwardingPacket:
-                    specificPacket = await ForwardingPacket.ParseFrom(buffer.slice(44));
+                    specificPacket = ForwardingPacket.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.LoadedSong:
-                    specificPacket = await LoadedSong.ParseFrom(buffer.slice(44));
+                    specificPacket = LoadedSong.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.LoadSong:
-                    specificPacket = await LoadSong.ParseFrom(buffer.slice(44));
+                    specificPacket = LoadSong.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.PlaySong:
-                    specificPacket = await PlaySong.ParseFrom(buffer.slice(44));
+                    specificPacket = PlaySong.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.Response:
-                    specificPacket = await TAResponse.ParseFrom(buffer.slice(44));
+                    specificPacket = TAResponse.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.ScoreRequest:
-                    specificPacket = await ScoreRequest.ParseFrom(buffer.slice(44));
+                    specificPacket = ScoreRequest.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.ScoreRequestResponse:
-                    specificPacket = await ScoreRequestResponse.ParseFrom(buffer.slice(44));
+                    specificPacket = ScoreRequestResponse.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.SongFinished:
-                    specificPacket = await SongFinished.ParseFrom(buffer.slice(44));
+                    specificPacket = SongFinished.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.SongList:
-                    specificPacket = await SongList.ParseFrom(buffer.slice(44));
+                    specificPacket = SongList.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.SubmitScore:
-                    specificPacket = await SubmitScore.ParseFrom(buffer.slice(44));
+                    specificPacket = SubmitScore.ParseFrom(buffer.slice(44));
                     break;
                 case PacketType.Acknowledgement:
                     specificPacket = null;
@@ -111,7 +111,7 @@ export class Packet {
     }
 
     public static potentiallyValid(buffer: Buffer) {
-        if (buffer.length.toString().slice(0, 4) != 'moon') return false;
+        if (buffer.toString().slice(0, 4) != 'moon') return false;
         let sizeBytes = buffer.readUInt32LE(8);
         return (sizeBytes + 44) <= buffer.length;
     }

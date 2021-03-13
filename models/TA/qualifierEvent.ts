@@ -1,6 +1,12 @@
-import { load } from "protobuf-typescript";
+import { load, Root } from "protobuf-typescript";
 import { protoAny } from "./anyType";
 import type { GameplayParameters } from "./gameplayParameters";
+
+let root: Root;
+
+(async () => {
+    root = await load(__dirname + '/../../protobuf/Models/qualifier_event.proto');
+})();
 
 export class QualifierEvent {
     eventId: string;
@@ -11,8 +17,7 @@ export class QualifierEvent {
     sendScoresToInfoChannel: boolean;
     flags: number;
 
-    static async ParseFrom(buffer: Buffer) {
-        const root = await load(__dirname + '/../../protobuf/Models/qualifier_event.proto');
+    static ParseFrom(buffer: Buffer) {
         const qualEvent = root.lookupType("TournamentAssistantShared.Models.QualifierEvent");
         const message = qualEvent.decode(buffer);
         return qualEvent.toObject(message);

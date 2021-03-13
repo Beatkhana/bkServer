@@ -135,7 +135,6 @@ export class QualifiersController extends controller {
     }
 
     static async taScore(score: SubmitScore, tournamentId: string) {
-        console.log(score, tournamentId);
         let db = new database();
         let settings: any = await db.aQuery(`SELECT * FROM tournament_settings WHERE tournamentId = ?`, [tournamentId]);
         if (settings.length < 1) return;
@@ -148,10 +147,9 @@ export class QualifiersController extends controller {
         } else {
             user = await db.aQuery(`SELECT u.discordId FROM participants p JOIN users u ON u.discordId = p.userId WHERE u.ssId = ? AND p.tournamentId = ?`, [score.score.userId, tournamentId]);
         }
-        console.log(user);
         if (user.length < 1) return;
         user = user[0];
-        let levelHash = score.score.parameters.beatmap.levelId.replace(`custom_level_`, "");
+        let levelHash = score.score.parameters.beatmap.levelId.replace(`custom_level_`, "").toUpperCase();
         let map = await db.aQuery(`SELECT * FROM pool_link pl JOIN map_pools mp ON mp.id = pl.poolId WHERE pl.songHash = ? AND mp.tournamentId = ?`, [levelHash, tournamentId]);
         if (map.length < 1) return;
         // console.log(user);

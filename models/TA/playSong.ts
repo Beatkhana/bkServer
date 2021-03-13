@@ -1,5 +1,11 @@
-import { load } from "protobuf-typescript";
+import { load, Root } from "protobuf-typescript";
 import type { GameplayParameters } from "./gameplayParameters";
+
+let root: Root;
+
+(async () => {
+    root = await load(__dirname + '/../../protobuf/Models/Packets/play_song.proto');
+})();
 
 export class PlaySong {
     gameplayParameters: GameplayParameters;
@@ -8,8 +14,7 @@ export class PlaySong {
     disablePause: boolean;
     disableFail: boolean;
 
-    static async ParseFrom(buffer: Buffer) {
-        const root = await load(__dirname + '/../../protobuf/Models/Packets/play_song.proto');
+    static ParseFrom(buffer: Buffer) {
         const playSong = root.lookupType("TournamentAssistantShared.Models.Packets.PlaySong");
         const message = playSong.decode(buffer);
         return playSong.toObject(message);

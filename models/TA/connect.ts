@@ -1,4 +1,10 @@
-import { load } from "protobuf-typescript";
+import { load, Root } from "protobuf-typescript";
+
+let root: Root;
+
+(async () => {
+    root = await load(__dirname + '/../../protobuf/Models/Packets/connect.proto');
+})();
 
 export class Connect {
     clientType: ConnectTypes;
@@ -6,8 +12,7 @@ export class Connect {
     userId: string;
     clientVersion: number;
 
-    static async ParseFrom(buffer: Buffer) {
-        const root = await load(__dirname + '/../../protobuf/Models/Packets/connect.proto');
+    static ParseFrom(buffer: Buffer) {
         const connect = root.lookupType("TournamentAssistantShared.Models.Packets.Connect");
         const message = connect.decode(buffer);
         return connect.toObject(message);

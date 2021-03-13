@@ -1,7 +1,13 @@
-import { load } from "protobuf-typescript";
+import { load, Root } from "protobuf-typescript";
 import type { SongList } from "./songList";
 import type { Team } from "./team";
 import type { User } from "./User";
+
+let root: Root;
+
+(async () => {
+    root = await load(__dirname + '/../../protobuf/Models/player.proto');
+})();
 
 export class Player implements User {
     id: string;
@@ -20,8 +26,7 @@ export class Player implements User {
     streamDelayMs: number;
     streamSyncStartMs: number;
 
-    static async ParseFrom(buffer: Buffer) {
-        const root = await load(__dirname + '/../../protobuf/Models/player.proto');
+    static ParseFrom(buffer: Buffer) {
         const player = root.lookupType("TournamentAssistantShared.Models.Player");
         const message = player.decode(buffer);
         return player.toObject(message);

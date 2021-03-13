@@ -1,10 +1,14 @@
-import { load } from "protobuf-typescript";
-import { ResponseType, TAResponse } from "./response";
+import { load, Root } from "protobuf-typescript";
+import { TAResponse } from "./response";
 import type { State } from "./state";
-import type { User } from "./User";
-import path from 'path';
 import { Coordinator } from "./coordinator";
 import { Player } from "./player";
+
+let root: Root;
+
+(async () => {
+    root = await load(__dirname + '/../../protobuf/Models/Packets/connect_response.proto');
+})();
 
 export class ConnectResponse {
     response: TAResponse;
@@ -15,9 +19,7 @@ export class ConnectResponse {
     serverVersion: number;
     password: string;
 
-    static async ParseFrom(buffer: Buffer) {
-        const root = await load(__dirname + '/../../protobuf/Models/Packets/connect_response.proto');
-
+    static ParseFrom(buffer: Buffer) {
         const conRes = root.lookupType("TournamentAssistantShared.Models.Packets.ConnectResponse");
 
         var errMsg = conRes.verify(buffer);

@@ -66,48 +66,21 @@ export class taSocket extends controller {
         });
 
         let accumulatedData = Buffer.alloc(0);
-        this.socketClient.on("data", async (data: Buffer) => {
-
-            // let offset = data.indexOf(Buffer.from('moon'));
-            // if (offset !== -1) {
-            //     // get the whole message into one Buffer
-            //     let msg = Buffer.concat([accumulatedData, data.slice(0, offset)]);
-
-            //     // put rest of data into the accumulatedData buffer as part of next piece of data
-            //     // skip past the delimiter
-            //     accumulatedData = data.slice(offset + 1);
-
-            //     // emit that we now have a whole msg
-            //     // socket.emit('_msg', msg);
-            //     try {
-            //         let packet = await Packet.fromBytes(msg);
-            //         this.handlePacket(packet);
-            //     } catch (error) {
-            //         console.error('failed to decode packet');
-            //         console.error(error);
-            //     }
-
-            // } else {
-            //     // no delimiter yet, just accumulate the data
-            //     accumulatedData = Buffer.concat([accumulatedData, data]);
-            // }
-            // if (accumulatedData.length != 0) {
-            //     accumulatedData = data;
-            // } else {
+        this.socketClient.on("data", (data: Buffer) => {
             accumulatedData = Buffer.concat([accumulatedData, data]);
             // console.log(accumulatedData.toString());
             // console.log(`=======================================================`);
-            while (accumulatedData.length >= 44) {
-                let packet = null;
+            while (accumulatedData.length >= 44 && Packet.potentiallyValid(accumulatedData)) {
+                let packet: Packet | null = null;
+                let pktType: PacketType = accumulatedData.readUInt8(4);
+                let sizeBytes = accumulatedData.readUInt32LE(8);
                 try {
-                    packet = await Packet.fromBytes(accumulatedData);
-                    // console.log('reseting buffer')
-                    accumulatedData = accumulatedData.slice(packet?.Size);
+                    packet = Packet.fromBytes(accumulatedData.slice(0, (sizeBytes + 44)));
                     this.handlePacket(packet);
                 } catch (error) {
                     console.error('failed to decode packet');
-                    // console.error(error);
                 }
+                accumulatedData = accumulatedData.slice(packet?.Size ?? 44);
             }
         });
     }
@@ -115,7 +88,7 @@ export class taSocket extends controller {
     async handlePacket(packet: { Type: number, SpecificPacket: any }) {
 
         this.emitter.emit('taEvent', [this.tournamentId, packet]);
-        console.log(packet);
+        // console.log(packet);
         if (!packet) return;
         if (packet.Type == PacketType.ConnectResponse) {
             let connectResponse = packet.SpecificPacket as ConnectResponse;
@@ -180,7 +153,7 @@ export class taSocket extends controller {
             name: "BeatKhana!",
             password: this.password,
             userId: "",
-            clientVersion: 50
+            clientVersion: 51
         }
         var errMsg = connection.verify(payload);
         if (errMsg)

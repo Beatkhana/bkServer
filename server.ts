@@ -3,19 +3,14 @@ import { cronController } from './controllers/cron.controller';
 import { debugLogger } from './controllers/debugLogger.controller';
 import { wss } from './controllers/event.controller';
 import { TAController } from './controllers/ta.controller';
-import { taSocket } from './controllers/ta.socket';
 
 const router = require('./router')
 const app = express();
 const path = require('path');
 var compression = require('compression');
 const session = require('express-session');
-var MemoryStore = require('memorystore')(session)
+var MemoryStore = require('memorystore')(session);
 
-const cron = require('node-cron');
-
-// const cronJobs = require('./crons')
-import { crons } from './crons';
 import { bracketRouter } from './routers/bracket.router';
 import { mapPoolRouter } from './routers/map_pool';
 import { participantsRouter } from './routers/participants';
@@ -100,6 +95,7 @@ let server = app.listen(PORT, () => {
     console.info("Server now listening on " + PORT);
     console.info('Running in ' + env + ' mode')
 });
+
 // allow websocket connections
 server.on('upgrade', (request: any, socket: any, head: any) => {
     wss.handleUpgrade(request, socket, head, (socket: any) => {
@@ -107,11 +103,6 @@ server.on('upgrade', (request: any, socket: any, head: any) => {
     });
 });
 
-
-// app.listen(PORT, () => {
-//     console.log("Server now listening on " + PORT);
-//     console.log('Running in ' + env + ' mode')
-// });
 let TACon = new TAController();
 TACon.init();
 
@@ -119,24 +110,14 @@ TACon.init();
 let cronCon: cronController = new cronController();
 cronCon.setCrons();
 
-// let taSocketThing = new taSocket('', '', '');
-// cron.schedule("0 * * * *", () => {
-//     console.log("Running Cron: Update users");
-//     crons.updateSSData();
-// });
+// process.on('exit', beforeClose);
+// process.on('SIGINT', beforeClose);
+// process.on('SIGUSR1', beforeClose);
+// process.on('SIGUSR2', beforeClose);
+// process.on('uncaughtException', beforeClose);
 
-// cron.schedule("*/5 * * * *", () => {
-//     console.log("Running Cron: Discord users update");
-//     crons.updateUsersDiscord();
-// });
-process.on('exit', beforeClose);
-process.on('SIGINT', beforeClose);
-process.on('SIGUSR1', beforeClose);
-process.on('SIGUSR2', beforeClose);
-process.on('uncaughtException', beforeClose);
-
-function beforeClose() {
-    console.info("Server shutdown");
-    TACon.closeTa();
-    process.exit();
-}
+// function beforeClose() {
+//     console.info("Server shutdown");
+//     TACon.closeTa();
+//     process.exit();
+// }

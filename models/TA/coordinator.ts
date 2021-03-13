@@ -1,6 +1,12 @@
-import { load } from 'protobuf-typescript';
+import { load, Root } from 'protobuf-typescript';
 import { protoAny } from './anyType';
 import type { User } from './User';
+
+let root: Root;
+
+(async () => {
+    root = await load(__dirname + '/../../protobuf/Models/coordinator.proto');
+})();
 
 export class Coordinator implements User {
     id: string;
@@ -8,8 +14,7 @@ export class Coordinator implements User {
     getIcon?: string;
     userId?: string;
 
-    static async ParseFrom(buffer: Buffer) {
-        const root = await load(__dirname + '/../../protobuf/Models/coordinator.proto');
+    static ParseFrom(buffer: Buffer) {
 
         const coordinator = root.lookupType("TournamentAssistantShared.Models.Coordinator");
 

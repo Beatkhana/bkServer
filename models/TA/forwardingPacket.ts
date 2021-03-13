@@ -1,12 +1,17 @@
-import { load } from "protobuf-typescript";
+import { load, Root } from "protobuf-typescript";
+
+let root: Root;
+
+(async () => {
+    root = await load(__dirname + '/../../protobuf/Models/Packets/forwarding_packet.proto');
+})();
 
 export class ForwardingPacket {
     forwardTo: string[];
     type: PacketType;
     specificPacket: any;
 
-    static async ParseFrom(buffer: Buffer) {
-        const root = await load(__dirname + '/../../protobuf/Models/Packets/forwarding_packet.proto');
+    static ParseFrom(buffer: Buffer) {
         const forwarder = root.lookupType("TournamentAssistantShared.Models.Packets.ForwardingPacket");
         const message = forwarder.decode(buffer);
         return forwarder.toObject(message);

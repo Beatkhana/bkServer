@@ -1,17 +1,22 @@
-import { load } from "protobuf-typescript";
+import { load, Root } from "protobuf-typescript";
 import { Coordinator } from "./coordinator";
 import { Match } from "./match";
 import { Player } from "./player";
 import { QualifierEvent } from "./qualifierEvent";
 
+let eventRoot: Root;
+
+(async () => {
+    eventRoot = await load(__dirname + '/../../protobuf/Models/Packets/event.proto');
+})();
+
 export class TAEvent {
     type: EventType;
     changedObject: any;
 
-    static async ParseFrom(buffer: Buffer) {
-        const root = await load(__dirname + '/../../protobuf/Models/Packets/event.proto');
+    static ParseFrom(buffer: Buffer) {
 
-        const eventPack = root.lookupType("TournamentAssistantShared.Models.Packets.Event");
+        const eventPack = eventRoot.lookupType("TournamentAssistantShared.Models.Packets.Event");
 
         var errMsg = eventPack.verify(buffer);
         if (errMsg)
@@ -22,37 +27,37 @@ export class TAEvent {
         // console.log(event.type)
         switch (event.type) {
             case EventType.PlayerAdded:
-                event.changedObject = await Player.ParseFrom(event.changedObject.value);
+                event.changedObject = Player.ParseFrom(event.changedObject.value);
                 break;
             case EventType.PlayerUpdated:
-                event.changedObject = await Player.ParseFrom(event.changedObject.value);
+                event.changedObject = Player.ParseFrom(event.changedObject.value);
                 break;
             case EventType.PlayerLeft:
-                event.changedObject = await Player.ParseFrom(event.changedObject.value);
+                event.changedObject = Player.ParseFrom(event.changedObject.value);
                 break;
             case EventType.CoordinatorAdded:
-                event.changedObject = await Coordinator.ParseFrom(event.changedObject.value);
+                event.changedObject = Coordinator.ParseFrom(event.changedObject.value);
                 break;
             case EventType.CoordinatorLeft:
-                event.changedObject = await Coordinator.ParseFrom(event.changedObject.value);
+                event.changedObject = Coordinator.ParseFrom(event.changedObject.value);
                 break;
             case EventType.MatchCreated:
-                event.changedObject = await Match.ParseFrom(event.changedObject.value);
+                event.changedObject = Match.ParseFrom(event.changedObject.value);
                 break;
             case EventType.MatchUpdated:
-                event.changedObject = await Match.ParseFrom(event.changedObject.value);
+                event.changedObject = Match.ParseFrom(event.changedObject.value);
                 break;
             case EventType.MatchDeleted:
-                event.changedObject = await Match.ParseFrom(event.changedObject.value);
+                event.changedObject = Match.ParseFrom(event.changedObject.value);
                 break;
             case EventType.QualifierEventCreated:
-                event.changedObject = await QualifierEvent.ParseFrom(event.changedObject.value);
+                event.changedObject = QualifierEvent.ParseFrom(event.changedObject.value);
                 break;
             case EventType.QualifierEventUpdated:
-                event.changedObject = await QualifierEvent.ParseFrom(event.changedObject.value);
+                event.changedObject = QualifierEvent.ParseFrom(event.changedObject.value);
                 break;
             case EventType.QualifierEventDeleted:
-                event.changedObject = await QualifierEvent.ParseFrom(event.changedObject.value);
+                event.changedObject = QualifierEvent.ParseFrom(event.changedObject.value);
                 break;
             // case EventType.HostAdded:
 
