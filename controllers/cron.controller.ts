@@ -15,7 +15,7 @@ export class cronController extends controller {
             console.info("Running cron - Update discord data");
             this.updateUsersDiscord();
         });
-        cron.schedule("0 * * * *", () => {
+        cron.schedule("0 */2 * * *", () => {
             console.info("Running cron - Update score saber data");
             this.updateUsersSS();
         });
@@ -91,31 +91,27 @@ export class cronController extends controller {
         let badgeAssignment = await this.db.aQuery(`SELECT * FROM badge_assignment`);
         let badgeLabels = curBadges.map(x => x.image);
         let updated = 0;
-        // let ssData: ssResponse = await userController.getSSData("76561198333869741");
         for (let i = 0; i < users.length; i++) {
             const user = users[i];
             if (!user.ssId) continue;
-            if (i !== 0 && i % 60 == 0) await this.delay(60000);
             let ssData: ssResponse = await userController.getSSData(user.ssId);
-            // console.log(ssData)
             if (ssData != null && ssData.playerInfo && ssData?.playerInfo?.banned != 1) {
                 let info = {
                     globalRank: ssData.playerInfo.rank,
-                    localRank: ssData.playerInfo.countryRank
+                    localRank: ssData.playerInfo.countryRank,
+                    country: ssData.playerInfo.country
                 }
                 try {
                     await this.db.aQuery("UPDATE users SET ? WHERE discordId = ?", [info, user.discordId]);
                     updated++;
                 } catch (error) {
                     console.log(error);
-                    // throw error;
                 }
                 if (ssData.playerInfo.badges.length > 0) {
                     for (const badge of ssData.playerInfo.badges) {
                         let imgName = badge.image.split('.')[0];
                         if (['ranker', 'supporter'].includes(imgName)) continue;
                         if (!badgeLabels.includes(imgName)) {
-                            // console.log(badge);
                             let info = await fetch(`https://new.scoresaber.com/api/static/badges/${badge.image}`);
                             let buff = await info.buffer();
                             let savePath = this.env == 'development' ? '../app/src/assets/badges/' : __dirname + '/../public/assets/badges/';

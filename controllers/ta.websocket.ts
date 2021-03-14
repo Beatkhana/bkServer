@@ -31,34 +31,34 @@ export class taWebSocket extends controller {
     }
 
     init() {
-        this.ws.addEventListener('open', () => {
-            // console.info(this.tournamentId + " TA Connected");
-            let packetData = {
-                ClientType: ConnectTypes.Coordinator,
-                Name: "BeatKhana!",
-                ClientVersion: 36,
-                Password: this.password
-            };
-            let packet = new Packet(packetData, PacketType.Connect);
-            this.ws.send(JSON.stringify(packet));
-        });
-        this.ws.addEventListener("message", (event) => {
-            this.emitter.emit('taEvent', [this.tournamentId, JSON.parse(event.data)]);
-            this.handlePacket(JSON.parse(event.data));
-        });
-        this.ws.onclose = () => {
-            console.error(`Socket Closed - ${this.taClient?.State?.serverSettings?.serverName} - ${this.tournamentId}`);
-            this.taClient = new client();
-            // this.close();
-            setTimeout(() => {
-                this.ws = new WebSocket(`ws://${this.url}`);
-                this.init();
-            }, 300000);
-        };
-        this.ws.onerror = (err) => {
-            console.error("Socket Error", err.message);
-            this.ws = null;
-        }
+        // this.ws.addEventListener('open', () => {
+        //     // console.info(this.tournamentId + " TA Connected");
+        //     let packetData = {
+        //         ClientType: ConnectTypes.Coordinator,
+        //         Name: "BeatKhana!",
+        //         ClientVersion: 36,
+        //         Password: this.password
+        //     };
+        //     let packet = new Packet(packetData, PacketType.Connect);
+        //     this.ws.send(JSON.stringify(packet));
+        // });
+        // this.ws.addEventListener("message", (event) => {
+        //     this.emitter.emit('taEvent', [this.tournamentId, JSON.parse(event.data)]);
+        //     this.handlePacket(JSON.parse(event.data));
+        // });
+        // this.ws.onclose = () => {
+        //     console.error(`Socket Closed - ${this.taClient?.State?.serverSettings?.serverName} - ${this.tournamentId}`);
+        //     this.taClient = new client();
+        //     // this.close();
+        //     setTimeout(() => {
+        //         this.ws = new WebSocket(`ws://${this.url}`);
+        //         this.init();
+        //     }, 300000);
+        // };
+        // this.ws.onerror = (err) => {
+        //     console.error("Socket Error", err.message);
+        //     this.ws = null;
+        // }
     }
 
     handlePacket(packet) {

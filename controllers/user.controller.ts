@@ -230,12 +230,20 @@ export class userController extends controller {
     }
 
     static async getSSData(id: string) {
-        const response = await fetch(`https://new.scoresaber.com/api/player/${id}/full`);
-        // console.log(await response.text());
+        function delay(ms: number) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        const res = await fetch(`https://new.scoresaber.com/api/player/${id}/full`);
+        if (parseInt(res.headers.get('x-ratelimit-remaining') ?? "0") < 10) {
+            let d1 = new Date(parseInt(res.headers.get('x-ratelimit-reset') ?? "0") * 1000);
+            let d2 = new Date();
+            // console.log(`Waiting ${(d1.getTime() - (new Date()).getTime()) / 1000} seconds...`);
+            await delay(d1.getTime() - d2.getTime());
+        }
         try {
-            return await response.json();
+            return await res.json();
         } catch (error) {
-            // console.error(error);
             return null;
         }
     }
