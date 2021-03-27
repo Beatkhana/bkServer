@@ -117,10 +117,10 @@ export class MapPoolController extends controller {
         let auth = new authController(req);
         let isAuth = await auth.hasAdminPerms || await auth.tournamentMapPool;
         if (!req.params.id) return this.clientError(res, "Please provide a map pool ID");
-        let pool: any = await this.db.aQuery(`SELECT map_pools.id, map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, pool_link.songHash FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE (map_pools.live = ? OR map_pools.live = 1) AND map_pools.id = ?`, [+!isAuth, req.params.id]);
+        let pool: any = await this.db.aQuery(`SELECT map_pools.id, map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, pool_link.songHash, pool_link.songDiff FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE (map_pools.live = ? OR map_pools.live = 1) AND map_pools.id = ?`, [+!isAuth, req.params.id]);
         if (!pool[0]) return this.clientError(res, "Invalid Map Pool ID");
         let tournamentName = await this.db.aQuery(`SELECT name FROM tournaments WHERE id = ?`, [pool[0].tournamentId]);
-        let curSongs = pool.map(e => { return { hash: e.songHash } });
+        let curSongs = pool.map(e => { return { hash: e.songHash, difficulties: [{ characteristic: "Standard", name: (e.songDiff == "Expert+" ? 'expertPlus' : e.songDiff.toLowerCase()) }] } });
         // console.log(pool[0]);
         let playlist = {
             playlistTitle: `${tournamentName[0].name}_${pool[0].poolName}`,
