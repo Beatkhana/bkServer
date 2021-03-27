@@ -6,6 +6,10 @@ const qualsCon: QualifiersController = new QualifiersController();
 
 qualifiersRouter.post('/tournament/:tourneyId/qualifiers', (req, res) => qualsCon.saveScore(req, res));
 qualifiersRouter.put('/tournament/:tourneyId/updateFlags', (req, res) => qualsCon.updateFlags(req, res));
+qualifiersRouter.put('/tournament/:tourneyId/updateFlags', (req, res) => qualsCon.updateFlags(req, res));
+qualifiersRouter.post('/tournament/:tourneyId/qualifiers/sessions/add', (req, res) => qualsCon.addSession(req, res));
+qualifiersRouter.delete('/tournament/:tourneyId/qualifiers/sessions/delete/:id', (req, res) => qualsCon.deleteSession(req, res));
+qualifiersRouter.get('/tournament/:tourneyId/qualifiers/sessions', (req, res) => qualsCon.getSessions(req, res));
 qualifiersRouter.get('/tournament/:tourneyId/qualifiers', (req, res) => qualsCon.getScores(req, res));
 
 export { qualifiersRouter }

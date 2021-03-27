@@ -1,5 +1,6 @@
 import express from "express";
 import { database } from "../database";
+import { qualifierSession } from "../models/qualifiers";
 import { GameplayModifiers, GameOptions } from "../models/TA/gameplayModifiers";
 import { GameplayParameters } from "../models/TA/gameplayParameters";
 import { SubmitScore } from "../models/TA/submitScore";
@@ -319,6 +320,43 @@ export class QualifiersController extends controller {
             }
         }
         return scores;
+    }
+
+    async getSessions(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        let settings = await this.getSettings(auth.tourneyId);
+        if (!settings.public) return this.clientError(res);
+        let sessions: qualifierSession[] = await this.db.aQuery(`SELECT qs.id, qs.time, qs.limit, COUNT(sa.id) as allocated FROM qual_sessions qs LEFT JOIN session_assignment sa ON sa.sessionId = qs.id WHERE qs.tournamentId = ? GROUP BY qs.id`, [auth.tourneyId]);
+        return res.send(sessions);
+    }
+
+    async addSession(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!await auth.hasAdminPerms) return this.unauthorized(res);
+        let data = req.body as qualifierSession[];
+        try {
+            for (const session of data) {
+                delete session.allocated;
+                session.time = new Date(session.time).toISOString().slice(0, 19).replace('T', ' ');
+                await this.db.aQuery(`INSERT INTO qual_sessions SET ?`, [session]);
+            }
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+
+    async deleteSession(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!await auth.hasAdminPerms) return this.unauthorized(res);
+        let reqData = req.body as qualifierSession;
+        console.log(req.params.id);
+        try {
+            await this.db.aQuery(`DELETE FROM qual_sessions WHERE id = ?`, [req.params.id]);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error)
+        }
     }
 
 }

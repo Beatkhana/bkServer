@@ -63,6 +63,7 @@ export class TournamentController extends controller {
         ts.sort_method,
         ts.standard_cutoff,
         ts.qual_attempts,
+        ts.quals_method,
         ts.ta_url ${isAuth ? ', ts.ta_password, ts.ta_event_flags' : ''}
         FROM tournaments t
         LEFT JOIN tournament_settings ts ON ts.tournamentId = t.id  
