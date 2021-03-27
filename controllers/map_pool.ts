@@ -123,6 +123,7 @@ export class MapPoolController extends controller {
         let curSongs = pool.map(e => { return { hash: e.songHash, difficulties: [{ characteristic: "Standard", name: (e.songDiff == "Expert+" ? 'expertPlus' : e.songDiff.toLowerCase()) }] } });
         // console.log(pool[0]);
         let playlist = {
+            AllowDuplicates: false,
             playlistTitle: `${tournamentName[0].name}_${pool[0].poolName}`,
             playlistAuthor: `${tournamentName[0].name} Through BeatKhana!`,
             playlistDescription: pool[0].description,
