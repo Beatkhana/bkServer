@@ -4,4 +4,11 @@ export interface qualifierSession {
     time: string;
     limit: number;
     allocated: number;
+    users?: sessionUser[];
+}
+
+export interface sessionUser {
+    userId: string;
+    name: string;
+    avatar: string;
 }

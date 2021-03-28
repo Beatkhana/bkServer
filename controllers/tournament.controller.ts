@@ -212,12 +212,14 @@ export class TournamentController extends controller {
 
         try {
             let result = await this.db.aQuery(`UPDATE tournament_settings SET ? WHERE ?? = ?`, [data.settings, 'id', data.settingsId]);
-            if (data.settings.state == 'qualifiers' && curSettings[0].state == "awaiting_start") {
-                QualifiersController.createEvent(data.tournamentId);
-            } else if (data.settings.state != 'qualifiers') {
-                TAController.deleteEvent(data.tournamentId);
-            } else if (data.settings.state == 'qualifiers') {
-                QualifiersController.updateEvent(data.tournamentId);
+            if (data.settings.quals_method == "ta_quals") {
+                if (data.settings.state == 'qualifiers' && curSettings[0].state == "awaiting_start") {
+                    QualifiersController.createEvent(data.tournamentId);
+                } else if (data.settings.state != 'qualifiers') {
+                    TAController.deleteEvent(data.tournamentId);
+                } else if (data.settings.state == 'qualifiers') {
+                    QualifiersController.updateEvent(data.tournamentId);
+                }
             }
             return res.send({ data: result });
         } catch (error) {

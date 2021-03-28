@@ -359,4 +359,68 @@ export class QualifiersController extends controller {
         }
     }
 
+    async assignSession(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!auth.userId) return this.clientError(res, "Not Logged in");
+        if (!auth.tourneyId) return this.clientError(res, "Not tournament ID provided");
+        if (!req.body.sessionId) return this.clientError(res, "Session not provided");
+        let data = await this.db.aQuery('SELECT * FROM participants WHERE tournamentId = ? AND userId = ?', [auth.tourneyId, auth.userId]);
+        if (data.length < 1) return this.clientError(res, "Not signed up for tournament");
+        let curSession: qualifierSession[] = await this.db.aQuery(`SELECT qs.id, qs.time, qs.limit, COUNT(sa.id) as allocated FROM qual_sessions qs LEFT JOIN session_assignment sa ON sa.sessionId = qs.id WHERE qs.tournamentId = ? && qs.id = ? GROUP BY qs.id`, [auth.tourneyId, req.body.sessionId]);
+        if (curSession[0].allocated >= curSession[0].limit) return this.clientError(res, "Session full");
+        try {
+            await this.db.aQuery(`DELETE FROM session_assignment WHERE participantId = ? AND sessionId = ?`, [data[0].id, req.body.sessionId]);
+            await this.db.aQuery(`INSERT INTO session_assignment SET participantId = ?, sessionId = ?`, [data[0].id, req.body.sessionId]);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+
+    async userSession(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!auth.userId) return this.clientError(res, "Not Logged in");
+        if (!auth.tourneyId) return this.clientError(res, "Not tournament ID provided");
+        let data = await this.db.aQuery('SELECT * FROM participants WHERE tournamentId = ? AND userId = ?', [auth.tourneyId, auth.userId]);
+        if (data.length < 1) return this.clientError(res, "Not signed up for tournament");
+        let curSession: qualifierSession[] = await this.db.aQuery(`SELECT qs.id, qs.time, qs.limit, COUNT(sa.id) as allocated FROM qual_sessions qs LEFT JOIN session_assignment sa ON sa.sessionId = qs.id WHERE qs.tournamentId = ? && sa.participantId = ? GROUP BY qs.id`, [auth.tourneyId, data[0].id]);
+        return res.send(curSession[0]);
+    }
+
+    async sessions(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!await auth.hasAdminPerms) return this.unauthorized(res);
+        let sessionsData: any = await this.db.aQuery(`SELECT qs.id, qs.time, qs.limit, qs.tournamentId, u.discordId, u.name, u.avatar FROM qual_sessions qs 
+        LEFT JOIN session_assignment sa ON sa.sessionId = qs.id
+        LEFT JOIN participants p ON p.id = sa.participantId 
+        LEFT JOIN users u ON u.discordId = p.userId
+        WHERE qs.tournamentId = ?`, [auth.tourneyId]);
+        let sessions: qualifierSession[] = [];
+        for (let row of sessionsData) {
+            let sIndex = sessions.findIndex(x => x.id == row.id);
+            if (sIndex > -1) {
+                sessions[sIndex].users.push({
+                    userId: row.discordId,
+                    name: row.name,
+                    avatar: row.avatar ? `/${row.avatar}` + (row.avatar?.substring(0, 2) == 'a_' ? '.gif' : '.webp') : null
+                });
+                sessions[sIndex].allocated++;
+            } else {
+                sessions.push({
+                    id: row.id,
+                    time: row.time,
+                    limit: row.limit,
+                    tournamentId: row.tournamentId,
+                    users: [{
+                        userId: row.discordId,
+                        name: row.name,
+                        avatar: row.avatar ? `/${row.avatar}` + (row.avatar?.substring(0, 2) == 'a_' ? '.gif' : '.webp') : null
+                    }],
+                    allocated: 1
+                });
+            }
+        }
+        return res.send(sessions);
+    }
+
 }
