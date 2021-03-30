@@ -325,7 +325,7 @@ export class QualifiersController extends controller {
     async getSessions(req: express.Request, res: express.Response) {
         let auth = new authController(req);
         let settings = await this.getSettings(auth.tourneyId);
-        if (!settings.public) return this.clientError(res);
+        // if (!settings.public) return this.clientError(res);
         let sessions: qualifierSession[] = await this.db.aQuery(`SELECT qs.id, qs.time, qs.limit, COUNT(sa.id) as allocated FROM qual_sessions qs LEFT JOIN session_assignment sa ON sa.sessionId = qs.id WHERE qs.tournamentId = ? GROUP BY qs.id`, [auth.tourneyId]);
         return res.send(sessions);
     }
@@ -355,7 +355,7 @@ export class QualifiersController extends controller {
             await this.db.aQuery(`DELETE FROM qual_sessions WHERE id = ?`, [req.params.id]);
             return this.ok(res);
         } catch (error) {
-            return this.fail(res, error)
+            return this.fail(res, error);
         }
     }
 
@@ -398,14 +398,14 @@ export class QualifiersController extends controller {
         let sessions: qualifierSession[] = [];
         for (let row of sessionsData) {
             let sIndex = sessions.findIndex(x => x.id == row.id);
-            if (sIndex > -1) {
+            if (sIndex > -1 && row.discordId) {
                 sessions[sIndex].users.push({
                     userId: row.discordId,
                     name: row.name,
                     avatar: row.avatar ? `/${row.avatar}` + (row.avatar?.substring(0, 2) == 'a_' ? '.gif' : '.webp') : null
                 });
                 sessions[sIndex].allocated++;
-            } else {
+            } else if (row.discordId) {
                 sessions.push({
                     id: row.id,
                     time: row.time,
@@ -417,6 +417,15 @@ export class QualifiersController extends controller {
                         avatar: row.avatar ? `/${row.avatar}` + (row.avatar?.substring(0, 2) == 'a_' ? '.gif' : '.webp') : null
                     }],
                     allocated: 1
+                });
+            } else {
+                sessions.push({
+                    id: row.id,
+                    time: row.time,
+                    limit: row.limit,
+                    tournamentId: row.tournamentId,
+                    users: [],
+                    allocated: 0
                 });
             }
         }
