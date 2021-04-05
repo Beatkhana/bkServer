@@ -59,6 +59,17 @@ export class TAController extends controller {
         }
     }
 
+    // static createMatch(tournamentId, maps, name, flags) {
+    //     // let clientI = taClients.findIndex(x => x.tournamentId == tournamentId);
+    //     // if (clientI > -1) {
+    //     //     taClients[clientI].createEvent(name, tournamentId, maps, flags);
+    //     // }
+    //     let clientI = taWSClients.findIndex(x => x.tournamentId == tournamentId);
+    //     if (clientI > -1) {
+    //         return taWSClients[clientI].createMatch(name, tournamentId, maps, flags);
+    //     }
+    // }
+
     static deleteEvent(tournamentId) {
         // let clientI = taClients.findIndex(x => x.tournamentId == tournamentId);
         // if (clientI > -1) {

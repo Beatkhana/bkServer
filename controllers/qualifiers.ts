@@ -5,10 +5,13 @@ import { GameplayModifiers, GameOptions } from "../models/taProto/gameplayModifi
 import { GameplayParameters } from "../models/taProto/gameplayParameters";
 import { SubmitScore } from "../models/taProto/submitScore";
 import * as SubmitScoreWS from "../models/TA/submitScore";
+import * as gameplayParametersWS from "../models/TA/gameplayParameters";
 import { qualsScore } from "../models/tournament.models";
 import { authController } from "./auth.controller";
 import { controller } from "./controller";
 import { TAController } from "./ta.controller";
+import { SongFinished } from "../models/TA/songFinished";
+import { settings } from "../models/settings.model";
 
 export class QualifiersController extends controller {
 
@@ -221,6 +224,96 @@ export class QualifiersController extends controller {
         }
     }
 
+    static async taLiveScore(score: SongFinished, tournamentId: string) {
+        let db = new database();
+        let settings: settings[] | settings = await db.aQuery(`SELECT * FROM tournament_settings WHERE tournamentId = ?`, [tournamentId]);
+        console.log(settings);
+        if (settings.length < 1) return;
+        settings = settings[0];
+        if (settings.state != 'qualifiers') return;
+        if (settings.quals_method != "live_quals") return;
+        let user: any;
+        user = await db.aQuery(`SELECT u.discordId FROM participants p JOIN users u ON u.discordId = p.userId WHERE u.ssId = ? AND p.tournamentId = ?`, [score.User.UserId, tournamentId]);
+        if (user.length < 1) return;
+        user = user[0];
+        let levelHash = score.Beatmap.LevelId.replace(`custom_level_`, "").toUpperCase();
+        let map = await db.aQuery(`SELECT * FROM pool_link pl JOIN map_pools mp ON mp.id = pl.poolId WHERE pl.songHash = ? AND mp.tournamentId = ?`, [levelHash, tournamentId]);
+        if (map.length < 1) return;
+        // session check
+        // let sessions: qualifierSession[] = await db.aQuery(`SELECT qs.id, qs.time, qs.limit, COUNT(sa.id) as allocated FROM qual_sessions qs LEFT JOIN session_assignment sa ON sa.sessionId = qs.id WHERE qs.tournamentId = ? GROUP BY qs.id`, [tournamentId]);
+        let sessionsData: any = await db.aQuery(`SELECT qs.id, qs.time, qs.limit, qs.tournamentId, u.discordId, u.name, u.avatar FROM qual_sessions qs 
+        LEFT JOIN session_assignment sa ON sa.sessionId = qs.id
+        LEFT JOIN participants p ON p.id = sa.participantId 
+        LEFT JOIN users u ON u.discordId = p.userId
+        WHERE qs.tournamentId = ?`, [tournamentId]);
+        let sessions: qualifierSession[] = [];
+        for (let row of sessionsData) {
+            let sIndex = sessions.findIndex(x => x.id == row.id);
+            if (sIndex > -1 && row.discordId) {
+                sessions[sIndex].users.push({
+                    userId: row.discordId,
+                    name: row.name,
+                    avatar: row.avatar ? `/${row.avatar}` + (row.avatar?.substring(0, 2) == 'a_' ? '.gif' : '.webp') : null
+                });
+                sessions[sIndex].allocated++;
+            } else if (row.discordId) {
+                sessions.push({
+                    id: row.id,
+                    time: row.time,
+                    limit: row.limit,
+                    tournamentId: row.tournamentId,
+                    users: [{
+                        userId: row.discordId,
+                        name: row.name,
+                        avatar: row.avatar ? `/${row.avatar}` + (row.avatar?.substring(0, 2) == 'a_' ? '.gif' : '.webp') : null
+                    }],
+                    allocated: 1
+                });
+            } else {
+                sessions.push({
+                    id: row.id,
+                    time: row.time,
+                    limit: row.limit,
+                    tournamentId: row.tournamentId,
+                    users: [],
+                    allocated: 0
+                });
+            }
+        }
+        let curSession: qualifierSession = sessions.find(x => x.users?.find(y => y.userId == user.discordId));
+        // user not in session
+        if (!curSession) return;
+        let now = new Date();
+        let sessionTime = new Date(curSession.time);
+        if (Math.abs(now.getTime() - sessionTime.getTime()) / 36e5 > 2) {
+            console.log(now, sessionTime);
+            return;
+        }
+        // console.log(user);
+        let curScore = await db.aQuery(`SELECT * FROM qualifier_scores WHERE tournamentId = ? AND userId = ? AND songHash = ?`, [tournamentId, user.discordId, levelHash]);
+        if (curScore[0]) return;
+        let attempt = 1;
+        let qualScore = {
+            tournamentId: tournamentId,
+            userId: user.discordId,
+            songHash: levelHash,
+            score: score.Score | 0,
+            percentage: 0,
+            maxScore: 0,
+            attempt: attempt
+        }
+        try {
+            await db.aQuery(`INSERT INTO qualifier_scores SET ?
+            ON DUPLICATE KEY UPDATE
+            score = GREATEST(score, VALUES(score)),
+            percentage = GREATEST(percentage, VALUES(percentage)),
+            maxScore = GREATEST(maxScore, VALUES(maxScore)),
+            attempt = GREATEST(attempt, VALUES(attempt))`, [qualScore]);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     static async updateMaps(tournamentId: string) {
         let db = new database();
         let maps = await db.aQuery(`SELECT pl.id FROM pool_link pl JOIN map_pools mp ON mp.id = pl.poolId WHERE mp.is_qualifiers = 1 AND tournamentId = ?`, [tournamentId]);
@@ -263,6 +356,38 @@ export class QualifiersController extends controller {
         // console.log(qualMaps);
         TAController.createEvent(tournamentId, qualMaps, `${tournament[0].name} Qualifiers`, settings[0].ta_event_flags);
     }
+
+    // static async runMatch(tournamentId) {
+    //     let db = new database();
+    //     let tournament = await db.aQuery(`SELECT * FROM tournaments WHERE id = ?`, [tournamentId]);
+    //     let settings = await db.aQuery("SELECT * FROM tournament_settings WHERE tournamentId = ?", [tournamentId]);
+
+    //     let songs = await db.aQuery(`SELECT s.* FROM pool_link s 
+    //     JOIN map_pools mp ON mp.id = s.poolId 
+    //     WHERE mp.tournamentId = ? AND mp.is_qualifiers = 1`, [tournamentId]);
+    //     let qualMaps = [];
+    //     // console.log(songs);
+    //     for (const song of songs) {
+    //         let map: gameplayParametersWS.GameplayParameters = {
+    //             Beatmap: {
+    //                 Name: song.songName,
+    //                 LevelId: `custom_level_${song.songHash.toUpperCase()}`,
+    //                 Characteristic: {
+    //                     SerializedName: song.selCharacteristic,
+    //                     Difficulties: [song.songDiff == "Expert+" ? "ExpertPlus" : song.songDiff]
+    //                 },
+    //                 Difficulty: song.songDiff == "Expert+" ? "ExpertPlus" : song.songDiff,
+    //             },
+    //             PlayerSettings: {
+    //                 Options: song.playerOptions,
+    //             },
+    //             GameplayModifiers: null,
+    //         };
+    //         qualMaps.push(map);
+    //     }
+    //     console.log(qualMaps);
+    //     let matchId = TAController.createMatch(tournamentId, qualMaps, `${tournament[0].name} Qualifiers`, settings[0].ta_event_flags);
+    // }
 
     static async updateEvent(tournamentId) {
         let db = new database();
