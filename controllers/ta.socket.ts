@@ -3,16 +3,16 @@ import { controller } from "./controller";
 import net from 'net';
 import { load } from "protobuf-typescript";
 import { Packet, PacketType } from "./packet";
-import { ConnectResponse } from "../models/TA/connectResponse";
-import { EventType, TAEvent } from "../models/TA/event";
-import { ConnectTypes } from "../models/TA/connect";
+import { ConnectResponse } from "../models/taProto/connectResponse";
+import { EventType, TAEvent } from "../models/taProto/event";
+import { ConnectTypes } from "../models/taProto/connect";
 import { v4 as uuidv4 } from 'uuid';
-import { SubmitScore } from "../models/TA/submitScore";
+import { SubmitScore } from "../models/taProto/submitScore";
 import { QualifiersController } from "./qualifiers";
-import { Match } from "../models/TA/match";
-import { GameplayParameters } from "../models/TA/gameplayParameters";
-import { QualifierEvent } from "../models/TA/qualifierEvent";
-import { Coordinator } from "../models/TA/coordinator";
+import { Match } from "../models/taProto/match";
+import { GameplayParameters } from "../models/taProto/gameplayParameters";
+import { QualifierEvent } from "../models/taProto/qualifierEvent";
+import { Coordinator } from "../models/taProto/coordinator";
 
 export class taSocket extends controller {
 
@@ -139,7 +139,7 @@ export class taSocket extends controller {
             }
         } else if (packet.Type == PacketType.SubmitScore) {
             // save score
-            QualifiersController.taScore(<SubmitScore>packet.SpecificPacket, this.tournamentId);
+            QualifiersController.taScoreProto(<SubmitScore>packet.SpecificPacket, this.tournamentId);
         } else if (packet.Type == PacketType.ForwardingPacket) {
             this.handlePacket(packet.SpecificPacket);
         }

@@ -1,9 +1,10 @@
 import express from "express";
 import { database } from "../database";
 import { qualifierSession } from "../models/qualifiers";
-import { GameplayModifiers, GameOptions } from "../models/TA/gameplayModifiers";
-import { GameplayParameters } from "../models/TA/gameplayParameters";
-import { SubmitScore } from "../models/TA/submitScore";
+import { GameplayModifiers, GameOptions } from "../models/taProto/gameplayModifiers";
+import { GameplayParameters } from "../models/taProto/gameplayParameters";
+import { SubmitScore } from "../models/taProto/submitScore";
+import * as SubmitScoreWS from "../models/TA/submitScore";
 import { qualsScore } from "../models/tournament.models";
 import { authController } from "./auth.controller";
 import { controller } from "./controller";
@@ -135,7 +136,7 @@ export class QualifiersController extends controller {
         }
     }
 
-    static async taScore(score: SubmitScore, tournamentId: string) {
+    static async taScoreProto(score: SubmitScore, tournamentId: string) {
         let db = new database();
         let settings: any = await db.aQuery(`SELECT * FROM tournament_settings WHERE tournamentId = ?`, [tournamentId]);
         if (settings.length < 1) return;
@@ -163,6 +164,46 @@ export class QualifiersController extends controller {
             userId: user.discordId,
             songHash: levelHash,
             score: score.score.score | 0,
+            percentage: 0,
+            maxScore: 0,
+            attempt: attempt
+        }
+        // console.log(qualScore);
+        try {
+            await db.aQuery(`INSERT INTO qualifier_scores SET ?
+            ON DUPLICATE KEY UPDATE
+            score = GREATEST(score, VALUES(score)),
+            percentage = GREATEST(percentage, VALUES(percentage)),
+            maxScore = GREATEST(maxScore, VALUES(maxScore)),
+            attempt = GREATEST(attempt, VALUES(attempt))`, [qualScore]);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    static async taScore(score: SubmitScoreWS.SubmitScore, tournamentId: string) {
+        let db = new database();
+        let settings: any = await db.aQuery(`SELECT * FROM tournament_settings WHERE tournamentId = ?`, [tournamentId]);
+        if (settings.length < 1) return;
+        settings = settings[0];
+        if (settings.state != 'qualifiers') return;
+        let user: any;
+        user = await db.aQuery(`SELECT u.discordId FROM participants p JOIN users u ON u.discordId = p.userId WHERE u.ssId = ? AND p.tournamentId = ?`, [score.Score.UserId, tournamentId]);
+        if (user.length < 1) return;
+        user = user[0];
+        let levelHash = score.Score.Parameters.Beatmap.LevelId.replace(`custom_level_`, "").toUpperCase();
+        let map = await db.aQuery(`SELECT * FROM pool_link pl JOIN map_pools mp ON mp.id = pl.poolId WHERE pl.songHash = ? AND mp.tournamentId = ?`, [levelHash, tournamentId]);
+        if (map.length < 1) return;
+        // console.log(user);
+        let curScore = await db.aQuery(`SELECT * FROM qualifier_scores WHERE tournamentId = ? AND userId = ? AND songHash = ?`, [tournamentId, user.discordId, levelHash]);
+        if (curScore[0] && curScore[0].attempt >= settings.qual_attempts && settings.qual_attempts != 0) return;
+        let attempt = 1;
+        if (curScore[0] && curScore[0].attempt) attempt = curScore[0].attempt + 1;
+        let qualScore = {
+            tournamentId: tournamentId,
+            userId: user.discordId,
+            songHash: levelHash,
+            score: score.Score.Score | 0,
             percentage: 0,
             maxScore: 0,
             attempt: attempt

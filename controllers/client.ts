@@ -1,11 +1,11 @@
-import { ConnectResponse } from "../models/TA/connectResponse";
-import { Coordinator } from "../models/TA/coordinator";
-import { Match } from "../models/TA/match";
-import { Player } from "../models/TA/player";
-import { QualifierEvent } from "../models/TA/qualifierEvent";
-import { ResponseType } from "../models/TA/response";
-import { State } from "../models/TA/state";
-import { User } from "../models/TA/User";
+import { ConnectResponse } from "../models/taProto/connectResponse";
+import { Coordinator } from "../models/taProto/coordinator";
+import { Match } from "../models/taProto/match";
+import { Player } from "../models/taProto/player";
+import { QualifierEvent } from "../models/taProto/qualifierEvent";
+import { ResponseType } from "../models/taProto/response";
+import { State } from "../models/taProto/state";
+import { User } from "../models/taProto/User";
 
 export class client {
 

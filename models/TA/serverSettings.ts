@@ -1,10 +1,10 @@
 import type { Team } from "./team";
 
 export interface ServerSettings {
-    serverName: string;
-    enableTeams: boolean;
-    teams: Team[];
-    scoreUpdateFrequency: number;
-    bannedMods: string[];
-    password: string;
+    ServerName: string;
+    EnableTeams: boolean;
+    Teams: Team[];
+    ScoreUpdateFrequency: number;
+    BannedMods: string[];
+    Password: string;
 }

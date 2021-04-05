@@ -1,18 +1,18 @@
 import { v4 as uuidv4, stringify as uuidStringify, parse as uuidParse, NIL as NIL_UUID } from 'uuid';
-import { Command } from '../models/TA/command';
-import { Connect } from '../models/TA/connect';
-import { ConnectResponse } from '../models/TA/connectResponse';
-import { TAEvent } from '../models/TA/event';
-import { ForwardingPacket } from '../models/TA/forwardingPacket';
-import { LoadedSong } from '../models/TA/loadedSong';
-import { LoadSong } from '../models/TA/loadSong';
-import { PlaySong } from '../models/TA/playSong';
-import { TAResponse } from '../models/TA/response';
-import { ScoreRequest } from '../models/TA/scoreRequest';
-import { ScoreRequestResponse } from '../models/TA/scoreRequestResponse';
-import { SongFinished } from '../models/TA/songFinished';
-import { SongList } from '../models/TA/songList';
-import { SubmitScore } from '../models/TA/submitScore';
+import { Command } from '../models/taProto/command';
+import { Connect } from '../models/taProto/connect';
+import { ConnectResponse } from '../models/taProto/connectResponse';
+import { TAEvent } from '../models/taProto/event';
+import { ForwardingPacket } from '../models/taProto/forwardingPacket';
+import { LoadedSong } from '../models/taProto/loadedSong';
+import { LoadSong } from '../models/taProto/loadSong';
+import { PlaySong } from '../models/taProto/playSong';
+import { TAResponse } from '../models/taProto/response';
+import { ScoreRequest } from '../models/taProto/scoreRequest';
+import { ScoreRequestResponse } from '../models/taProto/scoreRequestResponse';
+import { SongFinished } from '../models/taProto/songFinished';
+import { SongList } from '../models/taProto/songList';
+import { SubmitScore } from '../models/taProto/submitScore';
 
 export class Packet {
 

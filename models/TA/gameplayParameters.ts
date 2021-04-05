@@ -3,7 +3,7 @@ import type { GameplayModifiers } from "./gameplayModifiers";
 import type { PlayerSpecificSettings } from "./playerSpecificSettnigs";
 
 export interface GameplayParameters {
-    beatmap: Beatmap;
-    playerSettings: PlayerSpecificSettings;
-    gameplayModifiers: GameplayModifiers;
+    Beatmap: Beatmap;
+    PlayerSettings: PlayerSpecificSettings;
+    GameplayModifiers: GameplayModifiers;
 }

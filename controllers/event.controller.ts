@@ -17,15 +17,15 @@ wss.on('connection', (ws: WebSocket) => {
     let taClient: client = null;
     ws.on('message', (message) => {
         try {
-            let data = JSON.parse(message);
-            if (data.setTournament) {
-                tournamentId = data.setTournament;
-                let tmp = { t: tournamentId };
-                emitter.emit("getTAState", tmp);
-                taClient = tmp.t?.taClient;
-                delete taClient?.State?.serverSettings?.password;
-                ws.send(JSON.stringify({ TA: taClient }));
-            }
+            // let data = JSON.parse(message);
+            // if (data.setTournament) {
+            //     tournamentId = data.setTournament;
+            //     let tmp = { t: tournamentId };
+            //     emitter.emit("getTAState", tmp);
+            //     taClient = tmp.t?.taClient;
+            //     delete taClient?.State?.serverSettings?.password;
+            //     ws.send(JSON.stringify({ TA: taClient }));
+            // }
             // console.log(data);
             // if (data.overlay) {
             //     sendAll(data);

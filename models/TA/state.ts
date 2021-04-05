@@ -6,10 +6,10 @@ import type { QualifierEvent } from "./qualifierEvent";
 import type { ServerSettings } from "./serverSettings";
 
 export interface State {
-    serverSettings: ServerSettings;
-    players: Player[];
-    coordinators: Coordinator[];
-    matches: Match[];
-    events: QualifierEvent[];
-    knownHosts: CoreServer[];
+    ServerSettings: ServerSettings;
+    Players: Player[];
+    Coordinators: Coordinator[];
+    Matches: Match[];
+    Events: QualifierEvent[];
+    KnownHosts: CoreServer[];
 }

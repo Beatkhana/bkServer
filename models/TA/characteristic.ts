@@ -1,6 +1,6 @@
 import type { BeatmapDifficulty } from './match';
 
 export interface Characteristic {
-    serializedName: string;
-    difficulties: BeatmapDifficulty[];
+    SerializedName: string;
+    Difficulties: BeatmapDifficulty[];
 }

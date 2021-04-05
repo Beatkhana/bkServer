@@ -1,54 +1,13 @@
-import { load, Root } from "protobuf-typescript";
-import { protoAny } from "./anyType";
 import type { GameplayParameters } from "./gameplayParameters";
 
-let root: Root;
-
-(async () => {
-    root = await load(__dirname + '/../../protobuf/Models/qualifier_event.proto');
-})();
-
-export class QualifierEvent {
-    eventId: string;
-    name: string;
-    guild: Guild;
-    infoChannel: Channel;
-    qualifierMaps: GameplayParameters[];
-    sendScoresToInfoChannel: boolean;
-    flags: number;
-
-    static ParseFrom(buffer: Buffer) {
-        const qualEvent = root.lookupType("TournamentAssistantShared.Models.QualifierEvent");
-        const message = qualEvent.decode(buffer);
-        return qualEvent.toObject(message);
-    }
-
-    static async encode(data: QualifierEvent) {
-        const root = await load(__dirname + '/../../protobuf/Models/qualifier_event.proto');
-        const qualEvent = root.lookupType("TournamentAssistantShared.Models.QualifierEvent");
-        var errMsg = qualEvent.verify(data);
-        if (errMsg)
-            throw Error(errMsg);
-        let msg = qualEvent.create(data);
-        // console.log(msg);
-        let buff = qualEvent.encode(msg).finish();
-        // console.log("decoded", qualEvent.decode(buff));
-        return buff;
-    }
-
-    static async encodeAsAny(data: QualifierEvent) {
-        const root = await load(__dirname + '/../../protobuf/Models/qualifier_event.proto');
-        const qualEvent = root.lookupType("TournamentAssistantShared.Models.QualifierEvent");
-        var errMsg = qualEvent.verify(data);
-        if (errMsg)
-            throw Error(errMsg);
-        let msg = qualEvent.create(data);
-        let buff = qualEvent.encode(msg).finish();
-        return new protoAny({
-            type_url: "type.googleapis.com/TournamentAssistantShared.Models.QualifierEvent",
-            value: buff
-        });
-    }
+export interface QualifierEvent {
+    EventId: string;
+    Name: string;
+    Guild: Guild;
+    InfoChannel: Channel;
+    QualifierMaps: GameplayParameters[];
+    SendScoresToInfoChannel: boolean;
+    Flags: number;
 }
 
 export enum EventSettings {
@@ -58,11 +17,11 @@ export enum EventSettings {
 }
 
 export interface Guild {
-    id: string;
-    name: string;
+    Id: string;
+    Name: string;
 }
 
 export interface Channel {
-    id: number;
-    name: string;
+    Id: string;
+    Name: string;
 }
