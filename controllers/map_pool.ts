@@ -101,11 +101,11 @@ export class MapPoolController extends controller {
         let poolId = data.poolId;
         delete data.poolId;
         try {
-            if (req.body.is_qualifiers == 1) {
-                await this.db.aQuery(`UPDATE map_pools SET is_qualifiers = 0 WHERE tournamentId = ?`, [auth.tourneyId]);
-                // await this.db.aQuery(`DELETE FROM event_map_options WHERE tournament_id = ?`, [auth.tourneyId]);
-                // let mapIds = await this.db.aQuery(`SELECT id FROM pool_link WHERE poolId = ?`)
-            }
+            // if (req.body.is_qualifiers == 1) {
+            //     await this.db.aQuery(`UPDATE map_pools SET is_qualifiers = 0 WHERE tournamentId = ?`, [auth.tourneyId]);
+            //     // await this.db.aQuery(`DELETE FROM event_map_options WHERE tournament_id = ?`, [auth.tourneyId]);
+            //     // let mapIds = await this.db.aQuery(`SELECT id FROM pool_link WHERE poolId = ?`)
+            // }
             await this.db.aQuery(`UPDATE map_pools SET ? WHERE id = ?`, [data, poolId]);
             return this.ok(res);
         } catch (error) {
