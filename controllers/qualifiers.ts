@@ -536,7 +536,7 @@ export class QualifiersController extends controller {
         let curSession: qualifierSession[] = await this.db.aQuery(`SELECT qs.id, qs.time, qs.limit, COUNT(sa.id) as allocated FROM qual_sessions qs LEFT JOIN session_assignment sa ON sa.sessionId = qs.id WHERE qs.tournamentId = ? && qs.id = ? GROUP BY qs.id`, [auth.tourneyId, req.body.sessionId]);
         if (curSession[0].allocated >= curSession[0].limit) return this.clientError(res, "Session full");
         try {
-            await this.db.aQuery(`DELETE FROM session_assignment WHERE participantId = ? AND sessionId = ?`, [data[0].id, req.body.sessionId]);
+            await this.db.aQuery(`DELETE sa FROM session_assignment sa INNER JOIN qual_sessions qs ON qs.id = sa.sessionId WHERE sa.participantId = ? AND qs.tournamentId = ?`, [data[0].id, auth.tourneyId]);
             await this.db.aQuery(`INSERT INTO session_assignment SET participantId = ?, sessionId = ?`, [data[0].id, req.body.sessionId]);
             return this.ok(res);
         } catch (error) {
