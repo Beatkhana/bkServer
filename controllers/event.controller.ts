@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import * as WebSocket from 'ws';
 import { bracketMatch } from '../models/bracket.model';
 import { client } from './client';
+import { TAController } from './ta.controller';
 
 const emitter: EventEmitter = new EventEmitter();
 const wss = new WebSocket.Server({ noServer: true, path: "/api/ws" });
@@ -21,15 +22,15 @@ wss.on('connection', (ws: WebSocket) => {
             if (data.setTournament) {
                 tournamentId = data.setTournament;
                 let tmp = { t: tournamentId };
+                // console.log(TAController.taClients);
                 emitter.emit("getTAState", tmp);
                 taClient = tmp.t?.taClient;
                 delete taClient?.State?.serverSettings?.password;
                 ws.send(JSON.stringify({ TA: taClient }));
             }
-            console.log(data);
+            // console.log(data);
             if (data.overlay) {
                 sendAll(data);
-                // ws.send(JSON.stringify(data));
             }
         } catch (error) {
             console.error(error);

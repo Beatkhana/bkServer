@@ -16,7 +16,7 @@ export class TAController extends controller {
         this.taEnabledTournaments = await this.db.aQuery(`SELECT tournamentId, ta_url, ta_password FROM tournament_settings WHERE ta_url IS NOT NULL`);
         this.connectToTA();
         this.emitter.on("getTAState", (data) => {
-            data.t = taClients.find(x => x.tournamentId == data.t);
+            data.t = taWSClients.find(x => x.tournamentId == data.t);
         });
     }
 

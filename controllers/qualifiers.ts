@@ -10,7 +10,7 @@ import { qualsScore } from "../models/tournament.models";
 import { authController } from "./auth.controller";
 import { controller } from "./controller";
 import { TAController } from "./ta.controller";
-import { SongFinished } from "../models/TA/songFinished";
+import { CompletionType, SongFinished } from "../models/TA/songFinished";
 import { settings } from "../models/settings.model";
 
 export class QualifiersController extends controller {
@@ -293,6 +293,7 @@ export class QualifiersController extends controller {
         let curScore = await db.aQuery(`SELECT * FROM qualifier_scores WHERE tournamentId = ? AND userId = ? AND songHash = ?`, [tournamentId, user.discordId, levelHash]);
         if (curScore[0]) return;
         let attempt = 1;
+        if (score.Type == CompletionType.Failed) score.Score *= 2;
         let qualScore = {
             tournamentId: tournamentId,
             userId: user.discordId,
