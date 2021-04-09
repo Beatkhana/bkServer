@@ -14,14 +14,6 @@ import { WSPacket } from "./wsPacket";
 import { wsClient } from "./wsClient";
 import WebSocket from 'ws';
 import { SongFinished } from "../models/TA/songFinished";
-import { PreviewBeatmapLevel } from "../models/TA/previewBeatmapLevel";
-import { DownloadStates, PlayStates } from "../models/TA/player";
-import { GameOptions, GameplayModifiers } from "../models/TA/gameplayModifiers";
-import { Beatmap } from "../models/TA/beatmap";
-import { PlayerOptions } from "../models/TA/playerSpecificSettnigs";
-import { PlaySong } from "../models/TA/playSong";
-import { ForwardingPacket } from "../models/TA/forwardingPacket";
-import { LoadSong } from "../models/TA/loadSong";
 
 export class taWebSocket extends controller {
 
@@ -30,6 +22,8 @@ export class taWebSocket extends controller {
     taClient: wsClient;
     private url = "";
     private password;
+    private reconnectAttempts = 0;
+    private reconnect: NodeJS.Timeout = null;
 
     constructor(id, url: string, password: string) {
         super();
@@ -43,8 +37,6 @@ export class taWebSocket extends controller {
 
     init() {
         this.ws.onopen = () => {
-            // console.info(this.tournamentId + " TA Connected to ws");
-            // console.log(this.url);
             let packetData = {
                 ClientType: ConnectTypes.Coordinator,
                 Name: "BeatKhana!",
@@ -52,7 +44,6 @@ export class taWebSocket extends controller {
                 Password: this.password
             };
             let packet = new WSPacket(packetData, PacketType.Connect);
-            // this.ws.send("hello"); // i have no clue why this works, i hate my life
             this.ws.send(JSON.stringify(packet));
         };
         this.ws.addEventListener("message", (event) => {
@@ -62,11 +53,13 @@ export class taWebSocket extends controller {
         this.ws.onclose = () => {
             console.error(`Socket Closed - ${this.taClient?.State?.ServerSettings?.ServerName} - ${this.tournamentId}`);
             this.taClient = new wsClient();
-            // this.close();
-            setTimeout(() => {
-                this.ws = new WebSocket(`ws://${this.url}`);
-                this.init();
-            }, 300000);
+            if (this.reconnectAttempts < 5) {
+                this.reconnect = setTimeout(() => {
+                    this.reconnectAttempts++;
+                    this.ws = new WebSocket(`ws://${this.url}`);
+                    this.init();
+                }, 300000);
+            }
         };
         this.ws.onerror = (err) => {
             console.error("Socket Error", err.message);
@@ -80,7 +73,6 @@ export class taWebSocket extends controller {
             let connectResponse = packet.SpecificPacket as ConnectResponse;
             if (!this.taClient.Self && connectResponse.Self) {
                 this.taClient = new wsClient(connectResponse);
-                // console.log(connectResponse);
                 console.info("Connected to: " + this.taClient?.State?.ServerSettings.ServerName + ` (${this.tournamentId})`);
             }
         } else if (packet.Type == PacketType.Event && this.taClient.isConnected) {

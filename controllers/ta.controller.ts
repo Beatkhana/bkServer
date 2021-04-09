@@ -5,7 +5,7 @@ import { taSocket } from "./ta.socket";
 import { taWebSocket } from "./ta.websocket";
 
 // let wsClients: taWebSocket[] = [];
-let taClients: taSocket[] = [];
+// let taClients: taSocket[] = [];
 let taWSClients: taWebSocket[] = [];
 
 export class TAController extends controller {
