@@ -110,7 +110,7 @@ TACon.init();
 let cronCon: cronController = new cronController();
 cronCon.setCrons();
 
-process.on('exit', beforeClose);
+// process.on('exit', beforeClose);
 process.on('SIGINT', beforeClose);
 process.on('SIGUSR1', beforeClose);
 process.on('SIGUSR2', beforeClose);
