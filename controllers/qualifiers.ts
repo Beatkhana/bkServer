@@ -293,7 +293,7 @@ export class QualifiersController extends controller {
         let curScore = await db.aQuery(`SELECT * FROM qualifier_scores WHERE tournamentId = ? AND userId = ? AND songHash = ?`, [tournamentId, user.discordId, levelHash]);
         if (curScore[0]) return;
         let attempt = 1;
-        if (score.Type == CompletionType.Failed) score.Score *= 2;
+        // if (score.Type == CompletionType.Failed) score.Score *= 2;
         let qualScore = {
             tournamentId: tournamentId,
             userId: user.discordId,

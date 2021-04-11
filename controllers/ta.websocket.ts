@@ -41,7 +41,7 @@ export class taWebSocket extends controller {
                 ClientType: ConnectTypes.Coordinator,
                 Name: "BeatKhana!",
                 ClientVersion: 44,
-                Password: this.password
+                Password: this.password ?? ""
             };
             let packet = new WSPacket(packetData, PacketType.Connect);
             this.ws.send(JSON.stringify(packet));

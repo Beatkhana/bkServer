@@ -111,13 +111,13 @@ let cronCon: cronController = new cronController();
 cronCon.setCrons();
 
 // process.on('exit', beforeClose);
-process.on('SIGINT', beforeClose);
-process.on('SIGUSR1', beforeClose);
-process.on('SIGUSR2', beforeClose);
-process.on('uncaughtException', beforeClose);
+// process.on('SIGINT', beforeClose);
+// process.on('SIGUSR1', beforeClose);
+// process.on('SIGUSR2', beforeClose);
+// process.on('uncaughtException', beforeClose);
 
-function beforeClose() {
-    console.info("Server shutdown");
-    TACon.closeTa();
-    process.exit();
-}
+// function beforeClose() {
+//     console.info("Server shutdown");
+//     TACon.closeTa();
+//     process.exit();
+// }
