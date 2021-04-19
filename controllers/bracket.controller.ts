@@ -1,5 +1,5 @@
 import express from "express";
-import { bracketMatch } from "../models/bracket.model";
+import { bracketMatch, updateMatchRequest } from "../models/bracket.model";
 import { authRequest } from "../models/models";
 import { bslMatch, match, tournamentSettings } from "../models/tournament.models";
 import { auth, authController } from "./auth.controller";
@@ -46,6 +46,18 @@ export class bracketController extends controller {
         if (!req.body.best_of) return this.clientError(res, "Please provide a valid best of value");
         try {
             await this.db.aQuery('UPDATE bracket SET best_of = ? WHERE id = ?', [req.body.best_of, req.params.id]);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+
+    async updateBracketMatch(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!await auth.hasAdminPerms) return this.unauthorized(res);
+        let data = <updateMatchRequest>req.body;
+        try {
+            await this.db.aQuery(`UPDATE bracket SET p1 = ?, p2 = ? WHERE id = ?`, [data.p1, data.p2, data.matchId]);
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);

@@ -31,3 +31,9 @@ export interface coordinator {
     name: string;
     avatar: string;
 }
+
+export interface updateMatchRequest {
+    matchId: string;
+    p1: string;
+    p2: string;
+}
