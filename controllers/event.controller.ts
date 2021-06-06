@@ -2,16 +2,23 @@ import { EventEmitter } from 'events';
 import * as WebSocket from 'ws';
 import { bracketMatch } from '../models/bracket.model';
 import { client } from './client';
+import { sessionParser } from './session';
 import { TAController } from './ta.controller';
 
 const emitter: EventEmitter = new EventEmitter();
 const wss = new WebSocket.Server({ noServer: true, path: "/api/ws" });
+const owopWS = new WebSocket.Server({ noServer: true, path: "/api/owop", port: 9000 });
 
 emitter.setMaxListeners(1000);
 
 const clients = [];
 
-wss.on('connection', (ws: WebSocket) => {
+wss.on('connection', async (ws: WebSocket, req: any) => {
+    let res: any = {};
+    await sessionParser(req, res, () => {
+
+        // console.log(req.session);
+    });
     clients.push(ws);
     setInterval(() => heartbeat(ws), 20000);
     let tournamentId = null;
@@ -33,7 +40,8 @@ wss.on('connection', (ws: WebSocket) => {
                 sendAll(data);
             }
         } catch (error) {
-            console.error(error);
+            // probably not json can ignore
+            // console.error(error);
         }
     });
     // emitter.on('bracketUpdate', (data) => {
@@ -64,4 +72,4 @@ function sendAll(message) {
     }
 }
 
-export { emitter, wss };
+export { emitter, wss, owopWS };

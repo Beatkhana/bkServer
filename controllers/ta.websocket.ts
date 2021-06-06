@@ -14,6 +14,9 @@ import { WSPacket } from "./wsPacket";
 import { wsClient } from "./wsClient";
 import WebSocket from 'ws';
 import { SongFinished } from "../models/TA/songFinished";
+import { ScoreRequest } from "../models/TA/scoreRequest";
+import { emitter } from "./event.controller";
+import { Score } from "../models/TA/score";
 
 export class taWebSocket extends controller {
 
@@ -45,6 +48,7 @@ export class taWebSocket extends controller {
             };
             let packet = new WSPacket(packetData, PacketType.Connect);
             this.ws.send(JSON.stringify(packet));
+
         };
         this.ws.addEventListener("message", (event) => {
             this.emitter.emit('taEvent', [this.tournamentId, JSON.parse(event.data)]);
@@ -125,6 +129,14 @@ export class taWebSocket extends controller {
         } else if (packet.Type == PacketType.SongFinished) {
             console.debug("song fin", <SongFinished>packet.SpecificPacket);
             QualifiersController.taLiveScore(<SongFinished>packet.SpecificPacket, this.tournamentId);
+        } else if (packet.Type == PacketType.ScoreRequestResponse) {
+            // emitter.emit("scoreResponse", packet.SpecificPacket);
+            // console.log(packet.SpecificPacket);
+            // console.log(this.tournamentId);
+            let scores = <Score[]>packet.SpecificPacket.Scores;
+            for (const score of scores) {
+                QualifiersController.taScore({ Score: score }, this.tournamentId)
+            }
         }
     }
 
@@ -162,6 +174,19 @@ export class taWebSocket extends controller {
         this.ws.send(
             JSON.stringify(new WSPacket(SpecificPacket, PacketType.Event))
         );
+    }
+
+    getScores(tournamentId: string, options: GameplayParameters) {
+        let event = this.taClient.State.Events.find(x => x.Guild.Id == tournamentId);
+        if (event?.EventId) {
+            let req: ScoreRequest = {
+                EventId: event.EventId,
+                Parameters: options
+            };
+            this.ws.send(
+                JSON.stringify(new WSPacket(req, PacketType.ScoreRequest))
+            );
+        }
     }
 
     // async createMatch(name: string, tournamentId, maps: GameplayParameters[] = [], flags: number) {

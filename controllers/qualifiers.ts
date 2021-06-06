@@ -1,8 +1,6 @@
 import express from "express";
 import { database } from "../database";
 import { qualifierSession } from "../models/qualifiers";
-import { GameplayModifiers, GameOptions } from "../models/taProto/gameplayModifiers";
-import { GameplayParameters } from "../models/taProto/gameplayParameters";
 import { SubmitScore } from "../models/taProto/submitScore";
 import * as SubmitScoreWS from "../models/TA/submitScore";
 import * as gameplayParametersWS from "../models/TA/gameplayParameters";
@@ -12,6 +10,10 @@ import { controller } from "./controller";
 import { TAController } from "./ta.controller";
 import { CompletionType, SongFinished } from "../models/TA/songFinished";
 import { settings } from "../models/settings.model";
+import { GameplayParameters } from "../models/TA/gameplayParameters";
+import { GameplayModifiers } from "../models/TA/gameplayModifiers";
+import { emitter } from "./event.controller";
+import { Score } from "../models/TA/score";
 
 export class QualifiersController extends controller {
 
@@ -69,6 +71,7 @@ export class QualifiersController extends controller {
         // WHERE ts.public = 1 AND ts.show_quals = 1 AND p.tournamentId = ?`, [id]);
         let scores = [];
         for (const score of qualsScores) {
+            if (!score.discordId) continue;
             if (scores.some(x => x.discordId == score.discordId)) {
                 //do thing
                 let pIndex = scores.findIndex(x => x.discordId == score.discordId);
@@ -206,7 +209,7 @@ export class QualifiersController extends controller {
             tournamentId: tournamentId,
             userId: user.discordId,
             songHash: levelHash,
-            score: score.Score.Score | 0,
+            score: score.Score._Score | 0,
             percentage: 0,
             maxScore: 0,
             attempt: attempt
@@ -336,26 +339,62 @@ export class QualifiersController extends controller {
         let qualMaps = [];
         // console.log(songs);
         for (const song of songs) {
-            let gm: GameplayModifiers = { options: song.flags };
+            let gm: GameplayModifiers = { Options: song.flags };
             let map: GameplayParameters = {
-                beatmap: {
-                    name: song.songName,
-                    levelId: `custom_level_${song.songHash.toUpperCase()}`,
-                    characteristic: {
-                        serializedName: song.selCharacteristic,
-                        difficulties: [song.difficulty]
+                Beatmap: {
+                    Name: song.songName,
+                    LevelId: `custom_level_${song.songHash.toUpperCase()}`,
+                    Characteristic: {
+                        SerializedName: song.selCharacteristic,
+                        Difficulties: [song.difficulty]
                     },
-                    difficulty: song.difficulty,
+                    Difficulty: song.difficulty,
                 },
-                playerSettings: {
-                    options: song.playerOptions,
+                PlayerSettings: {
+                    Options: song.playerOptions,
                 },
-                gameplayModifiers: gm,
+                GameplayModifiers: gm,
             };
             qualMaps.push(map);
         }
         // console.log(qualMaps);
         TAController.createEvent(tournamentId, qualMaps, `${tournament[0].name} Qualifiers`, settings[0].ta_event_flags);
+    }
+
+    async getTAScores(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!await auth.hasAdminPerms || !auth.tourneyId) return this.clientError(res);
+        let tournamentId = auth.tourneyId;
+        let songs = await this.db.aQuery(`SELECT s.*, emo.* FROM pool_link s 
+        JOIN map_pools mp ON mp.id = s.poolId 
+        JOIN event_map_options emo ON emo.map_id = s.id 
+        WHERE mp.tournamentId = ? AND mp.is_qualifiers = 1`, [tournamentId]);
+        let qualMaps = [];
+        let i = 0;
+        for (const song of songs) {
+            let gm: GameplayModifiers = { Options: song.flags };
+            let map: GameplayParameters = {
+                Beatmap: {
+                    Name: song.songName,
+                    LevelId: `custom_level_${song.songHash.toUpperCase()}`,
+                    Characteristic: {
+                        SerializedName: song.selCharacteristic,
+                        Difficulties: [song.difficulty]
+                    },
+                    Difficulty: song.difficulty,
+                },
+                PlayerSettings: {
+                    Options: song.playerOptions,
+                },
+                GameplayModifiers: gm,
+            };
+            TAController.getScores(tournamentId, map);
+            i++;
+        }
+        if (i > 0) {
+            await this.db.aQuery(`DELETE FROM qualifier_scores WHERE tournamentId = ?`, [tournamentId]);
+        }
+        return this.ok(res);
     }
 
     // static async runMatch(tournamentId) {
@@ -402,21 +441,21 @@ export class QualifiersController extends controller {
         let qualMaps = [];
 
         for (const song of songs) {
-            let gm: GameplayModifiers = { options: song.flags };
+            let gm: GameplayModifiers = { Options: song.flags };
             let map: GameplayParameters = {
-                beatmap: {
-                    name: song.songName,
-                    levelId: `custom_level_${song.songHash.toUpperCase()}`,
-                    characteristic: {
-                        serializedName: song.selCharacteristic,
-                        difficulties: [song.difficulty]
+                Beatmap: {
+                    Name: song.songName,
+                    LevelId: `custom_level_${song.songHash.toUpperCase()}`,
+                    Characteristic: {
+                        SerializedName: song.selCharacteristic,
+                        Difficulties: [song.difficulty]
                     },
-                    difficulty: song.difficulty,
+                    Difficulty: song.difficulty,
                 },
-                playerSettings: {
-                    options: song.playerOptions,
+                PlayerSettings: {
+                    Options: song.playerOptions,
                 },
-                gameplayModifiers: gm,
+                GameplayModifiers: gm,
             };
             qualMaps.push(map);
         }

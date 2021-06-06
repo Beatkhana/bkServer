@@ -1,3 +1,4 @@
+import { GameplayParameters } from "../models/TA/gameplayParameters";
 import { QualifierEvent } from "../models/TA/qualifierEvent";
 import { client } from "./client";
 import { controller } from "./controller";
@@ -22,6 +23,7 @@ export class TAController extends controller {
 
     connectToTA() {
         for (const tournament of this.taEnabledTournaments) {
+
             // let tmp = new taSocket(tournament.tournamentId, tournament.ta_url, tournament.ta_password);
             // taClients.push(tmp);
             let tmp = new taWebSocket(tournament.tournamentId, tournament.ta_url, tournament.ta_password);
@@ -56,6 +58,13 @@ export class TAController extends controller {
         let clientI = taWSClients.findIndex(x => x.tournamentId == tournamentId);
         if (clientI > -1) {
             taWSClients[clientI].createEvent(name, tournamentId, maps, flags);
+        }
+    }
+
+    static getScores(tournamentId: string, options: GameplayParameters) {
+        let clientI = taWSClients.findIndex(x => x.tournamentId == tournamentId);
+        if (clientI > -1) {
+            return taWSClients[clientI].getScores(tournamentId, options);
         }
     }
 

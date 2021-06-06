@@ -1,7 +1,9 @@
 import express from 'express';
 import { cronController } from './controllers/cron.controller';
 import { debugLogger } from './controllers/debugLogger.controller';
-import { wss } from './controllers/event.controller';
+import { owopWS, wss } from './controllers/event.controller';
+import { beginServer } from './controllers/owop/server';
+import { sessionParser } from './controllers/session';
 import { TAController } from './controllers/ta.controller';
 
 const router = require('./router')
@@ -38,19 +40,7 @@ app.use((req, res, next) => {
 app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 
-app.use(session({
-    name: 'uId',
-    resave: false,
-    saveUninitialized: false,
-    secret: 'jfgdasjkfdau',
-    store: new MemoryStore({
-        checkPeriod: 86400000 // prune expired entries every week
-    }),
-    cookie: {
-        maxAge: 604800000,
-        sameSite: true
-    }
-}));
+app.use(sessionParser);
 
 app.use((err, req, res, next) => {
     switch (err.message) {
@@ -101,6 +91,9 @@ server.on('upgrade', (request: any, socket: any, head: any) => {
     wss.handleUpgrade(request, socket, head, (socket: any) => {
         wss.emit('connection', socket, request);
     });
+    // owopWS.handleUpgrade(request, socket, head, (socket: any) => {
+    //     owopWS.emit('connection', socket, request);
+    // });
 });
 
 let TACon = new TAController();
@@ -110,6 +103,8 @@ TACon.init();
 let cronCon: cronController = new cronController();
 cronCon.setCrons();
 
+beginServer();
+
 // process.on('exit', beforeClose);
 // process.on('SIGINT', beforeClose);
 // process.on('SIGUSR1', beforeClose);
@@ -117,7 +112,7 @@ cronCon.setCrons();
 // process.on('uncaughtException', beforeClose);
 
 // function beforeClose() {
-//     console.info("Server shutdown");
+//     // console.info("Server shutdown");
 //     TACon.closeTa();
-//     process.exit();
+//     // process.exit();
 // }

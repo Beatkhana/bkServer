@@ -1,6 +1,6 @@
 import type { GameplayParameters } from "./gameplayParameters";
 
 export interface ScoreRequest {
-    eventId: string;
-    parameters: GameplayParameters;
+    EventId: string;
+    Parameters: GameplayParameters;
 }

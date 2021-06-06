@@ -31,6 +31,7 @@
         "node-cron": "^2.0.3",
         "node-fetch": "^2.6.1",
         "protobuf-typescript": "^6.8.8",
+        "proxycheck-node.js": "^2.0.0-a",
         "request": "^2.88.2",
         "request-promise": "^4.2.5",
         "requests": "^0.3.0",

@@ -5,7 +5,7 @@ export interface Score {
     Parameters: GameplayParameters;
     UserId: number;
     Username: string;
-    Score: number;
+    _Score: number;
     FullCombo: boolean;
     Color: string;
 }
