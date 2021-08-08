@@ -3,6 +3,7 @@ import { authController } from "./auth.controller";
 import { controller } from "./controller";
 import * as rp from 'request-promise';
 import cheerio from 'cheerio';
+import { Beatsaver } from "../models/beatsaver.model";
 
 export class MapPoolController extends controller {
 
@@ -171,9 +172,9 @@ export class MapPoolController extends controller {
         let isAuth = await auth.hasAdminPerms || await auth.tournamentMapPool;
         if (!isAuth) return this.unauthorized(res);
         let data = req.body;
-        let key = data.ssLink.split('beatmap/')[1];
+        let key = data.ssLink.split('maps/')[1];
         let diff = data.diff;
-        let bsData = await rp.get('https://beatsaver.com/api/maps/detail/' + key, {
+        let bsData: Beatsaver.map = await rp.get<Beatsaver.map>('https://beatsaver.com/api/maps/id/' + key, {
             headers: {
                 "User-Agent": "BeatKhana/1.0.0 (+https://github.com/Dannypoke03)"
             },
@@ -181,7 +182,8 @@ export class MapPoolController extends controller {
         })
             .catch(err => console.log(err));
         let songName = bsData.metadata.songName.replace(" ", "+");
-        let songHash = bsData.hash;
+        let curVersion = bsData.versions.reduce((a, b) => (new Date(a.createdAt) > new Date(b.createdAt) ? a : b));
+        let songHash = curVersion.hash;
 
         let ssData = await rp.get(`https://scoresaber.com/?search=${encodeURI(songName)}`)
             .then(async (html: string | Buffer) => {
@@ -220,13 +222,13 @@ export class MapPoolController extends controller {
 
         let diffSearch = ssData.diff.toLowerCase();
         if (diffSearch == 'expert+') diffSearch = 'expertPlus';
-        let diffInfo = bsData.metadata.characteristics.find(x => x.name == 'Standard').difficulties[diffSearch];
+        let diffInfo = curVersion.diffs.find(x => x.characteristic === 'Standard' && x.difficulty === diffSearch);
         let info = {
-            songHash: bsData.hash.toUpperCase(),
+            songHash: curVersion.hash.toUpperCase(),
             songName: bsData.metadata.songName,
             songAuthor: bsData.metadata.songAuthorName,
             levelAuthor: bsData.metadata.levelAuthorName,
-            key: bsData.key,
+            key: bsData.id,
             numNotes: (diffInfo ? diffInfo.notes : 0),
             songDiff: ssData.diff,
             ssLink: `https://scoresaber.com${ssData.ssLink}`,
@@ -247,19 +249,20 @@ export class MapPoolController extends controller {
 
     private async getBSData(hash, diff): Promise<any> {
         try {
-            let res = await rp.get('https://beatsaver.com/api/maps/by-hash/' + hash, {
+            let res: string = await rp.get('https://beatsaver.com/api/maps/hash/' + hash, {
                 headers: {
                     "User-Agent": "BeatKhana/1.0.0 (+https://github.com/Dannypoke03)"
                 }
             });
-            res = JSON.parse(res);
+            let map = JSON.parse(res) as Beatsaver.map;
+            let curVersion = map.versions.reduce((a, b) => (new Date(a.createdAt) > new Date(b.createdAt) ? a : b));
             let info = {
                 songHash: hash,
-                songName: res.metadata.songName,
-                songAuthor: res.metadata.songAuthorName,
-                levelAuthor: res.metadata.levelAuthorName,
-                key: res.key,
-                numNotes: res.metadata.characteristics.find(x => x.name == 'Standard').difficulties[diff].notes
+                songName: map.metadata.songName,
+                songAuthor: map.metadata.songAuthorName,
+                levelAuthor: map.metadata.levelAuthorName,
+                key: map.id,
+                numNotes: curVersion.diffs.find(x => x.characteristic === 'Standard' && x.difficulty === diff).notes
             }
             return info;
         } catch (error) {
