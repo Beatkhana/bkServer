@@ -15413,7 +15413,8 @@
           this.intervalIteration = 0;
           this.bkWS = Object(rxjs_webSocket__WEBPACK_IMPORTED_MODULE_2__["webSocket"])("".concat(location.protocol == 'http:' ? 'ws' : 'wss', "://") + location.host + '/api/ws');
           this.player1 = null;
-        }
+        } // taWS: WebSocketSubject<any>;
+
 
         _createClass(OverlayComponent, [{
           key: "ngAfterViewInit",
@@ -15472,13 +15473,18 @@
                               break;
                           }
                         }
+
+                        if (msg.TA) _this34.handlePacket(msg.TA);
                       }, function (err) {
                         return console.log('err: ', err);
                       }, function () {
                         return console.log('complete');
-                      }); // console.log(this.router.url)
+                      });
+                      this.bkWS.next({
+                        setTournament: this.tourneyId
+                      });
 
-                    case 13:
+                    case 14:
                     case "end":
                       return _context32.stop();
                   }
@@ -15605,8 +15611,6 @@
             var _a, _b;
 
             return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(this, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee34() {
-              var _this37 = this;
-
               var data, settings, pointIcons, i, point, _i11, _i12, _i13, stream1, href1, img1, con1, div1, options1;
 
               return regeneratorRuntime.wrap(function _callee34$(_context34) {
@@ -15625,15 +15629,14 @@
                       settings = _context34.sent;
                       settings = settings[0];
 
-                      if (settings.ta_url) {
-                        this.taWS = Object(rxjs_webSocket__WEBPACK_IMPORTED_MODULE_2__["webSocket"])("wss://" + settings.ta_url);
-                        this.taWS.subscribe(function (msg) {
-                          _this37.handlePacket(msg);
-                        }, function (err) {
-                          return console.log('err: ', err);
-                        }, function () {
-                          return console.log('complete');
-                        });
+                      if (settings.ta_url) {// this.taWS = webSocket(`wss://` + settings.ta_url);
+                        // this.taWS.subscribe(
+                        //     msg => {
+                        //         this.handlePacket(msg)
+                        //     },
+                        //     err => console.log('err: ', err),
+                        //     () => console.log('complete')
+                        // );
                       }
 
                       this.matchData = data;
@@ -15720,7 +15723,7 @@
           key: "initDisplaySettings",
           value: function initDisplaySettings() {
             return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(this, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee35() {
-              var _this38 = this;
+              var _this37 = this;
 
               var matchesData, matchElements, _loop5, i;
 
@@ -15740,7 +15743,7 @@
                       _loop5 = function _loop5(i) {
                         var element = matchElements[i];
                         element.addEventListener("click", function () {
-                          return _this38.updateMatch(element.getAttribute('data-matchid'));
+                          return _this37.updateMatch(element.getAttribute('data-matchid'));
                         });
                       };
 
@@ -17822,7 +17825,7 @@
         }, {
           key: "deleteParticipant",
           value: function deleteParticipant(participantId) {
-            var _this39 = this;
+            var _this38 = this;
 
             var dialog = this.dialog.open(_confirm_dialog_confirm_dialog_component__WEBPACK_IMPORTED_MODULE_5__["ConfirmDialogComponent"], {
               // height: '400px',
@@ -17835,7 +17838,7 @@
               }
             });
             dialog.afterClosed().subscribe(function (data) {
-              return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this39, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee38() {
+              return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this38, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee38() {
                 var info;
                 return regeneratorRuntime.wrap(function _callee38$(_context38) {
                   while (1) {
@@ -17879,7 +17882,7 @@
         }, {
           key: "eliminateParticipant",
           value: function eliminateParticipant(participantId) {
-            var _this40 = this;
+            var _this39 = this;
 
             var dialog = this.dialog.open(_confirm_dialog_confirm_dialog_component__WEBPACK_IMPORTED_MODULE_5__["ConfirmDialogComponent"], {
               // height: '400px',
@@ -17892,7 +17895,7 @@
               }
             });
             dialog.afterClosed().subscribe(function (data) {
-              return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this40, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee39() {
+              return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this39, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee39() {
                 var info;
                 return regeneratorRuntime.wrap(function _callee39$(_context39) {
                   while (1) {
@@ -17934,7 +17937,7 @@
         }, {
           key: "editComment",
           value: function editComment(participantId) {
-            var _this41 = this;
+            var _this40 = this;
 
             var dialog = this.dialog.open(editCommentDialog, {
               minWidth: '60vw',
@@ -17950,12 +17953,12 @@
             });
             dialog.afterClosed().subscribe(function (data) {
               if (data) {
-                var userIndex = _this41.participants.findIndex(function (x) {
+                var userIndex = _this40.participants.findIndex(function (x) {
                   return x.participantId == data.participantId;
                 }); // console.log(this.participants[userIndex])
 
 
-                _this41.participants[userIndex] = Object.assign(Object.assign({}, _this41.participants[userIndex]), data); // console.log(this.participants[userIndex])
+                _this40.participants[userIndex] = Object.assign(Object.assign({}, _this40.participants[userIndex]), data); // console.log(this.participants[userIndex])
                 // console.log(data)
               }
             });
@@ -17994,14 +17997,14 @@
         }, {
           key: "setParticpants",
           value: function setParticpants() {
-            var _this42 = this;
+            var _this41 = this;
 
             this.getParticipants().subscribe(function (data) {
-              _this42.participants = data;
+              _this41.participants = data;
 
-              _this42.participants.sort(_this42.orderGlobal);
+              _this41.participants.sort(_this41.orderGlobal);
 
-              _this42.cd.detectChanges(); // console.log(this.participants);
+              _this41.cd.detectChanges(); // console.log(this.participants);
 
             });
           }
@@ -18818,15 +18821,15 @@
         var _super7 = _createSuper(ProfileComponent);
 
         function ProfileComponent() {
-          var _this43;
+          var _this42;
 
           _classCallCheck(this, ProfileComponent);
 
-          _this43 = _super7.apply(this, arguments);
-          _this43.title = "Profile | BeatKhana!";
-          _this43.loading = true;
-          _this43.curUser = null;
-          return _this43;
+          _this42 = _super7.apply(this, arguments);
+          _this42.title = "Profile | BeatKhana!";
+          _this42.loading = true;
+          _this42.curUser = null;
+          return _this42;
         }
 
         _createClass(ProfileComponent, [{
@@ -18869,7 +18872,7 @@
         }, {
           key: "editUser",
           value: function editUser(id) {
-            var _this44 = this;
+            var _this43 = this;
 
             var dialog = this.dialog.open(editProfileDialog, {
               // height: '400px',
@@ -18882,7 +18885,7 @@
             });
             dialog.afterClosed().subscribe(function (data) {
               if (data) {
-                _this44.user = Object.assign(Object.assign({}, _this44.user), data);
+                _this43.user = Object.assign(Object.assign({}, _this43.user), data);
               }
             });
           }
@@ -19649,17 +19652,17 @@
         var _super8 = _createSuper(QualifiersComponent);
 
         function QualifiersComponent() {
-          var _this45;
+          var _this44;
 
           _classCallCheck(this, QualifiersComponent);
 
-          _this45 = _super8.apply(this, arguments);
-          _this45.qualsScores = [];
-          _this45.loading = true;
-          _this45.pools = [];
-          _this45.leaderboards = {};
-          _this45.isAuth = false;
-          return _this45;
+          _this44 = _super8.apply(this, arguments);
+          _this44.qualsScores = [];
+          _this44.loading = true;
+          _this44.pools = [];
+          _this44.leaderboards = {};
+          _this44.isAuth = false;
+          return _this44;
         } // constructor(public http: HttpClient, public dialog: MatDialog, private notif: NotificationService) { }
 
 
@@ -19667,7 +19670,7 @@
           key: "ngOnInit",
           value: function ngOnInit() {
             return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(this, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee44() {
-              var _this46 = this;
+              var _this45 = this;
 
               var pools, tmp, _iterator8, _step6, pool;
 
@@ -19710,7 +19713,7 @@
 
                       if (this.user) {
                         this.isAuth = this.tournament.owner == this.user.discordId || this.user['roleIds'].includes('1') || !!this.staff.find(function (x) {
-                          return x.discordId == _this46.user.discordId && x.roles.map(function (x) {
+                          return x.discordId == _this45.user.discordId && x.roles.map(function (x) {
                             return x.id;
                           }).includes(1);
                         });
@@ -19719,9 +19722,9 @@
                       this.getQuals().subscribe(function (res) {
                         var _a, _b;
 
-                        _this46.qualsScores = res;
+                        _this45.qualsScores = res;
 
-                        var _iterator9 = _createForOfIteratorHelper(_this46.qualsScores),
+                        var _iterator9 = _createForOfIteratorHelper(_this45.qualsScores),
                             _step7;
 
                         try {
@@ -19743,10 +19746,10 @@
                               var _loop6 = function _loop6() {
                                 var score = _step10.value;
 
-                                if (((_a = _this46.qualsPool.songs.find(function (x) {
+                                if (((_a = _this45.qualsPool.songs.find(function (x) {
                                   return x.hash == score.songHash;
                                 })) === null || _a === void 0 ? void 0 : _a.numNotes) != 0) {
-                                  score.percentage = score.score / (((_b = _this46.qualsPool.songs.find(function (x) {
+                                  score.percentage = score.score / (((_b = _this45.qualsPool.songs.find(function (x) {
                                     return x.hash == score.songHash;
                                   })) === null || _b === void 0 ? void 0 : _b.numNotes) * 920 - 7245);
                                 } else {
@@ -19754,8 +19757,8 @@
                                 } // score.score = Math.round(score.score / 2);
 
 
-                                if (score.songHash in _this46.leaderboards) {
-                                  _this46.leaderboards[score.songHash].push({
+                                if (score.songHash in _this45.leaderboards) {
+                                  _this45.leaderboards[score.songHash].push({
                                     discordId: user.discordId,
                                     name: user.name,
                                     avatar: user.avatar,
@@ -19763,7 +19766,7 @@
                                     percentage: (score.percentage * 100).toFixed(2)
                                   });
                                 } else {
-                                  _this46.leaderboards[score.songHash] = [{
+                                  _this45.leaderboards[score.songHash] = [{
                                     discordId: user.discordId,
                                     name: user.name,
                                     avatar: user.avatar,
@@ -19789,15 +19792,15 @@
                           _iterator9.f();
                         }
 
-                        for (var _i18 = 0, _Object$keys = Object.keys(_this46.leaderboards); _i18 < _Object$keys.length; _i18++) {
+                        for (var _i18 = 0, _Object$keys = Object.keys(_this45.leaderboards); _i18 < _Object$keys.length; _i18++) {
                           var leaderboard = _Object$keys[_i18];
 
-                          _this46.leaderboards[leaderboard].sort(function (a, b) {
+                          _this45.leaderboards[leaderboard].sort(function (a, b) {
                             return b.score - a.score;
                           });
                         }
 
-                        var _iterator10 = _createForOfIteratorHelper(_this46.qualsScores),
+                        var _iterator10 = _createForOfIteratorHelper(_this45.qualsScores),
                             _step8;
 
                         try {
@@ -19810,7 +19813,7 @@
                             try {
                               for (_iterator13.s(); !(_step11 = _iterator13.n()).done;) {
                                 var score = _step11.value;
-                                score.position = _this46.leaderboards[score.songHash].findIndex(function (x) {
+                                score.position = _this45.leaderboards[score.songHash].findIndex(function (x) {
                                   return x.discordId == user.discordId;
                                 });
                               }
@@ -19834,26 +19837,26 @@
                           _iterator10.f();
                         }
 
-                        if (_this46.qualsScores.length == 1) {
-                          var sumA = _this46.sumProperty(_this46.qualsScores[0].scores, 'score');
+                        if (_this45.qualsScores.length == 1) {
+                          var sumA = _this45.sumProperty(_this45.qualsScores[0].scores, 'score');
 
-                          var sumAPer = _this46.sumProperty(_this46.qualsScores[0].scores, 'percentage');
+                          var sumAPer = _this45.sumProperty(_this45.qualsScores[0].scores, 'percentage');
 
-                          _this46.qualsScores[0].avgPercentage = isNaN(sumAPer / _this46.qualsPool.songs.length * 100) ? 0 : (sumAPer / _this46.qualsPool.songs.length * 100).toFixed(2);
-                          _this46.qualsScores[0].scoreSum = sumA;
+                          _this45.qualsScores[0].avgPercentage = isNaN(sumAPer / _this45.qualsPool.songs.length * 100) ? 0 : (sumAPer / _this45.qualsPool.songs.length * 100).toFixed(2);
+                          _this45.qualsScores[0].scoreSum = sumA;
                         }
 
-                        _this46.qualsScores.sort(function (a, b) {
-                          var sumA = _this46.sumProperty(a.scores, 'score');
+                        _this45.qualsScores.sort(function (a, b) {
+                          var sumA = _this45.sumProperty(a.scores, 'score');
 
-                          var sumB = _this46.sumProperty(b.scores, 'score');
+                          var sumB = _this45.sumProperty(b.scores, 'score');
 
-                          var sumAPer = _this46.sumProperty(a.scores, 'percentage');
+                          var sumAPer = _this45.sumProperty(a.scores, 'percentage');
 
-                          var sumBPer = _this46.sumProperty(b.scores, 'percentage');
+                          var sumBPer = _this45.sumProperty(b.scores, 'percentage');
 
-                          a.avgPercentage = isNaN(sumAPer / _this46.qualsPool.songs.length * 100) ? 0 : (sumAPer / _this46.qualsPool.songs.length * 100).toFixed(2);
-                          b.avgPercentage = isNaN(sumBPer / _this46.qualsPool.songs.length * 100) ? 0 : (sumBPer / _this46.qualsPool.songs.length * 100).toFixed(2);
+                          a.avgPercentage = isNaN(sumAPer / _this45.qualsPool.songs.length * 100) ? 0 : (sumAPer / _this45.qualsPool.songs.length * 100).toFixed(2);
+                          b.avgPercentage = isNaN(sumBPer / _this45.qualsPool.songs.length * 100) ? 0 : (sumBPer / _this45.qualsPool.songs.length * 100).toFixed(2);
                           a.scoreSum = sumA;
                           b.scoreSum = sumB;
 
@@ -19870,13 +19873,13 @@
                           }
                         });
 
-                        _this46.qualsScores.splice(_this46.tournament.quals_cutoff, 0, {
+                        _this45.qualsScores.splice(_this45.tournament.quals_cutoff, 0, {
                           cutoff: true
                         });
 
                         var i = 1;
 
-                        var _iterator11 = _createForOfIteratorHelper(_this46.qualsScores),
+                        var _iterator11 = _createForOfIteratorHelper(_this45.qualsScores),
                             _step9;
 
                         try {
@@ -19894,7 +19897,7 @@
                           _iterator11.f();
                         }
 
-                        _this46.loading = false;
+                        _this45.loading = false;
                       });
 
                     case 12:
@@ -19908,7 +19911,7 @@
         }, {
           key: "taSync",
           value: function taSync() {
-            var _this47 = this;
+            var _this46 = this;
 
             var dialog = this.dialog.open(_confirm_dialog_confirm_dialog_component__WEBPACK_IMPORTED_MODULE_3__["ConfirmDialogComponent"], {
               // height: '400px',
@@ -19921,7 +19924,7 @@
               }
             });
             dialog.afterClosed().subscribe(function (data) {
-              return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this47, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee45() {
+              return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this46, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee45() {
                 return regeneratorRuntime.wrap(function _callee45$(_context45) {
                   while (1) {
                     switch (_context45.prev = _context45.next) {
@@ -20245,31 +20248,31 @@
         var _super9 = _createSuper(RankingsComponent);
 
         function RankingsComponent() {
-          var _this48;
+          var _this47;
 
           _classCallCheck(this, RankingsComponent);
 
-          _this48 = _super9.apply(this, arguments);
-          _this48.title = "Rankings | BeatKhana!";
-          _this48.url = '/api/rankings';
-          _this48.users = [];
-          _this48.loading = true;
-          _this48.secondLoading = false;
-          _this48.allRecords = false;
-          _this48.page = 0;
-          return _this48;
+          _this47 = _super9.apply(this, arguments);
+          _this47.title = "Rankings | BeatKhana!";
+          _this47.url = '/api/rankings';
+          _this47.users = [];
+          _this47.loading = true;
+          _this47.secondLoading = false;
+          _this47.allRecords = false;
+          _this47.page = 0;
+          return _this47;
         }
 
         _createClass(RankingsComponent, [{
           key: "ngOnInit",
           value: function ngOnInit() {
-            var _this49 = this;
+            var _this48 = this;
 
             this.getRanks().subscribe(function (data) {
-              _this49.page += 1;
-              _this49.users = data.data;
+              _this48.page += 1;
+              _this48.users = data.data;
 
-              var _iterator14 = _createForOfIteratorHelper(_this49.users),
+              var _iterator14 = _createForOfIteratorHelper(_this48.users),
                   _step12;
 
               try {
@@ -20289,7 +20292,7 @@
                 _iterator14.f();
               }
 
-              _this49.loading = false; // console.log(data)
+              _this48.loading = false; // console.log(data)
             });
             this.setTitle(this.title);
           }
@@ -20301,18 +20304,18 @@
         }, {
           key: "doSomething",
           value: function doSomething(event) {
-            var _this50 = this;
+            var _this49 = this;
 
             if (window.pageYOffset - document.getElementsByClassName("playerGrid")[0].scrollHeight > -1000 && !this.secondLoading && !this.allRecords) {
               this.secondLoading = true;
               this.getRanks().subscribe(function (data) {
                 if (data.err == null) {
-                  _this50.page += 1;
-                  _this50.users = _this50.users.concat(data.data);
-                  _this50.secondLoading = false;
+                  _this49.page += 1;
+                  _this49.users = _this49.users.concat(data.data);
+                  _this49.secondLoading = false;
                 } else {
-                  _this50.secondLoading = false;
-                  _this50.allRecords = true;
+                  _this49.secondLoading = false;
+                  _this49.allRecords = true;
                 }
               });
             }
@@ -20857,18 +20860,18 @@
         }, {
           key: "setTags",
           value: function setTags(tags) {
-            var _this51 = this;
+            var _this50 = this;
 
             tags.forEach(function (siteTag) {
-              var tag = siteTag.isFacebook ? _this51.metaService.getTag("property='".concat(siteTag.name, "'")) : _this51.metaService.getTag("name='".concat(siteTag.name, "'"));
+              var tag = siteTag.isFacebook ? _this50.metaService.getTag("property='".concat(siteTag.name, "'")) : _this50.metaService.getTag("name='".concat(siteTag.name, "'"));
 
               if (siteTag.isFacebook) {
-                _this51.metaService.updateTag({
+                _this50.metaService.updateTag({
                   property: siteTag.name,
                   content: siteTag.value
                 });
               } else {
-                _this51.metaService.updateTag({
+                _this50.metaService.updateTag({
                   name: siteTag.name,
                   content: siteTag.value
                 });
@@ -22068,16 +22071,16 @@
         var _super10 = _createSuper(TeamComponent);
 
         function TeamComponent() {
-          var _this52;
+          var _this51;
 
           _classCallCheck(this, TeamComponent);
 
-          _this52 = _super10.apply(this, arguments);
-          _this52.title = "Team | BeatKhana!";
-          _this52.url = '/api/team';
-          _this52.team = null;
-          _this52.loading = true;
-          _this52.displayRoles = {
+          _this51 = _super10.apply(this, arguments);
+          _this51.title = "Team | BeatKhana!";
+          _this51.url = '/api/team';
+          _this51.team = null;
+          _this51.loading = true;
+          _this51.displayRoles = {
             1: {
               label: 'Admins',
               id: 1,
@@ -22094,19 +22097,19 @@
               users: []
             }
           };
-          return _this52;
+          return _this51;
         }
 
         _createClass(TeamComponent, [{
           key: "ngOnInit",
           value: function ngOnInit() {
-            var _this53 = this;
+            var _this52 = this;
 
             this.setTitle(this.title);
             this.getTeam().subscribe(function (data) {
-              _this53.team = data;
+              _this52.team = data;
 
-              var _iterator15 = _createForOfIteratorHelper(_this53.team),
+              var _iterator15 = _createForOfIteratorHelper(_this52.team),
                   _step13;
 
               try {
@@ -22122,7 +22125,7 @@
 
                   var minRole = Math.min.apply(null, member.roleIds);
 
-                  _this53.displayRoles[minRole].users.push(member);
+                  _this52.displayRoles[minRole].users.push(member);
                 }
               } catch (err) {
                 _iterator15.e(err);
@@ -22388,14 +22391,14 @@
         var _super11 = _createSuper(TournamentStaffComponent);
 
         function TournamentStaffComponent() {
-          var _this54;
+          var _this53;
 
           _classCallCheck(this, TournamentStaffComponent);
 
-          _this54 = _super11.apply(this, arguments);
-          _this54.loading = true;
-          _this54.staff = [];
-          return _this54;
+          _this53 = _super11.apply(this, arguments);
+          _this53.loading = true;
+          _this53.staff = [];
+          return _this53;
         }
 
         _createClass(TournamentStaffComponent, [{
@@ -22431,7 +22434,7 @@
         }, {
           key: "openEdit",
           value: function openEdit() {
-            var _this55 = this;
+            var _this54 = this;
 
             var dialog = this.dialog.open(_modals_edit_staff_edit_staff_component__WEBPACK_IMPORTED_MODULE_3__["EditStaffComponent"], {
               // height: '400px',
@@ -22444,7 +22447,7 @@
               }
             });
             dialog.afterClosed().subscribe(function (data) {
-              return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this55, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee52() {
+              return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this54, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee52() {
                 return regeneratorRuntime.wrap(function _callee52$(_context52) {
                   while (1) {
                     switch (_context52.prev = _context52.next) {
@@ -24830,197 +24833,197 @@
         var _super12 = _createSuper(TournamentComponent);
 
         function TournamentComponent() {
-          var _this56;
+          var _this55;
 
           _classCallCheck(this, TournamentComponent);
 
-          _this56 = _super12.apply(this, arguments);
-          _this56.title = "BeatKhana!";
-          _this56.url = '/api/tournament';
-          _this56.loading = true;
-          _this56.isInfo = true;
-          _this56.isMapPool = false;
-          _this56.isBracket = false;
-          _this56.isParticipants = false;
-          _this56.canSignup = true;
-          _this56.isQuals = false;
-          _this56.isSignedUp = false;
-          _this56.staffPage = false;
-          _this56.sessions = false;
-          _this56.isAuth = false;
-          _this56.participants = [];
-          _this56.isParticipant = true;
-          _this56.participantData = {};
-          _this56.linkOptions = {
+          _this55 = _super12.apply(this, arguments);
+          _this55.title = "BeatKhana!";
+          _this55.url = '/api/tournament';
+          _this55.loading = true;
+          _this55.isInfo = true;
+          _this55.isMapPool = false;
+          _this55.isBracket = false;
+          _this55.isParticipants = false;
+          _this55.canSignup = true;
+          _this55.isQuals = false;
+          _this55.isSignedUp = false;
+          _this55.staffPage = false;
+          _this55.sessions = false;
+          _this55.isAuth = false;
+          _this55.participants = [];
+          _this55.isParticipant = true;
+          _this55.participantData = {};
+          _this55.linkOptions = {
             target: {
               url: "_blank"
             }
           };
-          _this56.countries = null;
-          return _this56;
+          _this55.countries = null;
+          return _this55;
         }
 
         _createClass(TournamentComponent, [{
           key: "ngOnInit",
           value: function ngOnInit() {
             return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(this, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee53() {
-              var _this57 = this;
+              var _this56 = this;
 
               return regeneratorRuntime.wrap(function _callee53$(_context53) {
                 while (1) {
                   switch (_context53.prev = _context53.next) {
                     case 0:
                       this.route.paramMap.subscribe(function (params) {
-                        _this57.tourneyId = params.get('id');
+                        _this56.tourneyId = params.get('id');
 
-                        if (_this57.router.url.includes('map-pool')) {
-                          _this57.isMapPool = true;
-                          _this57.isBracket = false;
-                          _this57.isInfo = false;
-                          _this57.isParticipants = false;
-                          _this57.isQuals = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = false;
-                          _this57.sessions = false;
-                        } else if (_this57.router.url.includes('allParticipants')) {
-                          _this57.isSignedUp = true;
-                          _this57.isQuals = false;
-                          _this57.isParticipants = false;
-                          _this57.isBracket = false;
-                          _this57.isMapPool = false;
-                          _this57.staffPage = false;
-                          _this57.isInfo = false;
-                          _this57.sessions = false;
-                        } else if (_this57.router.url.includes('bracket')) {
-                          _this57.isBracket = true;
-                          _this57.isMapPool = false;
-                          _this57.isInfo = false;
-                          _this57.isParticipants = false;
-                          _this57.isQuals = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = false;
-                          _this57.sessions = false;
-                        } else if (_this57.router.url.includes('participants')) {
-                          _this57.isParticipants = true;
-                          _this57.isBracket = false;
-                          _this57.isMapPool = false;
-                          _this57.isInfo = false;
-                          _this57.isQuals = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = false;
-                          _this57.sessions = false;
-                        } else if (_this57.router.url.includes('qualifiers')) {
-                          _this57.isQuals = true;
-                          _this57.isParticipants = false;
-                          _this57.isBracket = false;
-                          _this57.isMapPool = false;
-                          _this57.isInfo = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = false;
-                          _this57.sessions = false;
-                        } else if (_this57.router.url.includes('staff')) {
-                          _this57.isMapPool = false;
-                          _this57.isBracket = false;
-                          _this57.isInfo = false;
-                          _this57.isParticipants = false;
-                          _this57.isQuals = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = true;
-                          _this57.sessions = false;
-                        } else if (_this57.router.url.includes('sessions')) {
-                          _this57.isMapPool = false;
-                          _this57.isBracket = false;
-                          _this57.isInfo = false;
-                          _this57.isParticipants = false;
-                          _this57.isQuals = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = false;
-                          _this57.sessions = true;
+                        if (_this56.router.url.includes('map-pool')) {
+                          _this56.isMapPool = true;
+                          _this56.isBracket = false;
+                          _this56.isInfo = false;
+                          _this56.isParticipants = false;
+                          _this56.isQuals = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = false;
+                          _this56.sessions = false;
+                        } else if (_this56.router.url.includes('allParticipants')) {
+                          _this56.isSignedUp = true;
+                          _this56.isQuals = false;
+                          _this56.isParticipants = false;
+                          _this56.isBracket = false;
+                          _this56.isMapPool = false;
+                          _this56.staffPage = false;
+                          _this56.isInfo = false;
+                          _this56.sessions = false;
+                        } else if (_this56.router.url.includes('bracket')) {
+                          _this56.isBracket = true;
+                          _this56.isMapPool = false;
+                          _this56.isInfo = false;
+                          _this56.isParticipants = false;
+                          _this56.isQuals = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = false;
+                          _this56.sessions = false;
+                        } else if (_this56.router.url.includes('participants')) {
+                          _this56.isParticipants = true;
+                          _this56.isBracket = false;
+                          _this56.isMapPool = false;
+                          _this56.isInfo = false;
+                          _this56.isQuals = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = false;
+                          _this56.sessions = false;
+                        } else if (_this56.router.url.includes('qualifiers')) {
+                          _this56.isQuals = true;
+                          _this56.isParticipants = false;
+                          _this56.isBracket = false;
+                          _this56.isMapPool = false;
+                          _this56.isInfo = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = false;
+                          _this56.sessions = false;
+                        } else if (_this56.router.url.includes('staff')) {
+                          _this56.isMapPool = false;
+                          _this56.isBracket = false;
+                          _this56.isInfo = false;
+                          _this56.isParticipants = false;
+                          _this56.isQuals = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = true;
+                          _this56.sessions = false;
+                        } else if (_this56.router.url.includes('sessions')) {
+                          _this56.isMapPool = false;
+                          _this56.isBracket = false;
+                          _this56.isInfo = false;
+                          _this56.isParticipants = false;
+                          _this56.isQuals = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = false;
+                          _this56.sessions = true;
                         } else {
-                          _this57.isMapPool = false;
-                          _this57.isBracket = false;
-                          _this57.isInfo = true;
-                          _this57.isParticipants = false;
-                          _this57.isQuals = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = false;
-                          _this57.sessions = false;
+                          _this56.isMapPool = false;
+                          _this56.isBracket = false;
+                          _this56.isInfo = true;
+                          _this56.isParticipants = false;
+                          _this56.isQuals = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = false;
+                          _this56.sessions = false;
                         }
                       });
                       this.main();
                       this.router.events.subscribe(function (val) {
-                        if (_this57.router.url.includes('map-pool')) {
-                          _this57.isMapPool = true;
-                          _this57.isBracket = false;
-                          _this57.isInfo = false;
-                          _this57.isParticipants = false;
-                          _this57.isQuals = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = false;
-                          _this57.sessions = false;
-                        } else if (_this57.router.url.includes('allParticipants')) {
-                          _this57.isSignedUp = true;
-                          _this57.isQuals = false;
-                          _this57.isParticipants = false;
-                          _this57.isBracket = false;
-                          _this57.isMapPool = false;
-                          _this57.staffPage = false;
-                          _this57.isInfo = false;
-                          _this57.sessions = false;
-                        } else if (_this57.router.url.includes('bracket')) {
-                          _this57.isBracket = true;
-                          _this57.isMapPool = false;
-                          _this57.isInfo = false;
-                          _this57.isParticipants = false;
-                          _this57.isQuals = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = false;
-                          _this57.sessions = false;
-                        } else if (_this57.router.url.includes('participants')) {
-                          _this57.isParticipants = true;
-                          _this57.isBracket = false;
-                          _this57.isMapPool = false;
-                          _this57.isInfo = false;
-                          _this57.isQuals = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = false;
-                          _this57.sessions = false;
-                        } else if (_this57.router.url.includes('qualifiers')) {
-                          _this57.isQuals = true;
-                          _this57.isParticipants = false;
-                          _this57.isBracket = false;
-                          _this57.isMapPool = false;
-                          _this57.isInfo = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = false;
-                          _this57.sessions = false;
-                        } else if (_this57.router.url.includes('staff')) {
-                          _this57.isMapPool = false;
-                          _this57.isBracket = false;
-                          _this57.isInfo = false;
-                          _this57.isParticipants = false;
-                          _this57.isQuals = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = true;
-                          _this57.sessions = false;
-                        } else if (_this57.router.url.includes('sessions')) {
-                          _this57.isMapPool = false;
-                          _this57.isBracket = false;
-                          _this57.isInfo = false;
-                          _this57.isParticipants = false;
-                          _this57.isQuals = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = false;
-                          _this57.sessions = true;
+                        if (_this56.router.url.includes('map-pool')) {
+                          _this56.isMapPool = true;
+                          _this56.isBracket = false;
+                          _this56.isInfo = false;
+                          _this56.isParticipants = false;
+                          _this56.isQuals = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = false;
+                          _this56.sessions = false;
+                        } else if (_this56.router.url.includes('allParticipants')) {
+                          _this56.isSignedUp = true;
+                          _this56.isQuals = false;
+                          _this56.isParticipants = false;
+                          _this56.isBracket = false;
+                          _this56.isMapPool = false;
+                          _this56.staffPage = false;
+                          _this56.isInfo = false;
+                          _this56.sessions = false;
+                        } else if (_this56.router.url.includes('bracket')) {
+                          _this56.isBracket = true;
+                          _this56.isMapPool = false;
+                          _this56.isInfo = false;
+                          _this56.isParticipants = false;
+                          _this56.isQuals = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = false;
+                          _this56.sessions = false;
+                        } else if (_this56.router.url.includes('participants')) {
+                          _this56.isParticipants = true;
+                          _this56.isBracket = false;
+                          _this56.isMapPool = false;
+                          _this56.isInfo = false;
+                          _this56.isQuals = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = false;
+                          _this56.sessions = false;
+                        } else if (_this56.router.url.includes('qualifiers')) {
+                          _this56.isQuals = true;
+                          _this56.isParticipants = false;
+                          _this56.isBracket = false;
+                          _this56.isMapPool = false;
+                          _this56.isInfo = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = false;
+                          _this56.sessions = false;
+                        } else if (_this56.router.url.includes('staff')) {
+                          _this56.isMapPool = false;
+                          _this56.isBracket = false;
+                          _this56.isInfo = false;
+                          _this56.isParticipants = false;
+                          _this56.isQuals = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = true;
+                          _this56.sessions = false;
+                        } else if (_this56.router.url.includes('sessions')) {
+                          _this56.isMapPool = false;
+                          _this56.isBracket = false;
+                          _this56.isInfo = false;
+                          _this56.isParticipants = false;
+                          _this56.isQuals = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = false;
+                          _this56.sessions = true;
                         } else {
-                          _this57.isMapPool = false;
-                          _this57.isBracket = false;
-                          _this57.isInfo = true;
-                          _this57.isParticipants = false;
-                          _this57.isQuals = false;
-                          _this57.isSignedUp = false;
-                          _this57.staffPage = false;
-                          _this57.sessions = false;
+                          _this56.isMapPool = false;
+                          _this56.isBracket = false;
+                          _this56.isInfo = true;
+                          _this56.isParticipants = false;
+                          _this56.isQuals = false;
+                          _this56.isSignedUp = false;
+                          _this56.staffPage = false;
+                          _this56.sessions = false;
                         }
                       });
 
@@ -25036,7 +25039,7 @@
           key: "main",
           value: function main() {
             return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(this, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee54() {
-              var _this58 = this;
+              var _this57 = this;
 
               var data, usr, participantData, signedUp;
               return regeneratorRuntime.wrap(function _callee54$(_context54) {
@@ -25057,7 +25060,7 @@
 
                       if (this.user) {
                         this.isAuth = this.tournament.owner == this.user.discordId || this.user['roleIds'].includes('1') || !!this.staff.find(function (x) {
-                          return x.discordId == _this58.user.discordId && x.roles.map(function (x) {
+                          return x.discordId == _this57.user.discordId && x.roles.map(function (x) {
                             return x.id;
                           }).includes(1);
                         });
@@ -25133,7 +25136,7 @@
         }, {
           key: "openEdit",
           value: function openEdit() {
-            var _this59 = this;
+            var _this58 = this;
 
             var dialog = this.dialog.open(editTournament, {
               minWidth: '60vw',
@@ -25145,15 +25148,15 @@
             });
             dialog.afterClosed().subscribe(function (data) {
               if (data) {
-                _this59.tournament = Object.assign(Object.assign({}, _this59.tournament), data);
-                _this59.tournament.safeInfo = _this59.sanitizer.bypassSecurityTrustHtml(_this59.tournament.info);
+                _this58.tournament = Object.assign(Object.assign({}, _this58.tournament), data);
+                _this58.tournament.safeInfo = _this58.sanitizer.bypassSecurityTrustHtml(_this58.tournament.info);
               }
             });
           }
         }, {
           key: "tourneySettings",
           value: function tourneySettings() {
-            var _this60 = this;
+            var _this59 = this;
 
             var dialog = this.dialog.open(tournamentSettingsDialog, {
               // height: '400px',
@@ -25167,10 +25170,10 @@
             dialog.afterClosed().subscribe(function (data) {
               if (data) {
                 // console.log("Dialog output:", data);
-                _this60.tournament = Object.assign(Object.assign({}, _this60.tournament), data);
-                _this60.tournament.safeInfo = _this60.sanitizer.bypassSecurityTrustHtml(_this60.tournament.info);
+                _this59.tournament = Object.assign(Object.assign({}, _this59.tournament), data);
+                _this59.tournament.safeInfo = _this59.sanitizer.bypassSecurityTrustHtml(_this59.tournament.info);
 
-                _this60.main();
+                _this59.main();
               }
             });
           }
@@ -25194,7 +25197,7 @@
         }, {
           key: "delete",
           value: function _delete() {
-            var _this61 = this;
+            var _this60 = this;
 
             var dialog = this.dialog.open(_confirm_dialog_confirm_dialog_component__WEBPACK_IMPORTED_MODULE_6__["ConfirmDialogComponent"], {
               // height: '400px',
@@ -25207,7 +25210,7 @@
               }
             });
             dialog.afterClosed().subscribe(function (data) {
-              return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this61, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee55() {
+              return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this60, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee55() {
                 return regeneratorRuntime.wrap(function _callee55$(_context55) {
                   while (1) {
                     switch (_context55.prev = _context55.next) {
@@ -25245,7 +25248,7 @@
         }, {
           key: "signUp",
           value: function signUp() {
-            var _this62 = this;
+            var _this61 = this;
 
             var dialog = this.dialog.open(signUpDialog, {
               // height: '400px',
@@ -25258,7 +25261,7 @@
             });
             dialog.afterClosed().subscribe(function (data) {
               if (data) {
-                _this62.isParticipant = true;
+                _this61.isParticipant = true;
               }
             });
           }
@@ -25336,7 +25339,7 @@
         _createClass(editTournament, [{
           key: "ngOnInit",
           value: function ngOnInit() {
-            var _this63 = this;
+            var _this62 = this;
 
             this.id = this.data.tournament.tournamentId; // console.log(this.data);
 
@@ -25356,18 +25359,18 @@
               is_mini: !!this.data.tournament.is_mini
             });
             this.getUsers().subscribe(function (data) {
-              _this63.users = data;
-              _this63.filteredOptions = _this63.tournamentForm.valueChanges.pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["startWith"])(''), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["map"])(function (value) {
+              _this62.users = data;
+              _this62.filteredOptions = _this62.tournamentForm.valueChanges.pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["startWith"])(''), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["map"])(function (value) {
                 return typeof value === 'string' ? value : value.owner;
               }), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["map"])(function (owner) {
-                return owner ? _this63._filter(owner) : _this63.users.slice();
+                return owner ? _this62._filter(owner) : _this62.users.slice();
               }));
             });
           }
         }, {
           key: "onFileChanged",
           value: function onFileChanged(event) {
-            var _this64 = this;
+            var _this63 = this;
 
             this.selectedFile = event.target.files[0];
             this.tournamentForm.patchValue({
@@ -25377,7 +25380,7 @@
             reader.readAsDataURL(this.selectedFile);
 
             reader.onload = function () {
-              _this64.tournamentForm.patchValue({
+              _this63.tournamentForm.patchValue({
                 image: reader.result
               });
             };
@@ -25416,7 +25419,7 @@
         }, {
           key: "onSubmit",
           value: function onSubmit() {
-            var _this65 = this;
+            var _this64 = this;
 
             this.isSubmitted = true; // this.tournamentForm.value.date = this.formatDate(this.tournamentForm.value.date.toString())
             // this.tournamentForm.value.endDate = this.formatDate(this.tournamentForm.value.endDate.toString())
@@ -25427,23 +25430,23 @@
 
             this.updateTournament(this.tournamentForm.value).subscribe(function (data) {
               if (!data.flag) {
-                _this65.notif.showSuccess('', 'Successfully updated tournament');
+                _this64.notif.showSuccess('', 'Successfully updated tournament');
               } else {
                 console.error('Error', data.err);
 
-                _this65.notif.showError('', 'Error updating tournament');
+                _this64.notif.showError('', 'Error updating tournament');
               }
 
               data.data.date = new Date(Date.parse(data.data.date + '+00:00'));
               data.data.endDate = new Date(Date.parse(data.data.endDate + '+00:00'));
 
-              _this65.dialogRef.close(data.data);
+              _this64.dialogRef.close(data.data);
             }, function (error) {
-              _this65.notif.showError('', 'Error updating tournament');
+              _this64.notif.showError('', 'Error updating tournament');
 
               console.error("Error: ", error);
 
-              _this65.dialogRef.close(_this65.tournamentForm.value);
+              _this64.dialogRef.close(_this64.tournamentForm.value);
             });
           }
         }, {
@@ -25787,7 +25790,7 @@
           key: "ngOnInit",
           value: function ngOnInit() {
             return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(this, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee56() {
-              var _this66 = this;
+              var _this65 = this;
 
               var pools, modifier, _iterator16, _step14, song, _modifier, _modifier2, songData, characteristics, curVersion, _iterator17, _step15, _loop8;
 
@@ -25826,8 +25829,8 @@
                       this.ws.subscribe(function (msg) {
                         var _a;
 
-                        if (msg.TA && !_this66.taConnected) {
-                          _this66.taConnected = ((_a = msg.TA.Self) === null || _a === void 0 ? void 0 : _a.Name) == "BeatKhana!";
+                        if (msg.TA && !_this65.taConnected) {
+                          _this65.taConnected = ((_a = msg.TA.Self) === null || _a === void 0 ? void 0 : _a.Name) == "BeatKhana!";
                         }
                       }, function (err) {
                         return console.log(err);
@@ -25989,11 +25992,11 @@
                           });
 
                           if (curCharacteristic) {
-                            var diff = _models_ta_match__WEBPACK_IMPORTED_MODULE_11__["BeatmapDifficulty"][_this66.titleCase(characteristic.difficulty)];
+                            var diff = _models_ta_match__WEBPACK_IMPORTED_MODULE_11__["BeatmapDifficulty"][_this65.titleCase(characteristic.difficulty)];
 
                             curCharacteristic.Difficulties.push(diff);
                           } else {
-                            var _diff = _models_ta_match__WEBPACK_IMPORTED_MODULE_11__["BeatmapDifficulty"][_this66.titleCase(characteristic.difficulty)];
+                            var _diff = _models_ta_match__WEBPACK_IMPORTED_MODULE_11__["BeatmapDifficulty"][_this65.titleCase(characteristic.difficulty)];
 
                             characteristics.push({
                               SerializedName: characteristic.characteristic,
@@ -26099,7 +26102,7 @@
           key: "onSubmit",
           value: function onSubmit() {
             return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(this, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee58() {
-              var _this67 = this;
+              var _this66 = this;
 
               var _iterator18, _step16, modifier, _iterator19, _step17, song, _iterator20, _step18, _modifier3, _iterator21, _step19, _modifier4, info;
 
@@ -26257,7 +26260,7 @@
 
                     case 51:
                       this.updateSettings(info).subscribe(function (data) {
-                        return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this67, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee57() {
+                        return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this66, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee57() {
                           return regeneratorRuntime.wrap(function _callee57$(_context57) {
                             while (1) {
                               switch (_context57.prev = _context57.next) {
@@ -26279,11 +26282,11 @@
                           }, _callee57, this);
                         }));
                       }, function (error) {
-                        _this67.notif.showError('', 'Error updating tournament settings');
+                        _this66.notif.showError('', 'Error updating tournament settings');
 
                         console.error("Error: ", error);
 
-                        _this67.dialogRef.close(_this67.settingsForm.value);
+                        _this66.dialogRef.close(_this66.settingsForm.value);
                       });
 
                     case 52:
@@ -26302,7 +26305,7 @@
         }, {
           key: "onFileChanged",
           value: function onFileChanged(event) {
-            var _this68 = this;
+            var _this67 = this;
 
             this.selectedFile = event.target.files[0];
             var reader = new FileReader(); // reader.readAsDataURL(this.selectedFile);
@@ -26310,7 +26313,7 @@
             reader.readAsText(this.selectedFile, 'UTF-8');
 
             reader.onload = function () {
-              _this68.base64 = reader.result;
+              _this67.base64 = reader.result;
             };
           }
         }, {
@@ -26943,7 +26946,7 @@
         _createClass(addPlayerDialog, [{
           key: "ngOnInit",
           value: function ngOnInit() {
-            var _this69 = this;
+            var _this68 = this;
 
             this.id = this.data.tournament.tournamentId; // console.log(this.data)
 
@@ -26960,11 +26963,11 @@
             }
 
             this.getUsers().subscribe(function (data) {
-              _this69.users = data;
-              _this69.filteredOptions = _this69.addPlayerForm.valueChanges.pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["startWith"])(''), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["map"])(function (value) {
+              _this68.users = data;
+              _this68.filteredOptions = _this68.addPlayerForm.valueChanges.pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["startWith"])(''), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["map"])(function (value) {
                 return typeof value === 'string' ? value : value.userId;
               }), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["map"])(function (userId) {
-                return userId ? _this69._filter(userId) : _this69.users.slice();
+                return userId ? _this68._filter(userId) : _this68.users.slice();
               }));
             });
           }
@@ -27642,34 +27645,34 @@
         var _super13 = _createSuper(TournamentsComponent);
 
         function TournamentsComponent() {
-          var _this70;
+          var _this69;
 
           _classCallCheck(this, TournamentsComponent);
 
-          _this70 = _super13.apply(this, arguments);
-          _this70.title = "BeatKhana!";
-          _this70.url = '/api/tournaments';
-          _this70.tournaments = [];
-          _this70.loading = true;
-          _this70.linkOptions = {
+          _this69 = _super13.apply(this, arguments);
+          _this69.title = "BeatKhana!";
+          _this69.url = '/api/tournaments';
+          _this69.tournaments = [];
+          _this69.loading = true;
+          _this69.linkOptions = {
             target: {
               url: "_blank"
             }
           };
-          return _this70;
+          return _this69;
         }
 
         _createClass(TournamentsComponent, [{
           key: "ngOnInit",
           value: function ngOnInit() {
-            var _this71 = this;
+            var _this70 = this;
 
             this.getTournaments().subscribe(function (data) {
               data.sort(function (a, b) {
                 return new Date(a.startDate) - new Date(b.startDate);
               });
-              _this71.tournaments = data;
-              _this71.loading = false;
+              _this70.tournaments = data;
+              _this70.loading = false;
             });
             this.setTitle(this.title);
             this.metaTags.defineTags('/', 'BeatKhana!', 'The one stop spot for all Beat Saber tournament information!', 'assets/images/icon/BeatKhana Logo RGB.png');
@@ -27682,7 +27685,7 @@
         }, {
           key: "openDialog",
           value: function openDialog() {
-            var _this72 = this;
+            var _this71 = this;
 
             var dialog = this.dialog.open(newTournamentDialog, {
               minWidth: '60vw',
@@ -27691,12 +27694,12 @@
             });
             dialog.afterClosed().subscribe(function (data) {
               if (data) {
-                _this72.getTournaments().subscribe(function (data) {
+                _this71.getTournaments().subscribe(function (data) {
                   data.sort(function (a, b) {
                     return new Date(a.startDate) - new Date(b.startDate);
                   });
-                  _this72.tournaments = data;
-                  _this72.loading = false;
+                  _this71.tournaments = data;
+                  _this71.loading = false;
                 });
               }
             });
@@ -27776,7 +27779,7 @@
 
       var newTournamentDialog = /*#__PURE__*/function () {
         function newTournamentDialog(fb, http, router, dialogRef, notif) {
-          var _this73 = this;
+          var _this72 = this;
 
           _classCallCheck(this, newTournamentDialog);
 
@@ -27788,11 +27791,11 @@
           this.users = [];
           this.isSubmitted = false;
           this.getUsers().subscribe(function (data) {
-            _this73.users = data;
-            _this73.filteredOptions = _this73.tournamentForm.valueChanges.pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["startWith"])(''), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["map"])(function (value) {
+            _this72.users = data;
+            _this72.filteredOptions = _this72.tournamentForm.valueChanges.pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["startWith"])(''), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["map"])(function (value) {
               return typeof value === 'string' ? value : value.owner;
             }), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["map"])(function (owner) {
-              return owner ? _this73._filter(owner) : _this73.users.slice();
+              return owner ? _this72._filter(owner) : _this72.users.slice();
             }));
           });
         }
@@ -27860,22 +27863,22 @@
         }, {
           key: "onSubmit",
           value: function onSubmit() {
-            var _this74 = this;
+            var _this73 = this;
 
             this.isSubmitted = true;
             this.tournamentForm.value.is_mini = +this.tournamentForm.value.is_mini; // this.tournamentForm.value.date = this.formatDate(this.tournamentForm.value.date.toString())
             // this.tournamentForm.value.endDate = this.formatDate(this.tournamentForm.value.endDate.toString())
 
             this.addTournament(this.tournamentForm.value).subscribe(function (data) {
-              _this74.notif.showSuccess('', 'Successfully created tournament');
+              _this73.notif.showSuccess('', 'Successfully created tournament');
 
-              _this74.dialogRef.close(true);
+              _this73.dialogRef.close(true);
             }, function (error) {
-              _this74.notif.showError('', 'Error creating tournament');
+              _this73.notif.showError('', 'Error creating tournament');
 
               console.error("Error: ", error);
 
-              _this74.dialogRef.close(false);
+              _this73.dialogRef.close(false);
             });
           }
         }, {
@@ -27891,7 +27894,7 @@
         }, {
           key: "onFileChanged",
           value: function onFileChanged(event) {
-            var _this75 = this;
+            var _this74 = this;
 
             this.selectedFile = event.target.files[0];
             this.tournamentForm.patchValue({
@@ -27901,7 +27904,7 @@
             reader.readAsDataURL(this.selectedFile);
 
             reader.onload = function () {
-              _this75.tournamentForm.patchValue({
+              _this74.tournamentForm.patchValue({
                 image: reader.result
               });
             };
@@ -28221,7 +28224,7 @@
           key: "onSubmit",
           value: function onSubmit() {
             return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(this, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee63() {
-              var _this76 = this;
+              var _this75 = this;
 
               return regeneratorRuntime.wrap(function _callee63$(_context63) {
                 while (1) {
@@ -28236,7 +28239,7 @@
                       this.router.navigateByUrl('/archive', {
                         skipLocationChange: true
                       }).then(function () {
-                        _this76.router.navigate(['']);
+                        _this75.router.navigate(['']);
                       });
                       _context63.next = 11;
                       break;
@@ -28667,37 +28670,37 @@
         var _super14 = _createSuper(UserComponent);
 
         function UserComponent() {
-          var _this77;
+          var _this76;
 
           _classCallCheck(this, UserComponent);
 
-          _this77 = _super14.apply(this, arguments);
-          _this77.title = " | BeatKhana!";
-          _this77.url = '/api/user/';
-          _this77.curUser = null;
-          _this77.loading = true;
-          return _this77;
+          _this76 = _super14.apply(this, arguments);
+          _this76.title = " | BeatKhana!";
+          _this76.url = '/api/user/';
+          _this76.curUser = null;
+          _this76.loading = true;
+          return _this76;
         }
 
         _createClass(UserComponent, [{
           key: "ngOnInit",
           value: function ngOnInit() {
-            var _this78 = this;
+            var _this77 = this;
 
             this.route.paramMap.subscribe(function (params) {
-              _this78.userId = params.get('id');
-              _this78.url += _this78.userId;
+              _this77.userId = params.get('id');
+              _this77.url += _this77.userId;
 
-              _this78.getUser().subscribe(function (data) {
-                _this78.curUser = data;
+              _this77.getUser().subscribe(function (data) {
+                _this77.curUser = data;
 
-                _this78.setTitle(_this78.curUser.name + "'s Profile" + _this78.title);
+                _this77.setTitle(_this77.curUser.name + "'s Profile" + _this77.title);
 
-                if (_this78.curUser.avatar.includes('api') || _this78.curUser.avatar.includes('oculus')) {
-                  _this78.curUser.avatar = "https://new.scoresaber.com" + _this78.curUser.avatar;
+                if (_this77.curUser.avatar.includes('api') || _this77.curUser.avatar.includes('oculus')) {
+                  _this77.curUser.avatar = "https://new.scoresaber.com" + _this77.curUser.avatar;
                 } else {
-                  _this78.curUser.avatar = "/".concat(_this78.curUser.avatar) + (_this78.curUser.avatar.substring(0, 2) == 'a_' ? '.gif' : '.webp');
-                  _this78.curUser.avatar = "https://cdn.discordapp.com/avatars/".concat(_this78.curUser.discordId).concat(_this78.curUser.avatar);
+                  _this77.curUser.avatar = "/".concat(_this77.curUser.avatar) + (_this77.curUser.avatar.substring(0, 2) == 'a_' ? '.gif' : '.webp');
+                  _this77.curUser.avatar = "https://cdn.discordapp.com/avatars/".concat(_this77.curUser.discordId).concat(_this77.curUser.avatar);
                 }
               });
             });
@@ -28710,7 +28713,7 @@
         }, {
           key: "editBadges",
           value: function editBadges() {
-            var _this79 = this;
+            var _this78 = this;
 
             var dialog = this.dialog.open(_modals_assign_badges_assign_badges_component__WEBPACK_IMPORTED_MODULE_3__["AssignBadgesComponent"], {
               minWidth: '60vw',
@@ -28721,7 +28724,7 @@
               }
             });
             dialog.afterClosed().subscribe(function (data) {
-              return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this79, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee64() {
+              return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this78, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee64() {
                 return regeneratorRuntime.wrap(function _callee64$(_context64) {
                   while (1) {
                     switch (_context64.prev = _context64.next) {
@@ -29546,30 +29549,30 @@
         var _super15 = _createSuper(UsersComponent);
 
         function UsersComponent() {
-          var _this80;
+          var _this79;
 
           _classCallCheck(this, UsersComponent);
 
-          _this80 = _super15.apply(this, arguments);
-          _this80.users = [];
-          _this80.loading = true;
-          _this80.columnsToDisplay = ['name', 'ssLink', 'twitch', 'globalRank', 'localRank', 'country', 'tourneyRank', 'TR', 'pronoun', 'roleNames', 'edit'];
-          return _this80;
+          _this79 = _super15.apply(this, arguments);
+          _this79.users = [];
+          _this79.loading = true;
+          _this79.columnsToDisplay = ['name', 'ssLink', 'twitch', 'globalRank', 'localRank', 'country', 'tourneyRank', 'TR', 'pronoun', 'roleNames', 'edit'];
+          return _this79;
         }
 
         _createClass(UsersComponent, [{
           key: "ngOnInit",
           value: function ngOnInit() {
-            var _this81 = this;
+            var _this80 = this;
 
             // this.dataSource = new MatTableDataSource();
             // this.setUsers();
             this.getUsers().subscribe(function (data) {
-              _this81.loading = false;
-              _this81.users = data;
-              _this81.dataSource = new _angular_material_table__WEBPACK_IMPORTED_MODULE_6__["MatTableDataSource"](_this81.users);
+              _this80.loading = false;
+              _this80.users = data;
+              _this80.dataSource = new _angular_material_table__WEBPACK_IMPORTED_MODULE_6__["MatTableDataSource"](_this80.users);
 
-              _this81.setDataSourceAttributes();
+              _this80.setDataSourceAttributes();
             });
             this.setTitle('All Users | BeatKhana!');
           }
@@ -29581,7 +29584,7 @@
         }, {
           key: "editUser",
           value: function editUser(id) {
-            var _this82 = this;
+            var _this81 = this;
 
             var dialog = this.dialog.open(editUserDialog, {
               // height: '400px',
@@ -29597,12 +29600,12 @@
             });
             dialog.afterClosed().subscribe(function (data) {
               if (data) {
-                var i = _this82.users.findIndex(function (x) {
+                var i = _this81.users.findIndex(function (x) {
                   return x.discordId == data.discordId;
                 });
 
-                _this82.users[i] = Object.assign(Object.assign({}, _this82.users[i]), data);
-                _this82.dataSource.data = _this82.users;
+                _this81.users[i] = Object.assign(Object.assign({}, _this81.users[i]), data);
+                _this81.dataSource.data = _this81.users;
               }
             });
           }
@@ -29764,7 +29767,7 @@
           key: "onSubmit",
           value: function onSubmit() {
             return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(this, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee65() {
-              var _this83 = this;
+              var _this82 = this;
 
               var returnData, roleNames;
               return regeneratorRuntime.wrap(function _callee65$(_context65) {
@@ -29782,7 +29785,7 @@
                         this.userForm.value.roleIds = this.data.selUser.roleIds;
                       } else {
                         roleNames = this.userForm.value.roleIds.map(function (x) {
-                          return _this83.userRoles[_this83.userRoles.findIndex(function (y) {
+                          return _this82.userRoles[_this82.userRoles.findIndex(function (y) {
                             return y.id == x;
                           })].name;
                         }).join(', ');

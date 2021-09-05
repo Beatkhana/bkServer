@@ -7737,6 +7737,7 @@ class OverlayComponent {
         this.bkWS = Object(rxjs_webSocket__WEBPACK_IMPORTED_MODULE_2__["webSocket"])(`${location.protocol == 'http:' ? 'ws' : 'wss'}://` + location.host + '/api/ws');
         this.player1 = null;
     }
+    // taWS: WebSocketSubject<any>;
     ngAfterViewInit() {
         return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(this, void 0, void 0, function* () {
             let node = document.createElement('script');
@@ -7773,8 +7774,10 @@ class OverlayComponent {
                             break;
                     }
                 }
+                if (msg.TA)
+                    this.handlePacket(msg.TA);
             }, err => console.log('err: ', err), () => console.log('complete'));
-            // console.log(this.router.url)
+            this.bkWS.next({ setTournament: this.tourneyId });
         });
     }
     draw(url) {
@@ -7874,10 +7877,14 @@ class OverlayComponent {
             let settings = yield this.http.get(`/api/tournament/${this.tourneyId}`).toPromise();
             settings = settings[0];
             if (settings.ta_url) {
-                this.taWS = Object(rxjs_webSocket__WEBPACK_IMPORTED_MODULE_2__["webSocket"])(`wss://` + settings.ta_url);
-                this.taWS.subscribe(msg => {
-                    this.handlePacket(msg);
-                }, err => console.log('err: ', err), () => console.log('complete'));
+                // this.taWS = webSocket(`wss://` + settings.ta_url);
+                // this.taWS.subscribe(
+                //     msg => {
+                //         this.handlePacket(msg)
+                //     },
+                //     err => console.log('err: ', err),
+                //     () => console.log('complete')
+                // );
             }
             this.matchData = data;
             console.log(data);
