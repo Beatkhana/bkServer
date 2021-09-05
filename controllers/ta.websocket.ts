@@ -73,6 +73,7 @@ export class taWebSocket extends controller {
 
     handlePacket(packet) {
         // console.log(packet);
+
         if (packet.Type == PacketType.ConnectResponse) {
             let connectResponse = packet.SpecificPacket as ConnectResponse;
             if (!this.taClient.Self && connectResponse.Self) {
