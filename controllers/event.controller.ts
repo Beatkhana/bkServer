@@ -7,7 +7,7 @@ import { TAController } from './ta.controller';
 
 const emitter: EventEmitter = new EventEmitter();
 const wss = new WebSocket.Server({ noServer: true, path: "/api/ws" });
-const owopWS = new WebSocket.Server({ noServer: true, path: "/api/owop", port: 9000 });
+const owopWS = new WebSocket.Server({ noServer: true, path: "/api/owop" });
 
 emitter.setMaxListeners(1000);
 
