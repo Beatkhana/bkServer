@@ -128,7 +128,7 @@ export class taWebSocket extends controller {
         } else if (packet.Type == PacketType.ForwardingPacket) {
             this.handlePacket(packet.SpecificPacket);
         } else if (packet.Type == PacketType.SongFinished) {
-            console.debug("song fin", <SongFinished>packet.SpecificPacket);
+            // console.debug("song fin", <SongFinished>packet.SpecificPacket);
             QualifiersController.taLiveScore(<SongFinished>packet.SpecificPacket, this.tournamentId);
         } else if (packet.Type == PacketType.ScoreRequestResponse) {
             // emitter.emit("scoreResponse", packet.SpecificPacket);

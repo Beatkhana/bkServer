@@ -755,6 +755,8 @@ export class bracketController extends controller {
         u2.avatar as p2Avatar,
         u1.twitchName as p1Twitch,
         u2.twitchName as p2Twitch,
+        u1.ssId as p1ssId,
+        u2.ssId as p2ssId,
         par1.seed as p1Seed,
         par2.seed as p2Seed
         
