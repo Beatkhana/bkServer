@@ -4,6 +4,7 @@ import { controller } from "./controller";
 import * as rp from 'request-promise';
 import cheerio from 'cheerio';
 import { Beatsaver } from "../models/beatsaver.model";
+import { Scoresaber } from "../models/scoresaber.model";
 
 export class MapPoolController extends controller {
 
@@ -146,14 +147,22 @@ export class MapPoolController extends controller {
         if (!isAuth) return this.unauthorized(res);
         let data = req.body;
         try {
-            let html = await rp.get(data.ssLink);
-            let hash: string = cheerio('.box.has-shadow > b', html).text();
-            let diff: string = cheerio('li.is-active > a > span', html).text();
-            let diffSearch = diff.toLowerCase();
-            if (diffSearch == 'expert+') diffSearch = 'expertPlus';
-
-            let songInfo = await this.getBSData(hash, diffSearch);
-            songInfo.songDiff = diff;
+            let leaderboardId = data.ssLink.split('/').pop()?.split('?')[0];
+            let ssSong: Scoresaber.LeaderboardInfo;
+            try {
+                let ssReq = await rp.get<Scoresaber.LeaderboardInfo>(`https://scoresaber.com/api/leaderboard/by-id/${leaderboardId}/info`, {
+                    json: true
+                })
+                ssSong = ssReq;
+            } catch (error) {
+                console.error("Scoresaber Song Error: ", error);
+                return this.clientError(res, "Can't find song on scoresaber");
+            }
+            let diffSearch = Scoresaber.getDifficultyLabel(ssSong.difficulty);
+            if (diffSearch == 'Expert+') diffSearch = 'ExpertPlus';
+            let hash = ssSong.songHash;
+            let songInfo = await this.getBSData(ssSong.songHash, diffSearch);
+            songInfo.songDiff = Scoresaber.getDifficultyLabel(ssSong.difficulty);
             songInfo.ssLink = data.ssLink;
             let values = [];
             for (const id of data.poolIds) {
@@ -184,44 +193,20 @@ export class MapPoolController extends controller {
         let songName = bsData.metadata.songName.replace(" ", "+");
         let curVersion = bsData.versions.reduce((a, b) => (new Date(a.createdAt) > new Date(b.createdAt) ? a : b));
         let songHash = curVersion.hash;
-
-        let ssData = await rp.get(`https://scoresaber.com/?search=${encodeURI(songName)}`)
-            .then(async (html: string | Buffer) => {
-                let $ = cheerio.load(html);
-
-                let defaultLeaderboard = "";
-                let defaultDiff = "";
-
-                let ssLink = "";
-
-                $("table.ranking tr").each((i, e) => {
-                    if ($(e).find('img').attr('src')) {
-                        let curHash = $(e).find('img').attr('src').replace("/imports/images/songs/", "").replace(".png", "");
-                        if (curHash.toLowerCase() == songHash.toLowerCase()) {
-                            if (defaultLeaderboard == "") {
-                                defaultDiff = $(e).find('td.difficulty>span').text();
-                                defaultLeaderboard = $(e).find('td.song>a').attr('href');
-                            }
-                            if ($(e).find('td.difficulty>span').text().toLowerCase() == diff.toLowerCase()) {
-                                ssLink = $(e).find('td.song>a').attr('href');
-                            }
-                        }
-                    }
-                });
-
-                let response = {
-                    ssLink: ssLink != "" ? ssLink : defaultLeaderboard,
-                    diff: ssLink != "" ? diff : defaultDiff,
-                }
-                return response;
-
-            })
-            .catch(function (err) {
-                console.log(err);
+        let ssInfo: Scoresaber.LeaderboardInfo;
+        let ssDiff = Scoresaber.getDifficultyNumber(diff);
+        try {
+            let ssReq = await rp.get<Scoresaber.LeaderboardInfo>(`https://scoresaber.com/api/leaderboard/by-hash/${songHash}/info?difficulty=${ssDiff}`, {
+                json: true
             });
+            ssInfo = ssReq;
+        } catch (error) {
+            console.error("Scoresaber Song Error: ", error);
+            return this.clientError(res, "Can't find song on scoresaber");
+        }
 
-        let diffSearch = ssData.diff.toLowerCase();
-        if (diffSearch == 'expert+') diffSearch = 'expertPlus';
+        let diffSearch = diff;
+        if (diffSearch == 'Expert+') diffSearch = 'ExpertPlus';
         let diffInfo = curVersion.diffs.find(x => x.characteristic === 'Standard' && x.difficulty === diffSearch);
         let info = {
             songHash: curVersion.hash.toUpperCase(),
@@ -230,8 +215,8 @@ export class MapPoolController extends controller {
             levelAuthor: bsData.metadata.levelAuthorName,
             key: bsData.id,
             numNotes: (diffInfo ? diffInfo.notes : 0),
-            songDiff: ssData.diff,
-            ssLink: `https://scoresaber.com${ssData.ssLink}`,
+            songDiff: diff,
+            ssLink: `https://scoresaber.com/leaderboard/${ssInfo.id}`,
             poolId: 0
         }
         let values = [];
@@ -247,7 +232,7 @@ export class MapPoolController extends controller {
         }
     }
 
-    private async getBSData(hash, diff): Promise<any> {
+    private async getBSData(hash: string, diff: string): Promise<any> {
         try {
             let res: string = await rp.get('https://beatsaver.com/api/maps/hash/' + hash, {
                 headers: {
