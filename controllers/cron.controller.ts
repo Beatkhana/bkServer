@@ -1,5 +1,5 @@
 import * as cron from 'node-cron';
-import { ssResponse } from '../models/scoresaber.model';
+import { PlayerInfo, ssResponse } from '../models/scoresaber.model';
 import { badge, User } from '../models/user.model';
 import { controller } from './controller';
 import { userController } from './user.controller';
@@ -94,12 +94,12 @@ export class cronController extends controller {
         for (let i = 0; i < users.length; i++) {
             const user = users[i];
             if (!user.ssId) continue;
-            let ssData: ssResponse = await userController.getSSData(user.ssId);
-            if (ssData != null && ssData.playerInfo && ssData?.playerInfo?.banned != 1) {
+            let ssData: PlayerInfo = await userController.getSSData(user.ssId);
+            if (ssData != null && ssData && ssData?.banned != 1) {
                 let info = {
-                    globalRank: ssData.playerInfo.rank,
-                    localRank: ssData.playerInfo.countryRank,
-                    country: ssData.playerInfo.country
+                    globalRank: ssData.rank,
+                    localRank: ssData.countryRank,
+                    country: ssData.country
                 }
                 try {
                     await this.db.aQuery("UPDATE users SET ? WHERE discordId = ?", [info, user.discordId]);
@@ -107,8 +107,8 @@ export class cronController extends controller {
                 } catch (error) {
                     console.log(error);
                 }
-                if (ssData.playerInfo.badges.length > 0) {
-                    for (const badge of ssData.playerInfo.badges) {
+                if (ssData.badges.length > 0) {
+                    for (const badge of ssData.badges) {
                         let imgName = badge.image.split('.')[0];
                         if (['ranker', 'supporter'].includes(imgName)) continue;
                         if (!badgeLabels.includes(imgName)) {

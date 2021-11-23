@@ -4,7 +4,7 @@ export interface Badge {
 }
 
 export interface PlayerInfo {
-    playerId: string;
+    id: string;
     playerName: string;
     avatar: string;
     rank: number;

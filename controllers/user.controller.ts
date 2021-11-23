@@ -9,6 +9,7 @@ const FormData = require('form-data');
 const request = require('request');
 
 import crypto from "crypto";
+import { PlayerInfo } from "../models/scoresaber.model";
 
 export class userController extends controller {
 
@@ -229,12 +230,12 @@ export class userController extends controller {
         return user;
     }
 
-    static async getSSData(id: string) {
+    static async getSSData(id: string): Promise<PlayerInfo | null> {
         function delay(ms: number) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
-        const res = await fetch(`https://new.scoresaber.com/api/player/${id}/full`);
+        const res = await fetch(`https://scoresaber.com/api/player/${id}/full`);
         if (parseInt(res.headers.get('x-ratelimit-remaining') ?? "0") < 10) {
             let d1 = new Date(parseInt(res.headers.get('x-ratelimit-reset') ?? "0") * 1000);
             let d2 = new Date();
@@ -362,20 +363,20 @@ export class userController extends controller {
     async newUser(req: express.Request, res: express.Response) {
         if (req.session?.newUsr?.length > 0) {
             let usrData = { links: req.body, discordId: req.session.newUsr[0]['discordId'], refresh_token: req.session.newUsr[0]['refresh_token'], avatar: req.session.newUsr[0]['avatar'], name: req.session.newUsr[0]['name'] };
-            let ssData = null;
+            let ssData: PlayerInfo = null;
             if (usrData.links.scoreSaber) ssData = await userController.getSSData(usrData.links.scoreSaber.split('u/')[1]);
             if (!usrData.avatar) {
                 usrData.avatar = "-";
             }
             let user = {
                 discordId: usrData.discordId,
-                ssId: ssData?.playerInfo?.playerId,
+                ssId: ssData.id,
                 name: usrData.name,
                 twitchName: usrData.links.twitch.split('twitch.tv/')[1],
                 avatar: usrData.avatar,
-                globalRank: ssData?.playerInfo?.rank ?? 0,
-                localRank: ssData?.playerInfo?.countryRank ?? 0,
-                country: ssData?.playerInfo?.country ?? '',
+                globalRank: ssData?.rank ?? 0,
+                localRank: ssData?.countryRank ?? 0,
+                country: ssData?.country ?? '',
                 pronoun: usrData.links.pronoun,
                 refresh_token: usrData.refresh_token
             };
