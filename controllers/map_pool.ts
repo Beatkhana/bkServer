@@ -133,7 +133,7 @@ export class MapPoolController extends controller {
             songs: curSongs,
             syncURL: `https://beatkhana.com/api/download-pool/${pool[0].id}`
         }
-
+        playlist.image = playlist.image.replace(`data:`, '');
         var data = JSON.stringify(playlist);
         let filename = playlist.playlistTitle.replace(/[<>:"\/\\|?*]+/g, '').replace(/ /g, '_');
         res.setHeader('Content-disposition', `attachment; filename= ${filename}.bplist`);
