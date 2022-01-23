@@ -2,16 +2,13 @@ import express from 'express';
 import { cronController } from './controllers/cron.controller';
 import { debugLogger } from './controllers/debugLogger.controller';
 import { owopWS, wss } from './controllers/event.controller';
-import { beginServer } from './controllers/owop/server';
 import { sessionParser } from './controllers/session';
 import { TAController } from './controllers/ta.controller';
 
-const router = require('./router')
+import { router } from './router';
 const app = express();
-const path = require('path');
+import path from 'path';
 var compression = require('compression');
-const session = require('express-session');
-var MemoryStore = require('memorystore')(session);
 
 import { bracketRouter } from './routers/bracket.router';
 import { mapPoolRouter } from './routers/map_pool';
@@ -103,7 +100,7 @@ TACon.init();
 let cronCon: cronController = new cronController();
 cronCon.setCrons();
 
-beginServer();
+// beginServer();
 
 // process.on('exit', beforeClose);
 // process.on('SIGINT', beforeClose);

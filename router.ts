@@ -12,7 +12,7 @@ const tournament = new tournaments();
 const ranking = new rankings();
 const user = new userAuth();
 // const auth = new apiAuth();
-const router = express.Router();
+export const router = express.Router();
 const baseUrl = '/api';
 
 const log = new logger();
@@ -854,8 +854,6 @@ router.get(baseUrl + '/logs', function (req, res) {
         }
     });
 });
-
-module.exports = router;
 
 // Auth stuff
 function isAdminOwner(req, tournamentId, callback: Function) {
