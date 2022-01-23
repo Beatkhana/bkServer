@@ -5,7 +5,7 @@ const mapPoolRouter: Router = Router();
 const mapPoolCon: MapPoolController = new MapPoolController();
 
 mapPoolRouter.get('/tournament/:tourneyId/map-pools', (req, res) => mapPoolCon.getPools(req, res));
-mapPoolRouter.get('/download-pool/:id', (req, res) => mapPoolCon.downloadPool(req, res));
+mapPoolRouter.get('/tournament/:tourneyId/download-pool/:id', (req, res) => mapPoolCon.downloadPool(req, res));
 
 mapPoolRouter.put('/tournament/:tourneyId/map-pools', (req, res) => mapPoolCon.updatePool(req, res));
 
