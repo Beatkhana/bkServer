@@ -131,7 +131,7 @@ export class MapPoolController extends controller {
             playlistDescription: pool[0].description,
             image: pool[0].image,
             songs: curSongs,
-            syncURL: `https://beatkhana.com/api/download-pool/${pool[0].id}`
+            syncURL: `https://beatkhana.com/api/tournament/${pool[0].tournamentId}/download-pool/${pool[0].id}`
         }
         playlist.image = playlist.image.replace(`data:`, '');
         var data = JSON.stringify(playlist);
