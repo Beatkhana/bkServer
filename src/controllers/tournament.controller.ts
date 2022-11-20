@@ -1,0 +1,494 @@
+import express from "express";
+import sharp from "sharp";
+import { staff } from "../models/tournament.models";
+import DatabaseService from "../services/database";
+import { authController } from "./auth.controller";
+import { controller } from "./controller";
+import { ParticipantsController } from "./participants";
+import { QualifiersController } from "./qualifiers";
+import { TAController } from "./TA/ta.controller";
+
+export class TournamentController extends controller {
+    async getTournament(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!auth.tourneyId) return this.clientError(res, "Not tournament Id provided");
+        let user = await auth.getUser();
+        let sqlWhere = "";
+        let userRoles = "";
+        let isAuth = (await auth.isAdmin) || (await auth.isStaff);
+        switch (true) {
+            case isAuth:
+                sqlWhere = ``;
+                break;
+            case user != null:
+                sqlWhere = `AND (ts.public = 1 OR owner = ? OR tra.role_id IS NOT NULL)`;
+                userRoles = `LEFT JOIN tournament_role_assignment tra ON tra.tournament_id = t.id AND tra.user_id = ${user.discordId}`;
+                break;
+            default:
+                sqlWhere = `AND ts.public = 1`;
+                break;
+        }
+        let tournament = (await DatabaseService.query(
+            `SELECT t.id as tournamentId,
+        t.name,
+        t.image,
+        t.date as startDate,
+        t.endDate,
+        t.discord,
+        t.twitchLink,
+        t.prize,
+        t.info,
+        CAST(t.owner AS CHAR) as owner,
+        t.archived,
+        t.first,
+        t.second,
+        t.third,
+        t.is_mini,
+        ts.id as settingsId,
+        ts.public_signups,
+        ts.public,
+        ts.state,
+        ts.type,
+        ts.has_bracket,
+        ts.has_map_pool,
+        ts.signup_comment,
+        ts.comment_required,
+        ts.show_signups,
+        ts.bracket_sort_method,
+        ts.bracket_limit,
+        ts.quals_cutoff,
+        ts.show_quals,
+        ts.has_quals,
+        ts.countries,
+        ts.sort_method,
+        ts.standard_cutoff,
+        ts.qual_attempts,
+        ts.quals_method,
+        ts.ta_url ${isAuth ? ", ts.ta_password, ts.ta_event_flags" : ""}
+        FROM tournaments t
+        LEFT JOIN tournament_settings ts ON ts.tournamentId = t.id  
+        ${userRoles}
+        WHERE t.id = ? ${sqlWhere}`,
+            [auth.tourneyId, user?.discordId]
+        )) as any[];
+        if (tournament.length == 0) return this.notFound(res, "Tournament Not Found");
+        return res.send(tournament);
+    }
+
+    async createTournament(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!(await auth.isTournamentHost)) return this.unauthorized(res);
+        let data = req.body;
+        let base64String = data.image;
+        let base64Img = base64String.split(";base64,").pop();
+
+        let imgName = data.imgName;
+        imgName = imgName.toLowerCase();
+        imgName = imgName.substring(0, imgName.indexOf(".")) + ".webp";
+        let savePath = this.env == "development" ? "../app/src/assets/images/" : __dirname + "/../public/assets/images/";
+
+        data.image = imgName;
+        delete data.imgName;
+
+        try {
+            data.date = this.formatDate(data.date);
+            data.endDate = this.formatDate(data.endDate);
+        } catch (err) {
+            return this.clientError(res, "Invalid Date");
+        }
+
+        try {
+            let result: any = await DatabaseService.query(`INSERT INTO tournaments SET ?`, [data]);
+            let hash = this.randHash(15);
+
+            await DatabaseService.query("UPDATE tournaments SET image = ? WHERE id = ?", [`${result.insertId}_${hash}.webp`, result.insertId]);
+            await DatabaseService.query(`INSERT INTO tournament_settings SET tournamentId = ?`, [result.insertId]);
+
+            const buf = Buffer.from(base64Img, "base64");
+            const webpData = await sharp(buf).resize({ width: 550 }).webp({ lossless: true, quality: 50 }).toBuffer();
+
+            await sharp(webpData).toFile(savePath + `${result.insertId}_${hash}.webp`);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+
+    async deleteTournament(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!(await auth.isAdmin)) return this.unauthorized(res);
+        if (!auth.tourneyId) return this.clientError(res, "No tournament Id provided");
+        try {
+            await DatabaseService.query(`DELETE FROM tournaments WHERE id = ?`, [auth.tourneyId]);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+
+    async updateTournament(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
+        let data = { tournament: req.body, id: auth.tourneyId };
+        let imgName: string = data.tournament.image;
+
+        if (this.isBase64(data.tournament.image)) {
+            let base64String = data.tournament.image;
+            let base64Img = base64String.split(";base64,").pop();
+
+            imgName = data.tournament.imgName;
+            imgName = imgName.toLowerCase();
+            imgName = imgName.replace(/\s/g, "");
+            imgName = imgName.substring(0, imgName.indexOf(".")) + ".webp";
+            let savePath = this.env == "development" ? "../app/src/assets/images/" : __dirname + "/../public/assets/images/";
+
+            // sharp
+            const buf = await Buffer.from(base64Img, "base64");
+            const webpData = await sharp(buf).resize({ width: 550 }).webp({ lossless: true, quality: 50 }).toBuffer();
+            let hash = this.randHash(15);
+            await sharp(webpData).toFile(savePath + `${data.id}_${hash}.webp`);
+            data.tournament.image = `${data.id}_${hash}.webp`;
+        }
+
+        delete data.tournament.imgName;
+        data.tournament.date = this.formatDate(data.tournament.date);
+        data.tournament.endDate = this.formatDate(data.tournament.endDate);
+
+        try {
+            await DatabaseService.query(`UPDATE tournaments SET ? WHERE ?? = ?`, [data.tournament, "id", data.id]);
+            return res.send({ data: data.tournament });
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+
+    async archive(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!((await auth.isAdmin) || (await auth.isStaff))) return this.unauthorized(res);
+        let data = req.body;
+        try {
+            data.tournament = {
+                first: data.first,
+                second: data.second,
+                third: data.third,
+                archived: 1
+            };
+            await DatabaseService.query(`UPDATE tournaments SET ? WHERE ?? = ?`, [data.tournament, "id", data.id]);
+            return this.ok(res);
+        } catch (err) {
+            return this.fail(res, err);
+        }
+    }
+
+    async updateSettings(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
+        let data = req.body;
+        let curSettings: any = await DatabaseService.query("SELECT * FROM tournament_settings WHERE id = ?", [data.settingsId]);
+        if (data.settings.state == "main_stage" && curSettings[0].state == "qualifiers") {
+            let seeding: any = await this.seedPlayersByQuals(data.tournamentId, data.settings.quals_cutoff);
+            if (!seeding) {
+                return this.fail(res, "Error Creating Seeds");
+            }
+        } else if (data.settings.state == "main_stage" && curSettings[0].state == "awaiting_start") {
+            if (data.settings.type == "battle_royale") {
+                let seeding: any = await this.seedPlayers(data.tournamentId, data.settings.standard_cutoff, "date");
+                if (!seeding) {
+                    return this.fail(res, "Error Creating Seeds");
+                }
+            }
+        }
+        if (data.settings.ta_url == "") data.settings.ta_url = null;
+        if (data.settings.ta_url != null && data.settings.ta_url != curSettings[0].ta_url) {
+            TAController.updateConnection(data.tournamentId, data.settings.ta_url, data.settings.ta_password);
+        }
+
+        try {
+            let result = await DatabaseService.query(`UPDATE tournament_settings SET ? WHERE ?? = ?`, [data.settings, "id", data.settingsId]);
+            if (data.settings.quals_method == "ta_quals") {
+                if (data.settings.state == "qualifiers" && curSettings[0].state == "awaiting_start") {
+                    QualifiersController.createEvent(data.tournamentId);
+                } else if (data.settings.state != "qualifiers") {
+                    TAController.deleteEvent(data.tournamentId);
+                } else if (data.settings.state == "qualifiers") {
+                    QualifiersController.updateEvent(data.tournamentId);
+                }
+            }
+            return res.send({ data: result });
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+
+    // TODO
+    // async recalcQuals(req: express.Request, res: express.Response) {
+    //     let auth = new authController(req);
+    //     if (!await auth.hasAdminPerms) return this.unauthorized(res);
+    //     let data = req.body;
+    //     let curSettings: any = await DatabaseService.query("SELECT * FROM tournament_settings WHERE id = ?", [data.settingsId]);
+    //     let seeding: any = await this.seedPlayersByQuals(data.tournamentId, data.settings.quals_cutoff);
+    //     if (data.settings.state == 'main_stage' && curSettings[0].state == "qualifiers") {
+    //         if (!seeding) {
+    //             return this.fail(res, "Error Creating Seeds");
+    //         }
+    //     } else if (data.settings.state == 'main_stage' && curSettings[0].state == "awaiting_start") {
+    //         if (data.settings.type == 'battle_royale') {
+    //             let seeding: any = await this.seedPlayers(data.tournamentId, data.settings.standard_cutoff, 'date');
+    //             if (!seeding) {
+    //                 return this.fail(res, "Error Creating Seeds");
+    //             }
+    //         }
+    //     }
+    //     return this.ok(res);
+    // }
+
+    // non quals seed
+    private async seedPlayers(tournamentId: string, cutoff, method: string) {
+        if (method == "date") {
+            let updateErr = false;
+            let participants: any = await ParticipantsController.allParticipants(tournamentId);
+            participants.sort((a, b) => a.participantId - b.participantId);
+            let qualified = participants.slice(0, cutoff + 1);
+            for (const user of participants) {
+                await DatabaseService.query("UPDATE participants SET seed = 0, position = 0 WHERE userId = ? AND tournamentId = ?", [user.userId, tournamentId]).catch(err => {
+                    console.error(err);
+                    updateErr = true;
+                });
+            }
+            for (let i = 0; i < qualified.length; i++) {
+                const user = qualified[i];
+                console.log(i, user.userId, tournamentId);
+                await DatabaseService.query("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [i + 1, user.userId, tournamentId]).catch(err => {
+                    console.error(err);
+                    updateErr = true;
+                });
+            }
+            return !updateErr;
+        }
+    }
+
+    // quals seed
+    async seedPlayersByQuals(tournamentId: string, cutoff) {
+        const pools: any = await this.getMapPools(tournamentId);
+        let qualsPool: any = Object.values(pools).find((x: any) => x.is_qualifiers == 1);
+        let qualsScores = await QualifiersController.getQualsScores(tournamentId);
+        console.log(qualsScores);
+        for (const user of qualsScores) {
+            for (const score of user.scores) {
+                if (qualsPool.songs.find(x => x.hash == score.songHash).numNotes != 0) {
+                    score.percentage = score.score / (qualsPool.songs.find(x => x.hash == score.songHash).numNotes * 920 - 7245);
+                } else {
+                    score.percentage = 0;
+                }
+                score.score = Math.round(score.score / 2);
+            }
+        }
+        qualsScores.sort((a, b) => {
+            let sumA = this.sumProperty(a.scores, "score");
+            let sumB = this.sumProperty(b.scores, "score");
+            let sumAPer = this.sumProperty(a.scores, "percentage");
+            let sumBPer = this.sumProperty(b.scores, "percentage");
+            a.avgPercentage = isNaN((sumAPer / qualsPool.songs.length) * 100) ? 0 : ((sumAPer / qualsPool.songs.length) * 100).toFixed(2);
+            b.avgPercentage = isNaN((sumBPer / qualsPool.songs.length) * 100) ? 0 : ((sumBPer / qualsPool.songs.length) * 100).toFixed(2);
+            a.scoreSum = sumA;
+            b.scoreSum = sumB;
+            if (a.forfeit == 1) return 1;
+            if (b.forfeit == 2) return -1;
+            if (b.avgPercentage == a.avgPercentage) {
+                if (sumB == sumA) {
+                    if (a.globalRank == 0) return 1;
+                    if (b.globalRank == 0) return -1;
+                    return a.globalRank - b.globalRank;
+                } else {
+                    return sumB - sumA;
+                }
+            } else {
+                return b.avgPercentage - a.avgPercentage;
+            }
+        });
+        for (const user of qualsScores) {
+            await DatabaseService.query("UPDATE participants SET seed = 0 WHERE userId = ? AND tournamentId = ?", [user.discordId, tournamentId]).catch(err => {
+                console.error(err);
+                updateErr = true;
+            });
+        }
+        let users = [];
+        for (let i = 0; i < cutoff; i++) {
+            const user = qualsScores[i];
+            // user.seed = i;
+            let temp = {
+                discordId: user.discordId,
+                seed: i + 1
+            };
+            users.push(temp);
+        }
+        let updateErr = false;
+        for (const user of users) {
+            await DatabaseService.query("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [user.seed, user.discordId, tournamentId]).catch(err => {
+                console.error(err);
+                updateErr = true;
+            });
+        }
+        return !updateErr;
+    }
+
+    // to move to map pool controller when made
+    async getMapPools(tournamentId: string, isAuth: boolean = false) {
+        let sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?`;
+        if (isAuth) {
+            sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE tournamentId = ?`;
+        }
+        const poolsRes: any = await DatabaseService.query(sql, [tournamentId]);
+        let mapPools = {};
+        for (const song of poolsRes) {
+            if (song.poolId in mapPools) {
+                mapPools[song.poolId].songs.push({
+                    id: song.songId,
+                    hash: song.songHash,
+                    name: song.songName,
+                    songAuthor: song.songAuthor,
+                    levelAuthor: song.levelAuthor,
+                    diff: song.songDiff,
+                    key: song.key,
+                    ssLink: song.ssLink,
+                    numNotes: song.numNotes
+                });
+            } else {
+                let songs = [];
+                if (song.songId != null) {
+                    songs = [
+                        {
+                            id: song.songId,
+                            hash: song.songHash,
+                            name: song.songName,
+                            songAuthor: song.songAuthor,
+                            levelAuthor: song.levelAuthor,
+                            diff: song.songDiff,
+                            key: song.key,
+                            ssLink: song.ssLink,
+                            numNotes: song.numNotes
+                        }
+                    ];
+                }
+                mapPools[song.poolId] = {
+                    id: song.poolId,
+                    tournamentId: song.tournamentId,
+                    poolName: song.poolName,
+                    image: song.image,
+                    description: song.description,
+                    live: !!+song.live,
+                    is_qualifiers: song.is_qualifiers,
+                    songs: songs
+                };
+            }
+        }
+        return mapPools;
+    }
+
+    // to move to quals controller when done
+
+    async signUp(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        // if (!auth.userId) return this.clientError(res, "No user logged in");
+        if (!auth.tourneyId) return this.clientError(res, "No Tournament ID provided");
+        let isAdmin = await auth.hasAdminPerms;
+        let settings = await this.getSettings(auth.tourneyId);
+        if (!settings.public_signups && !isAdmin) return this.unauthorized(res, "Signups are not enabled for this tournament.");
+        let curUser = await auth.getUser();
+        let countries = null;
+        if (settings.countries != "") countries = settings.countries.toLowerCase().replace(" ", "").split(",");
+        if (countries != null && !countries.includes(curUser.country.toLowerCase())) return this.unauthorized(res, "Signups are country restricted");
+        // if (!req.body.userId && !await auth.hasAdminPerms) req.body.userId = auth.userId;
+        if (req.body.userId && !isAdmin) req.body.userId = auth.userId;
+        if (!req.body.userId && auth.userId) req.body.userId = auth.userId;
+        try {
+            let result = await DatabaseService.query(`INSERT INTO participants SET ?`, [req.body]);
+            if (settings.show_signups) this.emitter.emit("newParticipant", [auth.tourneyId, req.body]);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+
+    async isSignedUp(req: express.Request, res: express.Response) {
+        let auth = new authController(req);
+        let user = await auth.getUser();
+        if (!user) return this.clientError(res, "Not logged in");
+        let tournamentId = req.params.tourneyId;
+        if (!tournamentId) return this.clientError(res, "Not tournament ID provided");
+        let data = (await DatabaseService.query("SELECT * FROM participants WHERE tournamentId = ? AND userId = ?", [tournamentId, user.discordId])) as any[];
+        if (data.length == 1) return res.send({ signedUp: true });
+        if (data.length !== 1) return res.send({ signedUp: false });
+    }
+
+    // tournament role assignment
+    async getStaff(req: express.Request, res: express.Response) {
+        let data = (await DatabaseService.query(
+            `SELECT 
+            u.discordId, 
+            u.ssId, 
+            u.name, 
+            u.twitchName, 
+            u.avatar, 
+            u.globalRank, 
+            u.localRank, 
+            u.country, 
+            u.tourneyRank, 
+            u.TR, 
+            u.pronoun,
+            tr.role_name,
+            tr.id as role_id
+        FROM users u
+        JOIN tournament_role_assignment tra ON tra.user_id = u.discordId AND tra.tournament_id = ?
+        JOIN tournament_roles tr ON tr.id = tra.role_id`,
+            [req.params.tourneyId]
+        )) as any[];
+        let users: staff[] = [];
+        for (const user of data) {
+            let existingUser = users.find(x => x.discordId == user.discordId);
+            if (existingUser) {
+                existingUser.roles.push({ id: user.role_id, role: user.role_name });
+            } else {
+                users.push({
+                    discordId: user.discordId,
+                    ssId: user.ssId,
+                    name: user.name,
+                    twitchName: user.twitchName,
+                    avatar: user.avatar,
+                    globalRank: user.globalRank,
+                    localRank: user.locaRank,
+                    country: user.country,
+                    tourneyRank: user.tourneyRank,
+                    TR: user.TR,
+                    pronoun: user.pronoun,
+                    roles: [
+                        {
+                            id: user.role_id,
+                            role: user.role_name
+                        }
+                    ]
+                });
+            }
+        }
+        return res.send(users);
+    }
+
+    async addStaff(req?: express.Request, res?: express.Response) {
+        let auth = new authController(req);
+        if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
+        if (!req.params.tourneyId) return this.clientError(res, "No tournament id provided");
+        if (!req.body.users) return this.clientError(res, "No users provided");
+        let insertData = [];
+        for (const user of req.body.users) {
+            let curUser = user.roleIds.map(x => [user.userId, x, req.params.tourneyId]);
+            insertData = [...insertData, ...curUser];
+        }
+        try {
+            await DatabaseService.query(`DELETE FROM tournament_role_assignment WHERE tournament_id = ?`, [req.params.tourneyId]);
+            await DatabaseService.query(`INSERT INTO tournament_role_assignment (user_id, role_id, tournament_id) VALUES ?`, [insertData]);
+            return this.ok(res);
+        } catch (error) {
+            return this.fail(res, error);
+        }
+    }
+}

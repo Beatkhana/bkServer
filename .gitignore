@@ -1,3 +1,5 @@
 /node_modules
 /dist/public/assets/tournamentImages/*
 !/dist/public/assets/tournamentImages/.gitkeep 
+
+.env

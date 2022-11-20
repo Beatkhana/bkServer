@@ -1,0 +1,41 @@
+{
+    "name": "beatkhana-owop",
+    "version": "2.1.0",
+    "description": "Node OWOP is OWOP Server but in node js. Configured for BeatKhana!",
+    "main": "server.ts",
+    "engines": {
+        "node": ">=12.x"
+    },
+    "dependencies": {
+        "chalk": "^3.0.0",
+        "discord.js": "^11.5.1",
+        "events": "^3.0.0",
+        "proxycheck-node.js": "^2.0.0-a",
+        "request": "^2.88.0",
+        "ws": "^7.2.1"
+    },
+    "devDependencies": {
+        "@types/node": "^15.0.1",
+        "nodemon": "^2.0.7",
+        "ts-node": "^9.1.1"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node server.js",
+        "dev": "nodemon server.ts"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Beatkhana/Beatkhana-OWOP"
+    },
+    "keywords": [
+        "Node-OWOP",
+        "OWOP-Server"
+    ],
+    "author": "mathias377",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/Beatkhana/Beatkhana-OWOP/issues"
+    },
+    "homepage": "https://github.com/Beatkhana/Beatkhana-OWOP#readme"
+}
