@@ -1,4 +1,3 @@
-import Ajv from "ajv";
 import * as express from "express";
 import { settings } from "../models/settings.model";
 import DatabaseService from "../services/database";
@@ -11,8 +10,6 @@ export abstract class controller {
 
     protected emitter = emitter;
 
-    protected ajv = new Ajv();
-
     protected delay(ms: number) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
@@ -20,15 +17,6 @@ export abstract class controller {
     protected async getSettings(id: string | number): Promise<settings> {
         const set: any = await DatabaseService.query("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
         return set[0];
-    }
-
-    protected validate(schema: object, data: object) {
-        const validate = this.ajv.compile(schema);
-        if (validate(data)) {
-            return true;
-        } else {
-            return validate.errors;
-        }
     }
 
     public static jsonResponse(res: express.Response, code: number, message: string) {

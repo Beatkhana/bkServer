@@ -1,16 +1,12 @@
+import axios from "axios";
 import express from "express";
+import FormData from "form-data";
 import sharp from "sharp";
-import { User, userAPI } from "../models/user.model";
+import { PlayerInfo } from "../models/scoresaber.model";
+import { userAPI } from "../models/user.model";
+import DatabaseService from "../services/database";
 import { authController } from "./auth";
 import { controller } from "./controller";
-const fetch = require("node-fetch");
-const FormData = require("form-data");
-
-const request = require("request");
-
-import crypto from "crypto";
-import { PlayerInfo } from "../models/scoresaber.model";
-import DatabaseService from "../services/database";
 
 export class userController extends controller {
     redirect = "";
@@ -293,11 +289,12 @@ export class userController extends controller {
 
             let refresh_token: string | null = null;
 
-            fetch("https://discord.com/api/oauth2/token", {
-                method: "POST",
-                body: data
-            })
-                .then(discordRes => discordRes.json())
+            axios
+                .post("https://discord.com/api/oauth2/token", {
+                    method: "POST",
+                    body: data
+                })
+                .then(discordRes => discordRes.data)
                 .then(info => {
                     refresh_token = info.refresh_token;
                     return info;

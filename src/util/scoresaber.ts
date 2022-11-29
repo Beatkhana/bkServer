@@ -1,11 +1,6 @@
-const request = require("request");
+import axios from "axios";
+import { PlayerInfo } from "../models/scoresaber.model";
 
-export function getSSData(id: any, callback: any) {
-    request(`https://new.scoresaber.com/api/player/${id}/basic`, { json: true }, (err, res, body) => {
-        if (err) {
-            console.log(err);
-            return null;
-        }
-        return callback(body);
-    });
+export function getSSData(id: string | number) {
+    return axios.get<PlayerInfo>(`https://new.scoresaber.com/api/player/${id}/basic`);
 }

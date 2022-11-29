@@ -1,8 +1,5 @@
 import * as express from "express";
-import { authRequest } from "../models/models";
 import { IUser } from "../models/user";
-
-import DatabaseService from "../services/database";
 import { TournamentService } from "../services/tournament";
 import { UserService } from "../services/user";
 import { controller } from "./controller";

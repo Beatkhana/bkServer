@@ -1,5 +1,5 @@
+import axios from "axios";
 import express from "express";
-import * as rp from "request-promise";
 import { Beatsaver } from "../models/beatsaver.model";
 import { Scoresaber } from "../models/scoresaber.model";
 import DatabaseService from "../services/database";
@@ -154,10 +154,9 @@ export class MapPoolController extends controller {
             let leaderboardId = data.ssLink.split("/").pop()?.split("?")[0];
             let ssSong: Scoresaber.LeaderboardInfo;
             try {
-                let ssReq = await rp.get<Scoresaber.LeaderboardInfo>(`https://scoresaber.com/api/leaderboard/by-id/${leaderboardId}/info`, {
-                    json: true
-                });
-                ssSong = ssReq;
+                let ssReq = await axios.get<Scoresaber.LeaderboardInfo>(`https://scoresaber.com/api/leaderboard/by-id/${leaderboardId}/info`);
+                if (ssReq.status != 200) throw new Error("Invalid SS Link");
+                ssSong = ssReq.data;
             } catch (error) {
                 console.error("Scoresaber Song Error: ", error);
                 return this.clientError(res, "Can't find song on scoresaber");
@@ -187,24 +186,29 @@ export class MapPoolController extends controller {
         let data = req.body;
         let key = data.ssLink.split("maps/")[1];
         let diff = data.diff;
-        let bsData: Beatsaver.map = await rp
-            .get<Beatsaver.map>("https://beatsaver.com/api/maps/id/" + key, {
+        let bsData: Beatsaver.map;
+
+        try {
+            const bsReq = await axios.get<Beatsaver.map>("https://beatsaver.com/api/maps/id/" + key, {
                 headers: {
                     "User-Agent": "BeatKhana/1.0.0 (+https://github.com/Dannypoke03)"
-                },
-                json: true
-            })
-            .catch(err => console.log(err));
+                }
+            });
+            if (bsReq.status != 200) throw new Error("Invalid BS Link");
+            bsData = bsReq.data;
+        } catch (error) {
+            console.error("Beatsaver Song Error: ", error);
+            return this.clientError(res, "Can't find song on beatsaver");
+        }
         let songName = bsData.metadata.songName.replace(" ", "+");
         let curVersion = bsData.versions.reduce((a, b) => (new Date(a.createdAt) > new Date(b.createdAt) ? a : b));
         let songHash = curVersion.hash;
         let ssInfo: Scoresaber.LeaderboardInfo;
         let ssDiff = Scoresaber.getDifficultyNumber(diff);
         try {
-            let ssReq = await rp.get<Scoresaber.LeaderboardInfo>(`https://scoresaber.com/api/leaderboard/by-hash/${songHash}/info?difficulty=${ssDiff}`, {
-                json: true
-            });
-            ssInfo = ssReq;
+            let ssReq = await axios.get<Scoresaber.LeaderboardInfo>(`https://scoresaber.com/api/leaderboard/by-hash/${songHash}/info?difficulty=${ssDiff}`);
+            if (!ssReq.data) throw new Error("Invalid SS Link");
+            ssInfo = ssReq.data;
         } catch (error) {
             console.error("Scoresaber Song Error: ", error);
             return this.clientError(res, "Can't find song on scoresaber");
@@ -239,12 +243,13 @@ export class MapPoolController extends controller {
 
     private async getBSData(hash: string, diff: string): Promise<any> {
         try {
-            let res: string = await rp.get("https://beatsaver.com/api/maps/hash/" + hash, {
+            let res = await axios.get("https://beatsaver.com/api/maps/hash/" + hash, {
                 headers: {
                     "User-Agent": "BeatKhana/1.0.0 (+https://github.com/Dannypoke03)"
                 }
             });
-            let map = JSON.parse(res) as Beatsaver.map;
+            if (!res.data) throw new Error("Invalid BS Link");
+            let map = JSON.parse(res.data) as Beatsaver.map;
             let curVersion = map.versions.reduce((a, b) => (new Date(a.createdAt) > new Date(b.createdAt) ? a : b));
             let info = {
                 songHash: hash,

@@ -1,8 +1,8 @@
 import * as WebSocket from "ws";
 import { bracketMatch } from "../../models/bracket.model";
 import { getSessionParser } from "../../services/session";
-import { client } from "../client";
 import { emitter } from "../event";
+import { TAClientWrapper } from "../TA/ClientWrapper";
 
 const wss = new WebSocket.Server({ noServer: true, path: "/api/ws" });
 const owopWS = new WebSocket.Server({ noServer: true, path: "/api/owop" });
@@ -37,7 +37,7 @@ export class wsController {
             session(req, res, async () => {});
             setInterval(() => this.heartbeat(ws), 20000);
             let tournamentId = null;
-            let taClient: client = null;
+            let taClient: TAClientWrapper = null;
             ws.on("message", message => {
                 try {
                     let data = JSON.parse(<string>message);
@@ -47,7 +47,6 @@ export class wsController {
                         // console.log(TAController.taClients);
                         emitter.emit("getTAState", tmp);
                         taClient = tmp.t?.taClient;
-                        delete taClient?.State?.serverSettings?.password;
                         ws.send(JSON.stringify({ TA: taClient }));
                     }
                     // console.log(data);

@@ -6,9 +6,6 @@ const CLIENT_SECRET = "LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6";
 
 const env = process.env.NODE_ENV || "production";
 
-const fetch = require("node-fetch");
-const FormData = require("form-data");
-
 export class crons {
     static async updateSSData() {
         try {
@@ -16,33 +13,32 @@ export class crons {
             let completed = 0;
             for (const user of res) {
                 if (!user.ssId) continue;
-                getSSData(user.ssId, data => {
-                    if (data) {
-                        let info = {};
-                        if (data?.playerInfo?.banned == 1) {
-                            info = {
-                                ssId: data.playerInfo.playerId,
-                                country: data.playerInfo.country
-                            };
-                        } else {
-                            info = {
-                                ssId: data.playerInfo?.playerId,
-                                // name: data.playerInfo.playerName,
-                                // avatar: data.playerInfo.avatar,
-                                globalRank: data.playerInfo?.rank,
-                                localRank: data.playerInfo?.countryRank
-                                // country: data.playerInfo.country,
-                            };
-                        }
-
-                        try {
-                            DatabaseService.query("UPDATE users SET ? WHERE discordId = ?", [info, user.discordId]);
-                            completed += 1;
-                        } catch (error) {
-                            console.error(error);
-                        }
+                const data = await getSSData(user.ssId);
+                if (data.status == 200) {
+                    let info = {};
+                    if (data.data?.banned == 1) {
+                        info = {
+                            ssId: data.data.id,
+                            country: data.data.country
+                        };
+                    } else {
+                        info = {
+                            ssId: data.data.id,
+                            // name: data.data.playerInfo.playerName,
+                            // avatar: data.data.playerInfo.avatar,
+                            globalRank: data.data.rank,
+                            localRank: data.data.countryRank
+                            // country: data.data.playerInfo.country,
+                        };
                     }
-                });
+
+                    try {
+                        DatabaseService.query("UPDATE users SET ? WHERE discordId = ?", [info, user.discordId]);
+                        completed += 1;
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
                 await delay(1000);
             }
             console.log(`Cron completed: Updated ${completed}/${res.length} users`);
