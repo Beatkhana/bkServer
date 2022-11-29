@@ -103,7 +103,7 @@ export class userController extends controller {
 
     async updateUserBadges(req: express.Request, res: express.Response) {
         let auth = new authController(req);
-        if (!((await auth.admin()) || (await auth.staff()))) return this.unauthorized(res);
+        if (!((await auth.isAdmin) || (await auth.isStaff))) return this.unauthorized(res);
         if (!req.params.id) return this.clientError(res, "No user ID provided");
         if (!req.body) return this.clientError(res, "Invalid request");
         try {
@@ -121,7 +121,7 @@ export class userController extends controller {
 
     async createBadge(req: express.Request, res: express.Response) {
         let auth = new authController(req);
-        if (!(await auth.admin())) return this.unauthorized(res);
+        if (!(await auth.isAdmin)) return this.unauthorized(res);
         let data = req.body;
         let base64String = data.image;
         let base64Img = base64String.split(";base64,").pop();
@@ -149,7 +149,7 @@ export class userController extends controller {
 
     async updateBadge(req: express.Request, res: express.Response) {
         let auth = new authController(req);
-        if (!((await auth.admin()) || (await auth.staff()))) return this.unauthorized(res);
+        if (!((await auth.isAdmin) || (await auth.isStaff))) return this.unauthorized(res);
 
         let data = req.body;
 
@@ -180,7 +180,7 @@ export class userController extends controller {
 
     async deleteBadge(req: express.Request, res: express.Response) {
         let auth = new authController(req);
-        if (!((await auth.admin()) || (await auth.staff()))) return this.unauthorized(res);
+        if (!((await auth.isAdmin) || (await auth.isStaff))) return this.unauthorized(res);
 
         try {
             await DatabaseService.query("DELETE FROM badges WHERE id = ?", [req.params.id]);
@@ -192,7 +192,7 @@ export class userController extends controller {
 
     async getBadges(req: express.Request, res: express.Response) {
         let auth = new authController(req);
-        if (!((await auth.admin()) || (await auth.staff()))) return this.unauthorized(res);
+        if (!((await auth.isAdmin) || (await auth.isStaff))) return this.unauthorized(res);
         try {
             let badges = await DatabaseService.query("SELECT * FROM badges");
             return res.send(badges);

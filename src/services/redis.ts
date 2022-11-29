@@ -17,7 +17,7 @@ export class RedisService {
      * @param {*} value - The value to set
      * @param {number} [expire=3600]  - The number of seconds until the key expires
      */
-    public static async set(key: string, value: any, expire = 3600): Promise<void> {
+    public static async set(key: string, value: any, expire: number = 3600): Promise<void> {
         redisClient.set(key, JSON.stringify(value), {
             EX: expire
         });

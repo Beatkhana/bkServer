@@ -127,7 +127,7 @@ export class QualifiersController extends controller {
         let auth = new authController(req);
         if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
         try {
-            await QualifiersController.updateMaps(auth.tourneyId);
+            await QualifiersController.updateMaps(auth.tourneyId.toString());
             for (const song of req.body) {
                 if (!song.flags) song.flags = 0;
                 await DatabaseService.query(`UPDATE event_map_options SET flags = ?, playerOptions = ?, difficulty = ?, selCharacteristic = ? WHERE tournament_id = ? AND map_id = ?`, [song.flags, song.playerOptions, song.difficulty, song.selectedCharacteristic, auth.tourneyId, song.id]);

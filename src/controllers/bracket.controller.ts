@@ -4,20 +4,16 @@ import { bracketMatch, updateMatchRequest } from "../models/bracket.model";
 import { authRequest } from "../models/models";
 import { bslMatch, match, tournamentSettings } from "../models/tournament.models";
 import DatabaseService from "../services/database";
-import { auth, authController } from "./auth.controller";
+import { authController } from "./auth.controller";
 import { controller } from "./controller";
 
 export class bracketController extends controller {
-    @auth()
-    async getBracket(args: authRequest) {
-        let { req, res, auth } = args;
+    async getBracket(req: express.Request, res: express.Response) {
         let bracketData = await this.bracketData(req.params.id);
         return res.send(bracketData);
     }
 
-    @auth()
-    async getBracketMatch(args: authRequest) {
-        let { req, res, auth } = args;
+    async getBracketMatch(req: express.Request, res: express.Response) {
         let match: bracketMatch | null = await this.bracketMatchData(req.params?.tourneyId, req.params?.matchId);
         if (match) {
             return res.send(match);
@@ -88,7 +84,7 @@ export class bracketController extends controller {
 
     async saveBracket(req: express.Request, res: express.Response) {
         let auth = new authController(req);
-        let id = auth.tourneyId;
+        let id = auth.tourneyId.toString();
         let data = req.body;
         if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
         let matches: Array<match> = [];
@@ -596,9 +592,8 @@ export class bracketController extends controller {
         return allMatches;
     }
 
-    @auth()
-    async updateBracket(args: authRequest) {
-        let { req, res, auth } = args;
+    async updateBracket(req: express.Request, res: express.Response) {
+        const auth = new authController(req);
         let id = req.params.tourneyId;
         let data = req.body;
         let isAuth = await auth.hasAdminPerms;

@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model api_keys {
+  id           Int         @id @default(autoincrement())
+  tournamentId BigInt      @unique(map: "tournamentId_UNIQUE")
+  api_key      String      @unique(map: "api_keys_UN") @db.VarChar(45)
+  tournaments  tournaments @relation(fields: [tournamentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "api_keys_FK")
+}
+
+model badge_assignment {
+  id      Int    @id @default(autoincrement())
+  userId  String @db.VarChar(20)
+  badgeId Int
+  users   users  @relation(fields: [userId], references: [discordId], onDelete: NoAction, onUpdate: NoAction, map: "badge_assignment_FK")
+  badges  badges @relation(fields: [badgeId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "badge_assignment_FK_1")
+
+  @@unique([userId, badgeId], map: "badge_assignment_UN")
+  @@index([badgeId], map: "badge_assignment_FK_1")
+}
+
+model badges {
+  id               Int                @id @default(autoincrement())
+  image            String             @unique(map: "badges_UN") @db.VarChar(100)
+  description      String             @db.VarChar(100)
+  badge_assignment badge_assignment[]
+}
+
+model bracket {
+  id           Int         @id @default(autoincrement())
+  tournamentId BigInt
+  round        Int
+  matchNum     Int
+  p1           String?     @db.VarChar(45)
+  p2           String?     @db.VarChar(45)
+  p1Score      Int         @default(0)
+  p2Score      Int         @default(0)
+  status       String      @default("awaiting_start") @db.VarChar(45)
+  bye          Int         @db.TinyInt
+  time         DateTime?   @db.DateTime(0)
+  best_of      Int?        @default(3)
+  tournaments  tournaments @relation(fields: [tournamentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bracket_FK")
+
+  @@index([tournamentId], map: "bracket_FK")
+}
+
+model event_map_options {
+  id                Int         @id @default(autoincrement())
+  tournament_id     BigInt
+  map_id            Int
+  flags             Int         @default(0)
+  playerOptions     Int         @default(0)
+  selCharacteristic String?     @db.VarChar(100)
+  difficulty        Int?
+  pool_link         pool_link   @relation(fields: [map_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "event_map_options_FK")
+  tournaments       tournaments @relation(fields: [tournament_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "event_map_options_FK_1")
+
+  @@index([map_id], map: "event_map_options_FK")
+  @@index([tournament_id], map: "event_map_options_FK_1")
+}
+
+model logs {
+  id     Int      @id @default(autoincrement())
+  userId String   @db.VarChar(20)
+  log    String   @db.Text
+  time   DateTime @db.DateTime(0)
+  users  users    @relation(fields: [userId], references: [discordId], onDelete: NoAction, onUpdate: NoAction, map: "logs_FK")
+
+  @@index([userId], map: "logs_FK")
+}
+
+model map_pools {
+  id            Int         @id @default(autoincrement())
+  tournamentId  BigInt
+  poolName      String      @db.VarChar(45)
+  image         String      @db.LongText
+  description   String      @db.Text
+  live          Int         @db.TinyInt
+  is_qualifiers Int         @default(0) @db.TinyInt
+  tournaments   tournaments @relation(fields: [tournamentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "map_pools_FK")
+  pool_link     pool_link[]
+
+  @@unique([tournamentId, poolName], map: "unique_map_per_pool")
+}
+
+model participants {
+  id                 Int                  @id @default(autoincrement())
+  tournamentId       BigInt
+  userId             String               @db.VarChar(20)
+  comment            String               @db.Text
+  forfeit            Int                  @default(0) @db.TinyInt
+  seed               Int                  @default(0)
+  position           Int                  @default(0)
+  tournaments        tournaments          @relation(fields: [tournamentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "participants_FK")
+  users              users                @relation(fields: [userId], references: [discordId], onDelete: NoAction, onUpdate: NoAction, map: "participants_FK_1")
+  session_assignment session_assignment[]
+
+  @@unique([tournamentId, userId], map: "1personpertourney")
+  @@index([userId], map: "participants_FK_1")
+}
+
+model pool_link {
+  id                Int                 @id @default(autoincrement())
+  poolId            Int
+  songHash          String              @db.VarChar(80)
+  songName          String              @db.VarChar(255)
+  songAuthor        String              @db.VarChar(45)
+  levelAuthor       String              @db.VarChar(45)
+  songDiff          String              @db.VarChar(45)
+  key               String              @db.VarChar(5)
+  ssLink            String              @db.VarChar(45)
+  numNotes          Int
+  map_pools         map_pools           @relation(fields: [poolId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pool_link_FK")
+  event_map_options event_map_options[]
+
+  @@index([poolId], map: "pool_link_FK")
+}
+
+model qual_sessions {
+  id                 Int                  @id @default(autoincrement())
+  time               DateTime             @db.DateTime(0)
+  limit              Int                  @default(15)
+  tournamentId       String               @db.VarChar(100)
+  session_assignment session_assignment[]
+}
+
+model qualifier_scores {
+  id           Int         @id @default(autoincrement())
+  tournamentId BigInt
+  userId       String      @db.VarChar(20)
+  songHash     String      @db.VarChar(45)
+  score        String      @db.VarChar(45)
+  percentage   Float       @db.Float
+  maxScore     String      @default("0") @db.VarChar(45)
+  attempt      Int         @default(1)
+  users        users       @relation(fields: [userId], references: [discordId], onDelete: NoAction, onUpdate: NoAction, map: "qualifier_scores_FK")
+  tournaments  tournaments @relation(fields: [tournamentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "qualifier_scores_FK_1")
+
+  @@unique([tournamentId, userId, songHash], map: "index2")
+  @@index([userId], map: "qualifier_scores_FK")
+}
+
+model quest_ids {
+  id     Int    @id @default(autoincrement())
+  userId String @unique(map: "quest_ids_UN") @db.VarChar(20)
+  qId    String @unique(map: "quest_ids_UN2") @db.VarChar(20)
+  users  users  @relation(fields: [userId], references: [discordId], onDelete: Cascade, onUpdate: NoAction, map: "quest_ids_FK")
+}
+
+model roleassignment {
+  id     Int    @id @default(autoincrement())
+  userId String @db.VarChar(20)
+  roleId Int
+  roles  roles  @relation(fields: [roleId], references: [roleId], onDelete: NoAction, onUpdate: NoAction, map: "roleassignment_FK")
+  users  users  @relation(fields: [userId], references: [discordId], onDelete: NoAction, onUpdate: NoAction, map: "roleassignment_FK_1")
+
+  @@index([roleId], map: "roleassignment_FK")
+  @@index([userId], map: "roleassignment_FK_1")
+}
+
+model roles {
+  roleId         Int              @id @default(autoincrement())
+  roleName       String           @db.Text
+  roleassignment roleassignment[]
+}
+
+model session_assignment {
+  id            Int           @id @default(autoincrement())
+  participantId Int
+  sessionId     Int
+  qual_sessions qual_sessions @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "session_assignment_FK")
+  participants  participants  @relation(fields: [participantId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "session_assignment_FK_1")
+
+  @@index([sessionId], map: "session_assignment_FK")
+  @@index([participantId], map: "session_assignment_FK_1")
+}
+
+model tournament_role_assignment {
+  id               Int              @id @default(autoincrement())
+  user_id          String           @db.VarChar(20)
+  role_id          Int
+  tournament_id    BigInt
+  users            users            @relation(fields: [user_id], references: [discordId], onDelete: Cascade, onUpdate: NoAction, map: "tournament_role_assignment_FK")
+  tournament_roles tournament_roles @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tournament_role_assignment_FK_1")
+  tournaments      tournaments      @relation(fields: [tournament_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tournament_role_assignment_FK_2")
+
+  @@unique([user_id, role_id, tournament_id], map: "tournament_role_assignment_UN")
+  @@index([role_id], map: "tournament_role_assignment_FK_1")
+  @@index([tournament_id], map: "tournament_role_assignment_FK_2")
+}
+
+model tournament_roles {
+  id                         Int                          @id @default(autoincrement())
+  role_name                  String                       @unique(map: "tournament_roles_UN") @db.VarChar(100)
+  tournament_role_assignment tournament_role_assignment[]
+}
+
+model tournament_settings {
+  id                  Int         @id @unique(map: "id_UNIQUE") @default(autoincrement())
+  tournamentId        BigInt      @unique(map: "tournamentId_UNIQUE")
+  public_signups      Int         @default(0) @db.TinyInt
+  show_signups        Int         @default(0) @db.TinyInt
+  public              Int         @default(0) @db.TinyInt
+  state               String      @default("awaiting_start") @db.VarChar(45)
+  type                String      @default("single_elim") @db.VarChar(45)
+  has_bracket         Int         @default(0) @db.TinyInt
+  has_map_pool        Int         @default(0) @db.TinyInt
+  signup_comment      String      @default("Comment") @db.VarChar(45)
+  comment_required    Int         @default(0) @db.TinyInt
+  bracket_sort_method String      @default("globalRank") @db.VarChar(45)
+  bracket_limit       Int         @default(16)
+  quals_cutoff        Int         @default(32)
+  show_quals          Int         @default(0) @db.TinyInt
+  has_quals           Int         @default(0) @db.TinyInt
+  countries           String      @default("") @db.VarChar(45)
+  sort_method         String      @default("globalRank") @db.VarChar(45)
+  standard_cutoff     Int         @default(16)
+  ta_url              String?     @db.VarChar(100)
+  ta_password         String?     @db.VarChar(100)
+  ta_event_flags      Int?        @default(0)
+  qual_attempts       Int         @default(0)
+  quals_method        String      @default("ta_quals") @db.VarChar(100)
+  tournaments         tournaments @relation(fields: [tournamentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tournament_settings_FK")
+}
+
+model tournaments {
+  id                         BigInt                       @id @default(autoincrement())
+  name                       String                       @db.Text
+  image                      String                       @db.Text
+  date                       DateTime                     @db.DateTime(0)
+  endDate                    DateTime                     @db.DateTime(0)
+  discord                    String                       @db.Text
+  twitchLink                 String?                      @db.Text
+  prize                      String?                      @db.VarChar(50)
+  info                       String?                      @db.Text
+  owner                      String?                      @db.VarChar(20)
+  archived                   Boolean                      @default(false)
+  first                      String?                      @db.Text
+  second                     String?                      @db.Text
+  third                      String?                      @db.Text
+  is_mini                    Int                          @default(0) @db.TinyInt
+  api_keys                   api_keys?
+  bracket                    bracket[]
+  event_map_options          event_map_options[]
+  map_pools                  map_pools[]
+  participants               participants[]
+  qualifier_scores           qualifier_scores[]
+  tournament_role_assignment tournament_role_assignment[]
+  tournament_settings        tournament_settings?
+  owner_user                 users?                       @relation(fields: [owner], references: [discordId], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model users {
+  discordId                  String                       @id @unique(map: "discordId_UNIQUE") @db.VarChar(20)
+  ssId                       String?                      @unique(map: "ssId") @db.VarChar(20)
+  name                       String                       @db.Text
+  twitchName                 String                       @unique(map: "twitchName") @db.VarChar(25)
+  avatar                     String                       @db.Text
+  globalRank                 Int                          @default(0)
+  localRank                  Int                          @default(0)
+  country                    String?                      @db.VarChar(2)
+  tourneyRank                Int?                         @default(0)
+  TR                         Int?                         @default(0)
+  pronoun                    String                       @db.VarChar(45)
+  refresh_token              String?                      @db.VarChar(45)
+  badge_assignment           badge_assignment[]
+  logs                       logs[]
+  participants               participants[]
+  qualifier_scores           qualifier_scores[]
+  quest_ids                  quest_ids?
+  roleassignment             roleassignment[]
+  tournament_role_assignment tournament_role_assignment[]
+  owned_tournaments          tournaments[]
+}

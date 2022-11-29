@@ -49,7 +49,7 @@ export class ParticipantsController extends controller {
             let promises = [];
             for (const user of participants) {
                 let participant: dbParticipant = {
-                    tournamentId: auth.tourneyId,
+                    tournamentId: auth.tourneyId.toString(),
                     userId: user.discordId,
                     comment: user.comment,
                     forfeit: user.forfeit,
