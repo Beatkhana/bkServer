@@ -5,6 +5,7 @@ import sharp from "sharp";
 import { PlayerInfo } from "../models/scoresaber.model";
 import { userAPI } from "../models/user.model";
 import DatabaseService from "../services/database";
+import { formUrlEncoded } from "../util/helpers";
 import { authController } from "./auth";
 import { controller } from "./controller";
 
@@ -267,13 +268,6 @@ export class userController extends controller {
     async discordAuth(req: express.Request, res: express.Response) {
         if (req.query.code) {
             const code = <string>req.query.code;
-            const data = new FormData();
-
-            // beatkhana
-            data.append("client_id", this.CLIENT_ID);
-            data.append("client_secret", this.CLIENT_SECRET);
-
-            data.append("grant_type", "authorization_code");
 
             const env = process.env.NODE_ENV || "production";
             let redirect = "";
@@ -283,48 +277,58 @@ export class userController extends controller {
                 redirect = "http://localhost:4200/api/discordAuth";
             }
 
-            data.append("redirect_uri", redirect);
-            data.append("scope", "identify");
-            data.append("code", code);
+            const data = {
+                client_id: this.CLIENT_ID,
+                client_secret: this.CLIENT_SECRET,
+                grant_type: "authorization_code",
+                redirect_uri: redirect,
+                scope: "identify",
+                code: code
+            };
 
             let refresh_token: string | null = null;
 
-            axios
-                .post("https://discord.com/api/oauth2/token", {
-                    method: "POST",
-                    body: data
-                })
-                .then(discordRes => discordRes.data)
-                .then(info => {
-                    refresh_token = info.refresh_token;
-                    return info;
-                })
-                .then(info =>
-                    fetch("https://discord.com/api/users/@me", {
-                        headers: {
-                            authorization: `${info.token_type} ${info.access_token}`
-                        }
-                    })
-                )
-                .then(userRes => userRes.json())
-                .then(data => {
-                    this.checkUser(data.id, refresh_token, data.avatar, data.username, (userRes, newUser) => {
-                        if (!newUser) {
-                            req.session.user = userRes;
-                            if (req.query.state != undefined) {
-                                res.redirect(`${req.query.state}`);
-                            } else {
-                                res.redirect("/");
-                            }
-                        } else {
-                            req.session.newUsr = userRes;
-                            res.redirect("/sign-up");
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error("Error:", error);
+            try {
+                let tokenReq = await axios.request({
+                    method: "post",
+                    data: formUrlEncoded(data),
+                    url: "https://discord.com/api/oauth2/token",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" }
                 });
+
+                if (tokenReq.data.refresh_token) {
+                    refresh_token = tokenReq.data.refresh_token;
+                } else {
+                    console.log(tokenReq);
+                    throw new Error("No refresh token");
+                }
+                const info = tokenReq.data;
+
+                let userReq = await axios.request({
+                    method: "get",
+                    url: "https://discord.com/api/users/@me",
+                    headers: { Authorization: `${info.token_type} ${info.access_token}` }
+                });
+
+                if (!userReq.data.id) throw new Error("No user id");
+                const responseData = userReq.data;
+                this.checkUser(responseData.id, refresh_token, responseData.avatar, responseData.username, (userRes, newUser) => {
+                    if (!newUser) {
+                        req.session.user = userRes;
+                        if (req.query.state != undefined) {
+                            res.redirect(`${req.query.state}`);
+                        } else {
+                            res.redirect("/");
+                        }
+                    } else {
+                        req.session.newUsr = userRes;
+                        res.redirect("/sign-up");
+                    }
+                });
+            } catch (error) {
+                console.log(error);
+                res.redirect("/");
+            }
         } else {
             res.redirect("/");
         }
