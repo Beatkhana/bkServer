@@ -4,7 +4,7 @@ import { bracketMatch, updateMatchRequest } from "../models/bracket.model";
 import { authRequest } from "../models/models";
 import { bslMatch, match, tournamentSettings } from "../models/tournament.models";
 import DatabaseService from "../services/database";
-import { authController } from "./auth.controller";
+import { authController } from "./auth";
 import { controller } from "./controller";
 
 export class bracketController extends controller {

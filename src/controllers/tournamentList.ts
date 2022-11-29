@@ -1,7 +1,7 @@
 import express from "express";
 import sharp from "sharp";
 import DatabaseService from "../services/database";
-import { authController } from "./auth.controller";
+import { authController } from "./auth";
 import { controller } from "./controller";
 
 export class tournamentListController extends controller {

@@ -4,7 +4,7 @@ import { PlayerInfo, ssResponse } from "../models/scoresaber.model";
 import { badge, User } from "../models/user.model";
 import DatabaseService from "../services/database";
 import { controller } from "./controller";
-import { userController } from "./user.controller";
+import { userController } from "./user";
 
 const FormData = require("form-data");
 const fetch = require("node-fetch");

@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { bracketRouter } from "./bracket.router";
+import { bracketRouter } from "./bracket";
 import { mapPoolRouter } from "./map_pool";
 import { participantsRouter } from "./participants";
 import { qualifiersRouter } from "./qualifiers";
-import { tournamentRouter } from "./tournament.router";
-import { tournamentListRouter } from "./tournamentList.router";
+import { tournamentRouter } from "./tournament";
+import { tournamentListRouter } from "./tournamentList";
 import { userRouter } from "./user.router";
 
 export abstract class BSLRouter {

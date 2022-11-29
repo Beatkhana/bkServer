@@ -4,9 +4,9 @@ import { qualifierSession } from "../models/qualifiers";
 import { settings } from "../models/settings.model";
 import { qualsScore } from "../models/tournament.models";
 import DatabaseService from "../services/database";
-import { authController } from "./auth.controller";
+import { authController } from "./auth";
 import { controller } from "./controller";
-import { emitter } from "./event.controller";
+import { emitter } from "./event";
 import { TAController } from "./TA/ta.controller";
 
 export class QualifiersController extends controller {

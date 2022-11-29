@@ -2,7 +2,7 @@ import * as WebSocket from "ws";
 import { bracketMatch } from "../../models/bracket.model";
 import { getSessionParser } from "../../services/session";
 import { client } from "../client";
-import { emitter } from "../event.controller";
+import { emitter } from "../event";
 
 const wss = new WebSocket.Server({ noServer: true, path: "/api/ws" });
 const owopWS = new WebSocket.Server({ noServer: true, path: "/api/owop" });

@@ -1,7 +1,7 @@
 import express from "express";
 import { dbParticipant, participant } from "../models/participants.model";
 import DatabaseService from "../services/database";
-import { authController } from "./auth.controller";
+import { authController } from "./auth";
 import { controller } from "./controller";
 
 export class ParticipantsController extends controller {

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { bracketController } from "../controllers/bracket.controller";
+import { bracketController } from "../controllers/bracket";
 
 const bracketRouter: Router = Router();
 const bracketCon: bracketController = new bracketController();

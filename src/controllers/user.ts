@@ -1,7 +1,7 @@
 import express from "express";
 import sharp from "sharp";
 import { User, userAPI } from "../models/user.model";
-import { authController } from "./auth.controller";
+import { authController } from "./auth";
 import { controller } from "./controller";
 const fetch = require("node-fetch");
 const FormData = require("form-data");

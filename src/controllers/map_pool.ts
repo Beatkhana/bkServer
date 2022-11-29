@@ -3,7 +3,7 @@ import * as rp from "request-promise";
 import { Beatsaver } from "../models/beatsaver.model";
 import { Scoresaber } from "../models/scoresaber.model";
 import DatabaseService from "../services/database";
-import { authController } from "./auth.controller";
+import { authController } from "./auth";
 import { controller } from "./controller";
 
 export class MapPoolController extends controller {

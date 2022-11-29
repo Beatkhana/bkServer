@@ -2,7 +2,7 @@ import Ajv from "ajv";
 import * as express from "express";
 import { settings } from "../models/settings.model";
 import DatabaseService from "../services/database";
-import { emitter } from "./event.controller";
+import { emitter } from "./event";
 export abstract class controller {
     protected env = process.env.NODE_ENV || "production";
 

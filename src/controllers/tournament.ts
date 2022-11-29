@@ -2,7 +2,7 @@ import express from "express";
 import sharp from "sharp";
 import { staff } from "../models/tournament.models";
 import DatabaseService from "../services/database";
-import { authController } from "./auth.controller";
+import { authController } from "./auth";
 import { controller } from "./controller";
 import { ParticipantsController } from "./participants";
 import { QualifiersController } from "./qualifiers";
