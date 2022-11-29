@@ -40,7 +40,7 @@ export class wsController {
             let taClient: TAClientWrapper = null;
             ws.on("message", message => {
                 try {
-                    let data = JSON.parse(<string>message);
+                    let data = JSON.parse(message.toString());
                     if (data.setTournament) {
                         tournamentId = data.setTournament;
                         let tmp = { t: tournamentId };
