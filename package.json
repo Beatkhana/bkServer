@@ -1,11 +1,11 @@
 {
     "name": "server",
     "version": "1.0.0",
-    "main": "server.js",
+    "main": "dist/src/server.js",
     "license": "MIT",
     "scripts": {
         "postinstall": "npx tsc",
-        "dev": "NODE_ENV=development nodemon server.ts",
+        "dev": "NODE_ENV=development nodemon src/server.ts",
         "start": "mv ./protobuf ./dist/ && node dist/server.js"
     },
     "dependencies": {

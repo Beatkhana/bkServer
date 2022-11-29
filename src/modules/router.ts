@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
-import config from "../config";
 import { apiRouter, BSLRouter } from "../routers/index";
+import config from "../util/config";
 
 export default async ({ app }: { app: express.Application }) => {
     const mainDir = config.env == "development" ? "../../dist/public" : "../public";

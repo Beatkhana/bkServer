@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { checkObjectValues } from "./util/objectChecker";
+import { checkObjectValues } from "./objectChecker";
 
 process.env.NODE_ENV = process.env.ENV || "development";
 

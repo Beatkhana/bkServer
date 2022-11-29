@@ -1,7 +1,7 @@
 import express from "express";
-import config from "./src/config";
-import { owopWS, wss } from "./src/controllers/websocket/server";
-import ModuleLoader from "./src/modules";
+import { owopWS, wss } from "./controllers/websocket/server";
+import ModuleLoader from "./modules";
+import config from "./util/config";
 
 async function startServer() {
     const app = express();

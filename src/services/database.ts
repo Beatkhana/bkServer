@@ -1,5 +1,5 @@
 import mysql from "mysql";
-import config from "../config";
+import config from "../util/config";
 let con: mysql.Pool;
 
 // export class database {
