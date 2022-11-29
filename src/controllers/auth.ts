@@ -67,7 +67,7 @@ export class authController extends controller {
     // owner
     public get isOwner() {
         return (async () => {
-            return (await TournamentService.getTournament(this.tourneyId)).owner === this.userId;
+            return (await TournamentService.getTournamentSimple(this.tourneyId)).owner === this.userId;
         })();
     }
 

@@ -9,7 +9,7 @@ export class tournamentListController extends controller {
         let auth = new authController(req);
         const user = await auth.getUser();
         const isAuth = (await auth.isAdmin) || (await auth.isStaff);
-        const tournaments = await TournamentService.getTournaments({ auth: isAuth, userId: user.discordId });
+        const tournaments = await TournamentService.getTournaments({ auth: isAuth, userId: user?.discordId });
         return res.send(tournaments);
     }
 
@@ -17,7 +17,7 @@ export class tournamentListController extends controller {
         let auth = new authController(req);
         const user = await auth.getUser();
         const isAuth = (await auth.isAdmin) || (await auth.isStaff);
-        const tournaments = await TournamentService.getTournaments({ auth: isAuth, userId: user.discordId, mini: true });
+        const tournaments = await TournamentService.getTournaments({ auth: isAuth, userId: user?.discordId, mini: true });
         return res.send(tournaments);
     }
 
@@ -25,7 +25,7 @@ export class tournamentListController extends controller {
         let auth = new authController(req);
         const user = await auth.getUser();
         const isAuth = (await auth.isAdmin) || (await auth.isStaff);
-        const tournaments = await TournamentService.getTournaments({ auth: isAuth, userId: user.discordId, archived: true });
+        const tournaments = await TournamentService.getTournaments({ auth: isAuth, userId: user?.discordId, archived: true });
         return res.send(tournaments);
     }
 }

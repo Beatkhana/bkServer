@@ -2,6 +2,7 @@ import express from "express";
 import sharp from "sharp";
 import { staff } from "../models/tournament.models";
 import DatabaseService from "../services/database";
+import { TournamentService } from "../services/tournament";
 import { authController } from "./auth";
 import { controller } from "./controller";
 import { ParticipantsController } from "./participants";
@@ -12,67 +13,13 @@ export class TournamentController extends controller {
     async getTournament(req: express.Request, res: express.Response) {
         let auth = new authController(req);
         if (!auth.tourneyId) return this.clientError(res, "Not tournament Id provided");
-        let user = await auth.getUser();
-        let sqlWhere = "";
-        let userRoles = "";
-        let isAuth = (await auth.isAdmin) || (await auth.isStaff);
-        switch (true) {
-            case isAuth:
-                sqlWhere = ``;
-                break;
-            case user != null:
-                sqlWhere = `AND (ts.public = 1 OR owner = ? OR tra.role_id IS NOT NULL)`;
-                userRoles = `LEFT JOIN tournament_role_assignment tra ON tra.tournament_id = t.id AND tra.user_id = ${user.discordId}`;
-                break;
-            default:
-                sqlWhere = `AND ts.public = 1`;
-                break;
-        }
-        let tournament = (await DatabaseService.query(
-            `SELECT t.id as tournamentId,
-        t.name,
-        t.image,
-        t.date as startDate,
-        t.endDate,
-        t.discord,
-        t.twitchLink,
-        t.prize,
-        t.info,
-        CAST(t.owner AS CHAR) as owner,
-        t.archived,
-        t.first,
-        t.second,
-        t.third,
-        t.is_mini,
-        ts.id as settingsId,
-        ts.public_signups,
-        ts.public,
-        ts.state,
-        ts.type,
-        ts.has_bracket,
-        ts.has_map_pool,
-        ts.signup_comment,
-        ts.comment_required,
-        ts.show_signups,
-        ts.bracket_sort_method,
-        ts.bracket_limit,
-        ts.quals_cutoff,
-        ts.show_quals,
-        ts.has_quals,
-        ts.countries,
-        ts.sort_method,
-        ts.standard_cutoff,
-        ts.qual_attempts,
-        ts.quals_method,
-        ts.ta_url ${isAuth ? ", ts.ta_password, ts.ta_event_flags" : ""}
-        FROM tournaments t
-        LEFT JOIN tournament_settings ts ON ts.tournamentId = t.id  
-        ${userRoles}
-        WHERE t.id = ? ${sqlWhere}`,
-            [auth.tourneyId, user?.discordId]
-        )) as any[];
-        if (tournament.length == 0) return this.notFound(res, "Tournament Not Found");
-        return res.send(tournament);
+        const tournament = await TournamentService.getTournament({
+            id: auth.tourneyId,
+            auth: (await auth.isAdmin) || (await auth.isStaff),
+            userId: auth.userId
+        });
+        if (!tournament) return this.notFound(res, "Tournament Not Found");
+        return res.send([tournament]);
     }
 
     async createTournament(req: express.Request, res: express.Response) {
