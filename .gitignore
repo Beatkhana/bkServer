@@ -3,3 +3,4 @@
 !/dist/public/assets/tournamentImages/.gitkeep 
 
 .env
+/dist
