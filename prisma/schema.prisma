@@ -42,7 +42,7 @@ model bracket {
   p1Score      Int         @default(0)
   p2Score      Int         @default(0)
   status       String      @default("awaiting_start") @db.VarChar(45)
-  bye          Int         @db.TinyInt
+  bye          Boolean     @default(false)
   time         DateTime?   @db.DateTime(0)
   best_of      Int?        @default(3)
   tournaments  tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "bracket_FK")
@@ -81,8 +81,8 @@ model map_pools {
   poolName      String      @db.VarChar(45)
   image         String      @db.LongText
   description   String      @db.Text
-  live          Int         @db.TinyInt
-  is_qualifiers Int         @default(0) @db.TinyInt
+  live          Boolean     @default(false)
+  is_qualifiers Boolean     @default(false)
   tournaments   tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "map_pools_FK")
   pool_link     pool_link[]
 
@@ -94,7 +94,7 @@ model participants {
   tournamentId       BigInt
   userId             String               @db.VarChar(20)
   comment            String               @db.Text
-  forfeit            Int                  @default(0) @db.TinyInt
+  forfeit            Boolean              @default(false)
   seed               Int                  @default(0)
   position           Int                  @default(0)
   tournaments        tournaments          @relation(fields: [tournamentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "participants_FK")
@@ -204,20 +204,20 @@ model tournament_roles {
 model tournament_settings {
   id                  Int         @id @unique(map: "id_UNIQUE") @default(autoincrement())
   tournamentId        BigInt      @unique(map: "tournamentId_UNIQUE")
-  public_signups      Int         @default(0) @db.TinyInt
-  show_signups        Int         @default(0) @db.TinyInt
-  public              Int         @default(0) @db.TinyInt
+  public_signups      Boolean     @default(false)
+  show_signups        Boolean     @default(false)
+  public              Boolean     @default(false)
   state               String      @default("awaiting_start") @db.VarChar(45)
   type                String      @default("single_elim") @db.VarChar(45)
-  has_bracket         Int         @default(0) @db.TinyInt
-  has_map_pool        Int         @default(0) @db.TinyInt
+  has_bracket         Boolean     @default(false)
+  has_map_pool        Boolean     @default(false)
   signup_comment      String      @default("Comment") @db.VarChar(45)
-  comment_required    Int         @default(0) @db.TinyInt
+  comment_required    Boolean     @default(false)
   bracket_sort_method String      @default("globalRank") @db.VarChar(45)
   bracket_limit       Int         @default(16)
   quals_cutoff        Int         @default(32)
-  show_quals          Int         @default(0) @db.TinyInt
-  has_quals           Int         @default(0) @db.TinyInt
+  show_quals          Boolean     @default(false)
+  has_quals           Boolean     @default(false)
   countries           String      @default("") @db.VarChar(45)
   sort_method         String      @default("globalRank") @db.VarChar(45)
   standard_cutoff     Int         @default(16)
@@ -244,7 +244,7 @@ model tournaments {
   first                      String?                      @db.Text
   second                     String?                      @db.Text
   third                      String?                      @db.Text
-  is_mini                    Int                          @default(0) @db.TinyInt
+  is_mini                    Boolean                      @default(false)
   api_keys                   api_keys?
   bracket                    bracket[]
   event_map_options          event_map_options[]
