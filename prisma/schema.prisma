@@ -11,14 +11,14 @@ model api_keys {
   id           Int         @id @default(autoincrement())
   tournamentId BigInt      @unique(map: "tournamentId_UNIQUE")
   api_key      String      @unique(map: "api_keys_UN") @db.VarChar(45)
-  tournaments  tournaments @relation(fields: [tournamentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "api_keys_FK")
+  tournaments  tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "api_keys_FK")
 }
 
 model badge_assignment {
   id      Int    @id @default(autoincrement())
   userId  String @db.VarChar(20)
   badgeId Int
-  users   users  @relation(fields: [userId], references: [discordId], onDelete: NoAction, onUpdate: NoAction, map: "badge_assignment_FK")
+  users   users  @relation(fields: [userId], references: [discordId], onDelete: Cascade, onUpdate: NoAction, map: "badge_assignment_FK")
   badges  badges @relation(fields: [badgeId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "badge_assignment_FK_1")
 
   @@unique([userId, badgeId], map: "badge_assignment_UN")
@@ -45,7 +45,7 @@ model bracket {
   bye          Int         @db.TinyInt
   time         DateTime?   @db.DateTime(0)
   best_of      Int?        @default(3)
-  tournaments  tournaments @relation(fields: [tournamentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bracket_FK")
+  tournaments  tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "bracket_FK")
 
   @@index([tournamentId], map: "bracket_FK")
 }
@@ -70,7 +70,7 @@ model logs {
   userId String   @db.VarChar(20)
   log    String   @db.Text
   time   DateTime @db.DateTime(0)
-  users  users    @relation(fields: [userId], references: [discordId], onDelete: NoAction, onUpdate: NoAction, map: "logs_FK")
+  users  users    @relation(fields: [userId], references: [discordId], onDelete: Cascade, onUpdate: NoAction, map: "logs_FK")
 
   @@index([userId], map: "logs_FK")
 }
@@ -83,7 +83,7 @@ model map_pools {
   description   String      @db.Text
   live          Int         @db.TinyInt
   is_qualifiers Int         @default(0) @db.TinyInt
-  tournaments   tournaments @relation(fields: [tournamentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "map_pools_FK")
+  tournaments   tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "map_pools_FK")
   pool_link     pool_link[]
 
   @@unique([tournamentId, poolName], map: "unique_map_per_pool")
@@ -97,8 +97,8 @@ model participants {
   forfeit            Int                  @default(0) @db.TinyInt
   seed               Int                  @default(0)
   position           Int                  @default(0)
-  tournaments        tournaments          @relation(fields: [tournamentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "participants_FK")
-  users              users                @relation(fields: [userId], references: [discordId], onDelete: NoAction, onUpdate: NoAction, map: "participants_FK_1")
+  tournaments        tournaments          @relation(fields: [tournamentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "participants_FK")
+  users              users                @relation(fields: [userId], references: [discordId], onDelete: Cascade, onUpdate: NoAction, map: "participants_FK_1")
   session_assignment session_assignment[]
 
   @@unique([tournamentId, userId], map: "1personpertourney")
@@ -116,7 +116,7 @@ model pool_link {
   key               String              @db.VarChar(5)
   ssLink            String              @db.VarChar(45)
   numNotes          Int
-  map_pools         map_pools           @relation(fields: [poolId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pool_link_FK")
+  map_pools         map_pools           @relation(fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "pool_link_FK")
   event_map_options event_map_options[]
 
   @@index([poolId], map: "pool_link_FK")
@@ -139,8 +139,8 @@ model qualifier_scores {
   percentage   Float       @db.Float
   maxScore     String      @default("0") @db.VarChar(45)
   attempt      Int         @default(1)
-  users        users       @relation(fields: [userId], references: [discordId], onDelete: NoAction, onUpdate: NoAction, map: "qualifier_scores_FK")
-  tournaments  tournaments @relation(fields: [tournamentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "qualifier_scores_FK_1")
+  users        users       @relation(fields: [userId], references: [discordId], onDelete: Cascade, onUpdate: NoAction, map: "qualifier_scores_FK")
+  tournaments  tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "qualifier_scores_FK_1")
 
   @@unique([tournamentId, userId, songHash], map: "index2")
   @@index([userId], map: "qualifier_scores_FK")
@@ -157,8 +157,8 @@ model roleassignment {
   id     Int    @id @default(autoincrement())
   userId String @db.VarChar(20)
   roleId Int
-  roles  roles  @relation(fields: [roleId], references: [roleId], onDelete: NoAction, onUpdate: NoAction, map: "roleassignment_FK")
-  users  users  @relation(fields: [userId], references: [discordId], onDelete: NoAction, onUpdate: NoAction, map: "roleassignment_FK_1")
+  roles  roles  @relation(fields: [roleId], references: [roleId], onDelete: Cascade, onUpdate: NoAction, map: "roleassignment_FK")
+  users  users  @relation(fields: [userId], references: [discordId], onDelete: Cascade, onUpdate: NoAction, map: "roleassignment_FK_1")
 
   @@index([roleId], map: "roleassignment_FK")
   @@index([userId], map: "roleassignment_FK_1")
@@ -226,7 +226,7 @@ model tournament_settings {
   ta_event_flags      Int?        @default(0)
   qual_attempts       Int         @default(0)
   quals_method        String      @default("ta_quals") @db.VarChar(100)
-  tournaments         tournaments @relation(fields: [tournamentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tournament_settings_FK")
+  tournaments         tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tournament_settings_FK")
 }
 
 model tournaments {
