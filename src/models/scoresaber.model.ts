@@ -3,22 +3,6 @@ export interface Badge {
     description: string;
 }
 
-export interface PlayerInfo {
-    id: string;
-    playerName: string;
-    avatar: string;
-    rank: number;
-    countryRank: number;
-    pp: number;
-    country: string;
-    role: string;
-    badges: Badge[];
-    history: string;
-    permissions: number;
-    inactive: number;
-    banned: number;
-}
-
 export interface ScoreStats {
     totalScore: number;
     totalRankedScore: number;
@@ -27,12 +11,12 @@ export interface ScoreStats {
     rankedPlayCount: number;
 }
 
-export interface ssResponse {
-    playerInfo: PlayerInfo;
-    scoreStats: ScoreStats;
-}
-
 export module Scoresaber {
+    export interface Metadata {
+        total: number;
+        page: number;
+        itemsPerPage: number;
+    }
     export interface Leaderboard {
         leaderboardInfo: LeaderboardInfo;
         scores: Score[] | null;
@@ -45,8 +29,7 @@ export module Scoresaber {
         songSubName: string;
         songAuthorName: string;
         levelAuthorName: string;
-        difficulty: number;
-        difficultyRaw: string;
+        difficulty: Difficulty;
         maxScore: number;
         createdDate: Date;
         rankedDate: Date;
@@ -59,6 +42,7 @@ export module Scoresaber {
         stars: number;
         plays: number;
         dailyPlays: number;
+        positiveModifiers: boolean;
         coverImage: string;
         playerScore: Score | null;
         difficulties: Difficulty[];
@@ -66,17 +50,24 @@ export module Scoresaber {
 
     export interface LeaderboardInfoCollection {
         leaderboards: LeaderboardInfo[];
-        totalCount: number;
+        metadata: Metadata;
+    }
+
+    export interface ScoreCollection {
+        scores: Score[];
+        metadata: Metadata;
     }
 
     export interface Difficulty {
         leaderboardId: number;
         difficulty: number;
+        gameMode: string;
+        difficultyRaw: string;
     }
 
     export interface Score {
         id: number;
-        leaderboardPlayerInfo?: any;
+        leaderboardPlayerInfo?: LeaderboardPlayer;
         rank: number;
         baseScore: number;
         modifiedScore: number;
@@ -92,6 +83,15 @@ export module Scoresaber {
         timeSet: Date;
     }
 
+    export interface LeaderboardPlayer {
+        id: string;
+        name: string;
+        profilePicture: string;
+        country: string;
+        permissions: number;
+        role: string;
+    }
+
     export interface LeaderboardFilterOptions {
         verified: boolean;
         ranked: boolean;
@@ -101,17 +101,36 @@ export module Scoresaber {
         sortDirection: SortDirection;
     }
 
+    export interface Player {
+        id: string;
+        name: string;
+        profilePicture: string;
+        bio: string;
+        country: string;
+        pp: number;
+        rank: number;
+        countryRank: number;
+        role: string;
+        badges: Badge[] | null;
+        histories: string;
+        scoreStats: ScoreStats | null;
+        permissions: number;
+        banned: boolean;
+        inactive: boolean;
+    }
+
     export enum Category {
-        Trending = 'trending',
-        DateRanked = 'rank_date',
-        ScoresSet = 'scores',
-        StarDifficulty = 'max_pp',
-        Author = 'levelAuthorName'
+        Trending = "trending",
+        DateRanked = "rank_date",
+        ScoresSet = "scores",
+        StarDifficulty = "max_pp",
+        Author = "levelAuthorName",
+        DateQualified = "qualified_date"
     }
 
     export enum SortDirection {
-        Descending = 'desc',
-        Ascending = 'asc'
+        Descending = "desc",
+        Ascending = "asc"
     }
 
     export function getCategoryFromNumber(category: number): Category {
@@ -177,37 +196,36 @@ export module Scoresaber {
                 return 1;
             }
         }
-        return 0;
     }
 
     export function getDifficultyLabel(input: number): string | null {
         switch (input) {
             case 1:
-                return 'Easy';
+                return "Easy";
             case 3:
-                return 'Normal';
+                return "Normal";
             case 5:
-                return 'Hard';
+                return "Hard";
             case 7:
-                return 'Expert';
+                return "Expert";
             case 9:
-                return 'Expert+';
+                return "Expert+";
         }
         return null;
     }
 
     export function getDifficultyNumber(input: string): number | null {
         switch (input) {
-            case 'Easy':
+            case "Easy":
                 return 1;
-            case 'Normal':
+            case "Normal":
                 return 3;
-            case 'Hard':
+            case "Hard":
                 return 5;
-            case 'Expert':
+            case "Expert":
                 return 7;
-            case 'ExpertPlus':
-            case 'Expert+':
+            case "ExpertPlus":
+            case "Expert+":
                 return 9;
             default:
                 return null;

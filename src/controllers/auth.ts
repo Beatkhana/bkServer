@@ -7,7 +7,7 @@ import { controller } from "./controller";
 export class authController extends controller {
     public userId: string | null = null;
     private apiKey: string | null = null;
-    public tourneyId: number | null = null;
+    public tourneyId: bigint | null = null;
 
     private adminRoles: number[] = [1];
     private staffRoles: number[] = [1, 2];
@@ -16,19 +16,19 @@ export class authController extends controller {
     constructor(req: express.Request) {
         super();
         this.userId = req.session.user ? req.session?.user[0]?.discordId : undefined;
-        this.tourneyId = +req.params?.tourneyId ?? 0;
+        this.tourneyId = BigInt(isNaN(+req.params?.tourneyId) ? 0 : +req.params?.tourneyId);
         this.apiKey = req.headers?.authorization ?? null;
     }
 
-    public async getUser(): Promise<IUser.User> {
+    public async getUser() {
         if (this.userId == undefined) return null;
-        return await UserService.getUser(this.userId);
+        return await UserService.getUser({ discordId: this.userId });
     }
 
     async getRoles(): Promise<number[]> {
         if (this.userId === null) return [];
-        const user = await UserService.getUser(this.userId);
-        return user.roles ?? [];
+        const user = await UserService.getUser({ discordId: this.userId });
+        return user.roles.map(x => x.roleId) ?? [];
     }
 
     // getters
@@ -67,7 +67,7 @@ export class authController extends controller {
     // owner
     public get isOwner() {
         return (async () => {
-            return (await TournamentService.getTournamentSimple(this.tourneyId)).owner === this.userId;
+            return (await TournamentService.getTournament({ id: this.tourneyId })).owner === this.userId;
         })();
     }
 

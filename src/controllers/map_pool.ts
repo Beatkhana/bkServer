@@ -2,7 +2,9 @@ import axios from "axios";
 import express from "express";
 import { Beatsaver } from "../models/beatsaver.model";
 import { Scoresaber } from "../models/scoresaber.model";
-import DatabaseService from "../services/database";
+// import DatabaseService from "../services/database";
+import { MapPoolService } from "../services/mapPool";
+import { TournamentService } from "../services/tournament";
 import { authController } from "./auth";
 import { controller } from "./controller";
 
@@ -12,9 +14,9 @@ export class MapPoolController extends controller {
         if (!((await auth.hasAdminPerms) || (await auth.tournamentMapPool))) return this.unauthorized(res);
         try {
             if (req.body.is_qualifiers == 1) {
-                await DatabaseService.query(`UPDATE map_pools SET is_qualifiers = 0 WHERE tournamentId = ?`, [auth.tourneyId]);
+                await MapPoolService.clearQualsPool(auth.tourneyId);
             }
-            await DatabaseService.query(`INSERT INTO map_pools SET ?`, [req.body]);
+            await MapPoolService.createPool(req.body);
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);
@@ -22,76 +24,11 @@ export class MapPoolController extends controller {
     }
 
     async getPools(req: express.Request, res: express.Response) {
-        let auth = new authController(req);
-        let isAuth = (await auth.hasAdminPerms) || (await auth.tournamentMapPool);
+        const auth = new authController(req);
+        const isAuth = (await auth.hasAdminPerms) || (await auth.tournamentMapPool);
 
-        let mapOptions = [];
-        let sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?`;
-        if (isAuth) {
-            sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE tournamentId = ?`;
-            mapOptions = (await DatabaseService.query(`SELECT * FROM event_map_options WHERE tournament_id = ?`, [auth.tourneyId])) as any[];
-        }
-        const poolsRes: any = await DatabaseService.query(sql, [auth.tourneyId]);
-        let mapPools = {};
-        // console.log(result)
-        // if (poolsRes == undefined) return callback({});
-        for (const song of poolsRes) {
-            if (song.poolId in mapPools) {
-                let tmpSong: any = {
-                    id: song.songId,
-                    hash: song.songHash,
-                    name: song.songName,
-                    songAuthor: song.songAuthor,
-                    levelAuthor: song.levelAuthor,
-                    diff: song.songDiff,
-                    key: song.key,
-                    ssLink: song.ssLink,
-                    numNotes: song.numNotes
-                };
-                if (isAuth && mapOptions.find(x => x.map_id == song.songId)) {
-                    let map = mapOptions.find(x => x.map_id == song.songId);
-                    tmpSong.flags = map.flags;
-                    tmpSong.playerOptions = map.playerOptions;
-                    tmpSong.selectedCharacteristic = map.selCharacteristic;
-                    tmpSong.difficulty = map.difficulty;
-                }
-                mapPools[song.poolId].songs.push(tmpSong);
-            } else {
-                let songs = [];
-                if (song.songId != null) {
-                    let tmpSong: any = {
-                        id: song.songId,
-                        hash: song.songHash,
-                        name: song.songName,
-                        songAuthor: song.songAuthor,
-                        levelAuthor: song.levelAuthor,
-                        diff: song.songDiff,
-                        key: song.key,
-                        ssLink: song.ssLink,
-                        numNotes: song.numNotes
-                    };
-                    if (isAuth && mapOptions.find(x => x.map_id == song.songId)) {
-                        let map = mapOptions.find(x => x.map_id == song.songId);
-                        tmpSong.flags = map.flags;
-                        tmpSong.playerOptions = map.playerOptions;
-                        tmpSong.selectedCharacteristic = map.selCharacteristic;
-                        tmpSong.difficulty = map.difficulty;
-                    }
-                    songs = [tmpSong];
-                }
-                mapPools[song.poolId] = {
-                    id: song.poolId,
-                    tournamentId: song.tournamentId,
-                    poolName: song.poolName,
-                    image: song.image,
-                    description: song.description,
-                    live: !!+song.live,
-                    is_qualifiers: song.is_qualifiers,
-                    songs: songs
-                };
-            }
-        }
-        return res.send(mapPools);
+        const mapPools = await MapPoolService.getMapPools(auth.tourneyId, isAuth);
+        return res.send(Object.fromEntries(mapPools));
     }
 
     async updatePool(req: express.Request, res: express.Response) {
@@ -102,12 +39,7 @@ export class MapPoolController extends controller {
         let poolId = data.poolId;
         delete data.poolId;
         try {
-            // if (req.body.is_qualifiers == 1) {
-            //     await DatabaseService.query(`UPDATE map_pools SET is_qualifiers = 0 WHERE tournamentId = ?`, [auth.tourneyId]);
-            //     // await DatabaseService.query(`DELETE FROM event_map_options WHERE tournament_id = ?`, [auth.tourneyId]);
-            //     // let mapIds = await DatabaseService.query(`SELECT id FROM pool_link WHERE poolId = ?`)
-            // }
-            await DatabaseService.query(`UPDATE map_pools SET ? WHERE id = ?`, [data, poolId]);
+            await MapPoolService.updatePool(poolId, data);
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);
@@ -118,24 +50,22 @@ export class MapPoolController extends controller {
         let auth = new authController(req);
         let isAuth = (await auth.hasAdminPerms) || (await auth.tournamentMapPool);
         if (!req.params.id) return this.clientError(res, "Please provide a map pool ID");
-        let pool: any = await DatabaseService.query(
-            `SELECT map_pools.id, map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, pool_link.songHash, pool_link.songDiff FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE (map_pools.live = ? OR map_pools.live = 1) AND map_pools.id = ? AND map_pools.tournamentId = ?`,
-            [+!isAuth, req.params.id, auth.tourneyId]
-        );
-        if (!pool[0]) return this.clientError(res, "Invalid Map Pool ID");
-        let tournamentName = await DatabaseService.query(`SELECT name FROM tournaments WHERE id = ?`, [pool[0].tournamentId]);
-        let curSongs = pool.map(e => {
-            return { hash: e.songHash, difficulties: [{ characteristic: "Standard", name: e.songDiff == "Expert+" ? "expertPlus" : e.songDiff.toLowerCase() }] };
+        const pool = await MapPoolService.getPool(+req.params.id, isAuth);
+
+        if (!pool) return this.clientError(res, "Invalid Map Pool ID");
+        const tournament = await TournamentService.getTournament({ id: auth.tourneyId });
+        let curSongs = pool.songs.map(e => {
+            return { hash: e.hash, difficulties: [{ characteristic: "Standard", name: e.diff == "Expert+" ? "expertPlus" : e.diff.toLowerCase() }] };
         });
-        // console.log(pool[0]);
+
         let playlist = {
             AllowDuplicates: false,
-            playlistTitle: `${tournamentName[0].name}_${pool[0].poolName}`,
-            playlistAuthor: `${tournamentName[0].name} Through BeatKhana!`,
-            playlistDescription: pool[0].description,
-            image: pool[0].image,
+            playlistTitle: `${tournament.name}_${pool.poolName}`,
+            playlistAuthor: `${tournament.name} Through BeatKhana!`,
+            playlistDescription: pool.description,
+            image: pool.image,
             songs: curSongs,
-            syncURL: `https://beatkhana.com/api/tournament/${pool[0].tournamentId}/download-pool/${pool[0].id}`
+            syncURL: `https://beatkhana.com/api/tournament/${pool.tournamentId}/download-pool/${pool.id}`
         };
         playlist.image = playlist.image.replace(`data:`, "");
         var data = JSON.stringify(playlist);
@@ -161,18 +91,33 @@ export class MapPoolController extends controller {
                 console.error("Scoresaber Song Error: ", error);
                 return this.clientError(res, "Can't find song on scoresaber");
             }
-            let diffSearch = Scoresaber.getDifficultyLabel(ssSong.difficulty);
+            let diffSearch = Scoresaber.getDifficultyLabel(ssSong.difficulty.difficulty);
             if (diffSearch == "Expert+") diffSearch = "ExpertPlus";
-            let hash = ssSong.songHash;
+
             let songInfo = await this.getBSData(ssSong.songHash, diffSearch);
-            songInfo.songDiff = Scoresaber.getDifficultyLabel(ssSong.difficulty);
-            songInfo.ssLink = data.ssLink;
-            let values = [];
+
+            let values: {
+                poolId: any;
+                songDiff: string;
+                ssLink: any;
+                songHash: string;
+                songName: string;
+                songAuthor: string;
+                levelAuthor: string;
+                key: string;
+                numNotes: number;
+            }[] = [];
             for (const id of data.poolIds) {
-                songInfo.poolId = id;
-                values.push(Object.values(songInfo));
+                const temp = {
+                    ...songInfo,
+                    poolId: id,
+                    songDiff: Scoresaber.getDifficultyLabel(ssSong.difficulty.difficulty),
+                    ssLink: data.ssLink
+                };
+                values.push(temp);
             }
-            await DatabaseService.query(`INSERT INTO pool_link (songHash, songName, songAuthor, levelAuthor, \`key\`, numNotes, songDiff, ssLink, poolId) VALUES ?`, [values]);
+            await MapPoolService.addSongsToPool(values);
+
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);
@@ -200,7 +145,7 @@ export class MapPoolController extends controller {
             console.error("Beatsaver Song Error: ", error);
             return this.clientError(res, "Can't find song on beatsaver");
         }
-        let songName = bsData.metadata.songName.replace(" ", "+");
+
         let curVersion = bsData.versions.reduce((a, b) => (new Date(a.createdAt) > new Date(b.createdAt) ? a : b));
         let songHash = curVersion.hash;
         let ssInfo: Scoresaber.LeaderboardInfo;
@@ -228,29 +173,44 @@ export class MapPoolController extends controller {
             ssLink: `https://scoresaber.com/leaderboard/${ssInfo.id}`,
             poolId: 0
         };
-        let values = [];
+
+        let values: {
+            poolId: number;
+            songDiff: string;
+            ssLink: string;
+            songHash: string;
+            songName: string;
+            songAuthor: string;
+            levelAuthor: string;
+            key: string;
+            numNotes: number;
+        }[] = [];
         for (const id of data.poolIds) {
-            info.poolId = id;
-            values.push(Object.values(info));
+            const temp = {
+                ...info,
+                poolId: id
+            };
+            values.push(temp);
         }
         try {
-            await DatabaseService.query(`INSERT INTO pool_link (songHash, songName, songAuthor, levelAuthor, \`key\`, numNotes, songDiff, ssLink, poolId) VALUES ?`, [values]);
+            await MapPoolService.addSongsToPool(values);
             return this.ok(res);
         } catch (err) {
             return this.fail(res, err);
         }
     }
 
-    private async getBSData(hash: string, diff: string): Promise<any> {
+    private async getBSData(hash: string, diff: string) {
         try {
-            let res = await axios.get("https://beatsaver.com/api/maps/hash/" + hash, {
+            let res = await axios.get<Beatsaver.map>("https://beatsaver.com/api/maps/hash/" + hash, {
                 headers: {
                     "User-Agent": "BeatKhana/1.0.0 (+https://github.com/Dannypoke03)"
                 }
             });
             if (!res.data) throw new Error("Invalid BS Link");
-            let map = JSON.parse(res.data) as Beatsaver.map;
+            let map = res.data;
             let curVersion = map.versions.reduce((a, b) => (new Date(a.createdAt) > new Date(b.createdAt) ? a : b));
+            console.log(diff);
             let info = {
                 songHash: hash,
                 songName: map.metadata.songName,
@@ -272,7 +232,7 @@ export class MapPoolController extends controller {
         if (!isAuth) return this.unauthorized(res);
         if (!req.body.id) return this.clientError(res, "No song id provided");
         try {
-            await DatabaseService.query(`DELETE FROM pool_link WHERE id = ?`, [req.body.id]);
+            await MapPoolService.removeSong(req.body.id);
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);
@@ -283,7 +243,7 @@ export class MapPoolController extends controller {
         let auth = new authController(req);
         if (!((await auth.hasAdminPerms) || (await auth.tournamentMapPool))) return this.unauthorized(res);
         try {
-            await DatabaseService.query(`DELETE FROM map_pools WHERE id = ?`, [req.params.poolId]);
+            await MapPoolService.removePool(+req.params.poolId);
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);

@@ -1,12 +1,8 @@
 import * as express from "express";
-import { settings } from "../models/settings.model";
-import DatabaseService from "../services/database";
+import { TournamentSettingsService } from "../services/tournament_settings";
 import { emitter } from "./event";
 export abstract class controller {
     protected env = process.env.NODE_ENV || "production";
-
-    protected CLIENT_ID = "721696709331386398";
-    protected CLIENT_SECRET = "LdOyEZhrU6uW_5yBAn7f8g2nvTJ_13Y6";
 
     protected emitter = emitter;
 
@@ -14,9 +10,8 @@ export abstract class controller {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    protected async getSettings(id: string | number): Promise<settings> {
-        const set: any = await DatabaseService.query("SELECT * FROM tournament_settings WHERE tournamentId = ?", [id]);
-        return set[0];
+    protected async getSettings(id: string | number | bigint) {
+        return await TournamentSettingsService.getSettings(BigInt(id));
     }
 
     public static jsonResponse(res: express.Response, code: number, message: string) {
@@ -76,7 +71,7 @@ export abstract class controller {
         return d.toISOString().slice(0, 19).replace("T", " ");
     }
 
-    protected randHash(length) {
+    protected randHash(length: number) {
         var result = "";
         var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         var charactersLength = characters.length;
@@ -86,12 +81,12 @@ export abstract class controller {
         return result;
     }
 
-    protected isBase64(str) {
+    protected isBase64(str: string) {
         const base64regex = /^\s*data:([a-z]+\/[a-z0-9-+.]+(;[a-z-]+=[a-z0-9-]+)?)?(;base64)?,([a-z0-9!$&',()*+;=\-._~:@\/?%\s]*)\s*$/i;
         return base64regex.test(str);
     }
 
-    protected sumProperty(items, prop) {
+    protected sumProperty<T extends { [key: string]: number }>(items: T[], prop: keyof T) {
         if (items == null) return 0;
 
         return items.reduce(function (a, b) {

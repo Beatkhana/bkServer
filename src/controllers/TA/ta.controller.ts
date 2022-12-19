@@ -1,21 +1,23 @@
 import { Models } from "tournament-assistant-client";
-import DatabaseService from "../../services/database";
+import { TournamentService } from "../../services/tournament";
 import { controller } from "../controller";
 import { TAClientWrapper } from "./ClientWrapper";
 
 let taWSClients: TAClientWrapper[] = [];
 
 interface ITAEnabledTournaments {
-    tournamentId: string;
-    ta_url: string;
-    ta_password: string;
+    id: bigint;
+    tournament_settings: {
+        ta_url: string;
+        ta_password: string;
+    };
 }
 
 export class TAController extends controller {
     taEnabledTournaments: ITAEnabledTournaments[] = [];
 
     async init() {
-        this.taEnabledTournaments = await DatabaseService.query<ITAEnabledTournaments>(`SELECT tournamentId, ta_url, ta_password FROM tournament_settings WHERE ta_url IS NOT NULL`);
+        this.taEnabledTournaments = await TournamentService.getTAEnabledTournaments();
         this.connectToTA();
         this.emitter.on("getTAState", data => {
             data.t = taWSClients.find(x => x.tournamentId == data.t);
@@ -24,7 +26,7 @@ export class TAController extends controller {
 
     connectToTA() {
         for (const tournament of this.taEnabledTournaments) {
-            let tmp = new TAClientWrapper(tournament.tournamentId, tournament.ta_url, tournament.ta_password);
+            let tmp = new TAClientWrapper(tournament.id.toString(), tournament.tournament_settings.ta_url, tournament.tournament_settings.ta_password);
             taWSClients.push(tmp);
         }
     }

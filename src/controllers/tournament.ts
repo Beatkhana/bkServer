@@ -1,11 +1,12 @@
 import express from "express";
 import sharp from "sharp";
-import { staff } from "../models/tournament.models";
-import DatabaseService from "../services/database";
+import { MapPoolService } from "../services/mapPool";
+import { ParticipantService } from "../services/participant";
+import { QualifiersService } from "../services/qualifiers";
 import { TournamentService } from "../services/tournament";
+import { TournamentSettingsService } from "../services/tournament_settings";
 import { authController } from "./auth";
 import { controller } from "./controller";
-import { ParticipantsController } from "./participants";
 import { QualifiersController } from "./qualifiers";
 import { TAController } from "./TA/ta.controller";
 
@@ -45,16 +46,16 @@ export class TournamentController extends controller {
         }
 
         try {
-            let result: any = await DatabaseService.query(`INSERT INTO tournaments SET ?`, [data]);
+            const result = await TournamentService.createTournament(data);
             let hash = this.randHash(15);
 
-            await DatabaseService.query("UPDATE tournaments SET image = ? WHERE id = ?", [`${result.insertId}_${hash}.webp`, result.insertId]);
-            await DatabaseService.query(`INSERT INTO tournament_settings SET tournamentId = ?`, [result.insertId]);
+            await TournamentService.setImage(result.id, `${result.id}_${hash}.webp`);
+            await TournamentSettingsService.createBlank(result.id);
 
             const buf = Buffer.from(base64Img, "base64");
             const webpData = await sharp(buf).resize({ width: 550 }).webp({ lossless: true, quality: 50 }).toBuffer();
 
-            await sharp(webpData).toFile(savePath + `${result.insertId}_${hash}.webp`);
+            await sharp(webpData).toFile(savePath + `${result.id}_${hash}.webp`);
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);
@@ -66,7 +67,7 @@ export class TournamentController extends controller {
         if (!(await auth.isAdmin)) return this.unauthorized(res);
         if (!auth.tourneyId) return this.clientError(res, "No tournament Id provided");
         try {
-            await DatabaseService.query(`DELETE FROM tournaments WHERE id = ?`, [auth.tourneyId]);
+            await TournamentService.deleteTournament(BigInt(auth.tourneyId));
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);
@@ -90,7 +91,7 @@ export class TournamentController extends controller {
             let savePath = this.env == "development" ? "../app/src/assets/images/" : __dirname + "/../public/assets/images/";
 
             // sharp
-            const buf = await Buffer.from(base64Img, "base64");
+            const buf = Buffer.from(base64Img, "base64");
             const webpData = await sharp(buf).resize({ width: 550 }).webp({ lossless: true, quality: 50 }).toBuffer();
             let hash = this.randHash(15);
             await sharp(webpData).toFile(savePath + `${data.id}_${hash}.webp`);
@@ -102,7 +103,7 @@ export class TournamentController extends controller {
         data.tournament.endDate = this.formatDate(data.tournament.endDate);
 
         try {
-            await DatabaseService.query(`UPDATE tournaments SET ? WHERE ?? = ?`, [data.tournament, "id", data.id]);
+            await TournamentService.updateTournament(BigInt(data.id), data.tournament);
             return res.send({ data: data.tournament });
         } catch (error) {
             return this.fail(res, error);
@@ -117,10 +118,9 @@ export class TournamentController extends controller {
             data.tournament = {
                 first: data.first,
                 second: data.second,
-                third: data.third,
-                archived: 1
+                third: data.third
             };
-            await DatabaseService.query(`UPDATE tournaments SET ? WHERE ?? = ?`, [data.tournament, "id", data.id]);
+            await TournamentService.archiveTournament(BigInt(data.id), data.tournament);
             return this.ok(res);
         } catch (err) {
             return this.fail(res, err);
@@ -131,13 +131,13 @@ export class TournamentController extends controller {
         let auth = new authController(req);
         if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
         let data = req.body;
-        let curSettings: any = await DatabaseService.query("SELECT * FROM tournament_settings WHERE id = ?", [data.settingsId]);
-        if (data.settings.state == "main_stage" && curSettings[0].state == "qualifiers") {
+        let curSettings = await TournamentSettingsService.getSettings(BigInt(auth.tourneyId));
+        if (data.settings.state == "main_stage" && curSettings.state == "qualifiers") {
             let seeding: any = await this.seedPlayersByQuals(data.tournamentId, data.settings.quals_cutoff);
             if (!seeding) {
                 return this.fail(res, "Error Creating Seeds");
             }
-        } else if (data.settings.state == "main_stage" && curSettings[0].state == "awaiting_start") {
+        } else if (data.settings.state == "main_stage" && curSettings.state == "awaiting_start") {
             if (data.settings.type == "battle_royale") {
                 let seeding: any = await this.seedPlayers(data.tournamentId, data.settings.standard_cutoff, "date");
                 if (!seeding) {
@@ -146,14 +146,14 @@ export class TournamentController extends controller {
             }
         }
         if (data.settings.ta_url == "") data.settings.ta_url = null;
-        if (data.settings.ta_url != null && data.settings.ta_url != curSettings[0].ta_url) {
+        if (data.settings.ta_url != null && data.settings.ta_url != curSettings.ta_url) {
             TAController.updateConnection(data.tournamentId, data.settings.ta_url, data.settings.ta_password);
         }
 
         try {
-            let result = await DatabaseService.query(`UPDATE tournament_settings SET ? WHERE ?? = ?`, [data.settings, "id", data.settingsId]);
+            let result = await TournamentSettingsService.updateSettings(BigInt(auth.tourneyId), data.settings);
             if (data.settings.quals_method == "ta_quals") {
-                if (data.settings.state == "qualifiers" && curSettings[0].state == "awaiting_start") {
+                if (data.settings.state == "qualifiers" && curSettings.state == "awaiting_start") {
                     QualifiersController.createEvent(data.tournamentId);
                 } else if (data.settings.state != "qualifiers") {
                     TAController.deleteEvent(data.tournamentId);
@@ -190,36 +190,39 @@ export class TournamentController extends controller {
     // }
 
     // non quals seed
-    private async seedPlayers(tournamentId: string, cutoff, method: string) {
+    private async seedPlayers(tournamentId: bigint, cutoff: number, method: string) {
         if (method == "date") {
             let updateErr = false;
-            let participants: any = await ParticipantsController.allParticipants(tournamentId);
+            let participants = await ParticipantService.getParticipants(tournamentId);
             participants.sort((a, b) => a.participantId - b.participantId);
             let qualified = participants.slice(0, cutoff + 1);
             for (const user of participants) {
-                await DatabaseService.query("UPDATE participants SET seed = 0, position = 0 WHERE userId = ? AND tournamentId = ?", [user.userId, tournamentId]).catch(err => {
-                    console.error(err);
+                try {
+                    await ParticipantService.updateParticipant({ tournamentId, userId: user.userId, data: { seed: 0, position: 0 } });
+                } catch (error) {
+                    console.error(error);
                     updateErr = true;
-                });
+                }
             }
             for (let i = 0; i < qualified.length; i++) {
                 const user = qualified[i];
                 console.log(i, user.userId, tournamentId);
-                await DatabaseService.query("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [i + 1, user.userId, tournamentId]).catch(err => {
-                    console.error(err);
+                try {
+                    await ParticipantService.updateParticipant({ tournamentId, userId: user.userId, data: { seed: i + 1 } });
+                } catch (error) {
+                    console.error(error);
                     updateErr = true;
-                });
+                }
             }
             return !updateErr;
         }
     }
 
     // quals seed
-    async seedPlayersByQuals(tournamentId: string, cutoff) {
-        const pools: any = await this.getMapPools(tournamentId);
-        let qualsPool: any = Object.values(pools).find((x: any) => x.is_qualifiers == 1);
-        let qualsScores = await QualifiersController.getQualsScores(tournamentId);
-        console.log(qualsScores);
+    async seedPlayersByQuals(tournamentId: bigint, cutoff: number) {
+        const pools = await MapPoolService.getMapPools(tournamentId);
+        let qualsPool = Array.from(pools.values()).find(x => x.is_qualifiers);
+        let qualsScores = await QualifiersService.getScores(tournamentId);
         for (const user of qualsScores) {
             for (const score of user.scores) {
                 if (qualsPool.songs.find(x => x.hash == score.songHash).numNotes != 0) {
@@ -253,86 +256,34 @@ export class TournamentController extends controller {
                 return b.avgPercentage - a.avgPercentage;
             }
         });
+        let updateErr = false;
         for (const user of qualsScores) {
-            await DatabaseService.query("UPDATE participants SET seed = 0 WHERE userId = ? AND tournamentId = ?", [user.discordId, tournamentId]).catch(err => {
-                console.error(err);
+            try {
+                await ParticipantService.updateParticipant({ tournamentId, userId: user.userId, data: { seed: 0 } });
+            } catch (error) {
+                console.error(error);
                 updateErr = true;
-            });
+            }
         }
         let users = [];
         for (let i = 0; i < cutoff; i++) {
             const user = qualsScores[i];
-            // user.seed = i;
             let temp = {
                 discordId: user.discordId,
                 seed: i + 1
             };
             users.push(temp);
         }
-        let updateErr = false;
         for (const user of users) {
-            await DatabaseService.query("UPDATE participants SET seed = ? WHERE userId = ? AND tournamentId = ?", [user.seed, user.discordId, tournamentId]).catch(err => {
-                console.error(err);
+            try {
+                await ParticipantService.updateParticipant({ tournamentId, userId: user.userId, data: { seed: user.seed } });
+            } catch (error) {
+                console.error(error);
                 updateErr = true;
-            });
+            }
         }
         return !updateErr;
     }
-
-    // to move to map pool controller when made
-    async getMapPools(tournamentId: string, isAuth: boolean = false) {
-        let sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE map_pools.live = 1 AND tournamentId = ?`;
-        if (isAuth) {
-            sql = `SELECT map_pools.id as 'poolId', map_pools.tournamentId, map_pools.poolName, map_pools.image, map_pools.description, map_pools.live, pool_link.id as 'songId', pool_link.songHash, pool_link.songName, pool_link.songAuthor, pool_link.levelAuthor, pool_link.songDiff, pool_link.key, pool_link.ssLink, pool_link.numNotes, map_pools.is_qualifiers FROM map_pools LEFT JOIN pool_link ON pool_link.poolId = map_pools.id WHERE tournamentId = ?`;
-        }
-        const poolsRes: any = await DatabaseService.query(sql, [tournamentId]);
-        let mapPools = {};
-        for (const song of poolsRes) {
-            if (song.poolId in mapPools) {
-                mapPools[song.poolId].songs.push({
-                    id: song.songId,
-                    hash: song.songHash,
-                    name: song.songName,
-                    songAuthor: song.songAuthor,
-                    levelAuthor: song.levelAuthor,
-                    diff: song.songDiff,
-                    key: song.key,
-                    ssLink: song.ssLink,
-                    numNotes: song.numNotes
-                });
-            } else {
-                let songs = [];
-                if (song.songId != null) {
-                    songs = [
-                        {
-                            id: song.songId,
-                            hash: song.songHash,
-                            name: song.songName,
-                            songAuthor: song.songAuthor,
-                            levelAuthor: song.levelAuthor,
-                            diff: song.songDiff,
-                            key: song.key,
-                            ssLink: song.ssLink,
-                            numNotes: song.numNotes
-                        }
-                    ];
-                }
-                mapPools[song.poolId] = {
-                    id: song.poolId,
-                    tournamentId: song.tournamentId,
-                    poolName: song.poolName,
-                    image: song.image,
-                    description: song.description,
-                    live: !!+song.live,
-                    is_qualifiers: song.is_qualifiers,
-                    songs: songs
-                };
-            }
-        }
-        return mapPools;
-    }
-
-    // to move to quals controller when done
 
     async signUp(req: express.Request, res: express.Response) {
         let auth = new authController(req);
@@ -349,7 +300,11 @@ export class TournamentController extends controller {
         if (req.body.userId && !isAdmin) req.body.userId = auth.userId;
         if (!req.body.userId && auth.userId) req.body.userId = auth.userId;
         try {
-            let result = await DatabaseService.query(`INSERT INTO participants SET ?`, [req.body]);
+            let result = await ParticipantService.createParticipant({
+                tournamentId: auth.tourneyId,
+                userId: req.body.userId,
+                comment: req.body.comment
+            });
             if (settings.show_signups) this.emitter.emit("newParticipant", [auth.tourneyId, req.body]);
             return this.ok(res);
         } catch (error) {
@@ -361,78 +316,35 @@ export class TournamentController extends controller {
         let auth = new authController(req);
         let user = await auth.getUser();
         if (!user) return this.clientError(res, "Not logged in");
-        let tournamentId = req.params.tourneyId;
+        let tournamentId = BigInt(auth.tourneyId);
         if (!tournamentId) return this.clientError(res, "Not tournament ID provided");
-        let data = (await DatabaseService.query("SELECT * FROM participants WHERE tournamentId = ? AND userId = ?", [tournamentId, user.discordId])) as any[];
-        if (data.length == 1) return res.send({ signedUp: true });
-        if (data.length !== 1) return res.send({ signedUp: false });
+        let data = await ParticipantService.getParticipant(tournamentId, user.discordId);
+        if (data) return res.send({ signedUp: true });
+        return res.send({ signedUp: false });
     }
 
     // tournament role assignment
     async getStaff(req: express.Request, res: express.Response) {
-        let data = (await DatabaseService.query(
-            `SELECT 
-            u.discordId, 
-            u.ssId, 
-            u.name, 
-            u.twitchName, 
-            u.avatar, 
-            u.globalRank, 
-            u.localRank, 
-            u.country, 
-            u.tourneyRank, 
-            u.TR, 
-            u.pronoun,
-            tr.role_name,
-            tr.id as role_id
-        FROM users u
-        JOIN tournament_role_assignment tra ON tra.user_id = u.discordId AND tra.tournament_id = ?
-        JOIN tournament_roles tr ON tr.id = tra.role_id`,
-            [req.params.tourneyId]
-        )) as any[];
-        let users: staff[] = [];
-        for (const user of data) {
-            let existingUser = users.find(x => x.discordId == user.discordId);
-            if (existingUser) {
-                existingUser.roles.push({ id: user.role_id, role: user.role_name });
-            } else {
-                users.push({
-                    discordId: user.discordId,
-                    ssId: user.ssId,
-                    name: user.name,
-                    twitchName: user.twitchName,
-                    avatar: user.avatar,
-                    globalRank: user.globalRank,
-                    localRank: user.locaRank,
-                    country: user.country,
-                    tourneyRank: user.tourneyRank,
-                    TR: user.TR,
-                    pronoun: user.pronoun,
-                    roles: [
-                        {
-                            id: user.role_id,
-                            role: user.role_name
-                        }
-                    ]
-                });
-            }
-        }
+        const auth = new authController(req);
+        const users = await TournamentService.getStaff(BigInt(auth.tourneyId));
         return res.send(users);
     }
 
     async addStaff(req?: express.Request, res?: express.Response) {
         let auth = new authController(req);
         if (!(await auth.hasAdminPerms)) return this.unauthorized(res);
-        if (!req.params.tourneyId) return this.clientError(res, "No tournament id provided");
+        if (!auth.tourneyId) return this.clientError(res, "No tournament id provided");
         if (!req.body.users) return this.clientError(res, "No users provided");
-        let insertData = [];
+        let insertData: { user_id: string; role_id: number; tournament_id: bigint }[] = [];
         for (const user of req.body.users) {
-            let curUser = user.roleIds.map(x => [user.userId, x, req.params.tourneyId]);
-            insertData = [...insertData, ...curUser];
+            let curUsers: { user_id: string; role_id: number; tournament_id: bigint }[] = user.roleIds.map(x => {
+                return { user_id: user.userId, role_id: x, tournament_id: auth.tourneyId };
+            });
+            insertData = [...insertData, ...curUsers];
         }
         try {
-            await DatabaseService.query(`DELETE FROM tournament_role_assignment WHERE tournament_id = ?`, [req.params.tourneyId]);
-            await DatabaseService.query(`INSERT INTO tournament_role_assignment (user_id, role_id, tournament_id) VALUES ?`, [insertData]);
+            await TournamentService.clearStaff(BigInt(auth.tourneyId));
+            await TournamentService.addStaff(insertData);
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);

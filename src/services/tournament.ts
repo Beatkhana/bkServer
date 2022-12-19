@@ -1,19 +1,21 @@
-import { prisma } from "./database";
+import { Prisma } from "@prisma/client";
+import DatabaseService, { prisma } from "./database";
 
 export class TournamentService {
-    public static async getTournaments({ auth, userId = "", mini = false, archived = false }: { auth: boolean; userId: string; mini?: boolean; archived?: boolean }) {
+    public static async getTournaments({ auth = false, userId = "", mini = false, archived = false, limit = 50, offset = 0 }: { auth?: boolean; userId?: string; mini?: boolean; archived?: boolean; limit?: number; offset?: number }) {
+        if (limit > 50) limit = 50;
         const tournaments = await prisma.tournaments.findMany({
             include: {
                 tournament_settings: true
             },
             where: {
                 archived: archived,
-                is_mini: +mini,
+                is_mini: mini,
                 ...(!auth && {
                     OR: [
                         {
                             tournament_settings: {
-                                public: 1
+                                public: true
                             }
                         },
                         {
@@ -28,40 +30,14 @@ export class TournamentService {
                         }
                     ]
                 })
-            }
+            },
+            skip: offset,
+            take: limit
         });
-        return tournaments.map(x => {
-            return {
-                tournamentId: x.id.toString(),
-                name: x.name,
-                image: x.image,
-                startDate: x.date,
-                endDate: x.endDate,
-                discord: x.discord,
-                twitchLink: x.twitchLink,
-                prize: x.prize,
-                info: x.info,
-                owner: x.owner,
-                archived: x.archived,
-                first: x.first,
-                second: x.second,
-                third: x.third,
-                public: x.tournament_settings.public
-            };
-        });
+        return tournaments;
     }
 
-    public static async getTournamentSimple(tourneyId: number) {
-        const tourney = await prisma.tournaments.findFirst({
-            where: {
-                id: tourneyId
-            }
-        });
-        if (!tourney) return null;
-        return tourney;
-    }
-
-    public static async getTournament({ id, auth = false, userId = "" }: { id: number; auth: boolean; userId: string; mini?: boolean; archived?: boolean }) {
+    public static async getTournament({ id, auth = false, userId = "" }: { id: bigint | number; auth?: boolean; userId?: string }) {
         const t = await prisma.tournaments.findFirst({
             include: {
                 tournament_settings: true
@@ -72,7 +48,7 @@ export class TournamentService {
                     OR: [
                         {
                             tournament_settings: {
-                                public: 1
+                                public: true
                             }
                         },
                         {
@@ -90,50 +66,32 @@ export class TournamentService {
             }
         });
         if (!t) return null;
-        return {
-            tournamentId: t.id.toString(),
-            name: t.name,
-            image: t.image,
-            startDate: t.date,
-            endDate: t.endDate,
-            discord: t.discord,
-            twitchLink: t.twitchLink,
-            prize: t.prize,
-            info: t.info,
-            owner: t.owner,
-            archived: t.archived,
-            first: t.first,
-            second: t.second,
-            third: t.third,
-            settingsId: t.tournament_settings.id,
-            public_signups: t.tournament_settings.public_signups,
-            public: t.tournament_settings.public,
-            state: t.tournament_settings.state,
-            type: t.tournament_settings.type,
-            has_bracket: t.tournament_settings.has_bracket,
-            has_map_pool: t.tournament_settings.has_map_pool,
-            signup_comment: t.tournament_settings.signup_comment,
-            comment_required: t.tournament_settings.comment_required,
-            show_signups: t.tournament_settings.show_signups,
-            bracket_sort_method: t.tournament_settings.bracket_sort_method,
-            bracket_limit: t.tournament_settings.bracket_limit,
-            quals_cutoff: t.tournament_settings.quals_cutoff,
-            show_quals: t.tournament_settings.show_quals,
-            has_quals: t.tournament_settings.has_quals,
-            countries: t.tournament_settings.countries,
-            sort_method: t.tournament_settings.sort_method,
-            standard_cutoff: t.tournament_settings.standard_cutoff,
-            qual_attempts: t.tournament_settings.qual_attempts,
-            quals_method: t.tournament_settings.quals_method,
-            ta_url: t.tournament_settings.ta_url,
-            ...(auth && {
-                ta_password: t.tournament_settings.ta_password,
-                ta_event_flags: t.tournament_settings.ta_event_flags
-            })
-        };
+        return t;
     }
 
-    public static async getTournamentStaffIds(tourneyId: number, roleIds?: number[]) {
+    public static async getTAEnabledTournaments() {
+        const tournaments = await prisma.tournaments.findMany({
+            select: {
+                id: true,
+                tournament_settings: {
+                    select: {
+                        ta_url: true,
+                        ta_password: true
+                    }
+                }
+            },
+            where: {
+                NOT: {
+                    tournament_settings: {
+                        ta_url: null
+                    }
+                }
+            }
+        });
+        return tournaments;
+    }
+
+    public static async getTournamentStaffIds(tourneyId: bigint, roleIds?: number[]) {
         const staff = await prisma.tournament_role_assignment.findMany({
             where: {
                 tournament_id: tourneyId,
@@ -143,12 +101,127 @@ export class TournamentService {
         return staff.map(x => x.user_id);
     }
 
-    public static async getTournamentAPIKey(tourneyId: number) {
+    public static async createTournament(data) {
+        data.date = new Date(data.date);
+        data.endDate = new Date(data.endDate);
+        return await prisma.tournaments.create({
+            data: data
+        });
+    }
+
+    public static async updateTournament(tournamentId: bigint, data) {
+        data.date = new Date(data.date);
+        data.endDate = new Date(data.endDate);
+        await prisma.tournaments.update({
+            data: data,
+            where: {
+                id: tournamentId
+            }
+        });
+    }
+
+    public static async archiveTournament(tournamentId: bigint, data: Partial<Prisma.tournamentsCreateInput>) {
+        await prisma.tournaments.update({
+            where: {
+                id: tournamentId
+            },
+            data: {
+                ...data,
+                archived: true
+            }
+        });
+    }
+
+    public static async setImage(tournamentId: bigint, imageName: string) {
+        await prisma.tournaments.update({
+            data: {
+                image: imageName
+            },
+            where: {
+                id: tournamentId
+            }
+        });
+    }
+
+    public static async deleteTournament(tournamentId: bigint) {
+        await prisma.tournaments.delete({
+            where: {
+                id: tournamentId
+            }
+        });
+    }
+
+    public static async getTournamentAPIKey(tourneyId: bigint) {
         const key = await prisma.api_keys.findFirst({
             where: {
                 tournamentId: tourneyId
             }
         });
         return key?.api_key;
+    }
+
+    public static async getStaff(tourneyId: bigint) {
+        let data = (await DatabaseService.query(
+            `SELECT 
+            u.discordId, 
+            u.ssId, 
+            u.name, 
+            u.twitchName, 
+            u.avatar, 
+            u.globalRank, 
+            u.localRank, 
+            u.country, 
+            u.tourneyRank, 
+            u.TR, 
+            u.pronoun,
+            tr.role_name,
+            tr.id as role_id
+        FROM users u
+        JOIN tournament_role_assignment tra ON tra.user_id = u.discordId AND tra.tournament_id = ?
+        JOIN tournament_roles tr ON tr.id = tra.role_id`,
+            [tourneyId]
+        )) as any[];
+        let users = [];
+        for (const user of data) {
+            let existingUser = users.find(x => x.discordId == user.discordId);
+            if (existingUser) {
+                existingUser.roles.push({ id: user.role_id, role: user.role_name });
+            } else {
+                users.push({
+                    discordId: user.discordId,
+                    ssId: user.ssId,
+                    name: user.name,
+                    twitchName: user.twitchName,
+                    avatar: user.avatar,
+                    globalRank: user.globalRank,
+                    localRank: user.locaRank,
+                    country: user.country,
+                    tourneyRank: user.tourneyRank,
+                    TR: user.TR,
+                    pronoun: user.pronoun,
+                    roles: [
+                        {
+                            id: user.role_id,
+                            role: user.role_name
+                        }
+                    ]
+                });
+            }
+        }
+        return users;
+    }
+
+    static async clearStaff(tournamentId: bigint) {
+        await prisma.tournament_role_assignment.deleteMany({
+            where: {
+                tournament_id: tournamentId
+            }
+        });
+    }
+
+    static async addStaff(data: Prisma.tournament_role_assignmentCreateManyInput[]) {
+        await prisma.tournament_role_assignment.createMany({
+            data: data
+        });
     }
 }

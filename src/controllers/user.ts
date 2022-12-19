@@ -1,70 +1,36 @@
 import axios from "axios";
 import express from "express";
-import FormData from "form-data";
 import sharp from "sharp";
-import { PlayerInfo } from "../models/scoresaber.model";
-import { userAPI } from "../models/user.model";
-import DatabaseService from "../services/database";
+import { Scoresaber } from "../models/scoresaber.model";
+import { BadgeService } from "../services/badge";
+import { UserService } from "../services/user";
+import config from "../util/config";
 import { formUrlEncoded } from "../util/helpers";
 import { authController } from "./auth";
 import { controller } from "./controller";
 
 export class userController extends controller {
-    redirect = "";
-
-    constructor() {
-        super();
-        if (this.env == "production") {
-            this.redirect = encodeURIComponent("https://beatkhana.com/api/discordAuth");
-        } else {
-            this.redirect = encodeURIComponent("http://localhost:4200/api/discordAuth");
-        }
-    }
-
     async me(req: express.Request, res: express.Response) {
         let tmp = req.session?.user;
-        if (tmp) delete tmp.refresh_token;
-        return res.send(tmp);
+        if (!tmp) return this.unauthorized(res, "Not logged in");
+        return res.send(await UserService.getUser({ discordId: tmp[0].discordId }));
     }
 
     async getUser(req: express.Request, res: express.Response) {
         if (!req.params.id) return this.clientError(res, "No Id provided");
-        let user = await this.userById(req.params.id);
+        let user = await UserService.getUser({ discordId: req.params.id });
         return res.send(user);
     }
 
     async allUsers(req: express.Request, res: express.Response) {
-        let users = await DatabaseService.query(`SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, 
-        discordId,
-        ssId,
-        \`users\`.\`name\`,
-        \`users\`.\`twitchName\`,
-        \`users\`.\`avatar\`,
-        \`users\`.\`globalRank\`,
-        \`users\`.\`localRank\`,
-        \`users\`.\`country\`,
-        \`users\`.\`tourneyRank\`,
-        \`users\`.\`TR\`,
-        \`users\`.\`pronoun\`, 
-        GROUP_CONCAT(DISTINCT r.roleName SEPARATOR ', ') as roleNames
-        FROM users
-        LEFT JOIN roleassignment ra ON ra.userId = users.discordId
-        LEFT JOIN roles r ON r.roleId = ra.roleId
-        GROUP BY users.discordId`);
-        return res.send(users);
+        const auth = new authController(req);
+        if (!(await auth.isStaff)) return this.unauthorized(res);
+        return res.send(await UserService.allUsers());
     }
 
     async userBySS(req: express.Request, res: express.Response) {
-        let result = await DatabaseService.query(
-            `SELECT u.discordId, u.ssId, u.name, u.twitchName, u.avatar, u.globalRank, u.localRank, u.country, u.tourneyRank, u.TR, u.pronoun, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tournaments FROM users u
-        LEFT JOIN participants p ON p.userId = u.discordId
-        LEFT JOIN tournaments t ON p.tournamentId = t.id
-        WHERE u.ssId = ?
-        GROUP BY u.discordId`,
-            [req.params.id]
-        );
-
-        return res.send(result);
+        if (!req.params.id) return this.clientError(res, "No Id provided");
+        return res.send(await UserService.getUser({ ssId: req.params.id }));
     }
 
     async updateUser(req: express.Request, res: express.Response) {
@@ -74,24 +40,27 @@ export class userController extends controller {
         let data = req.body;
         let id = req.params.id;
         let roleIds = [];
-        let roleError = false;
+
         if (data.roleIds != null && data.roleIds.length > 0) {
             roleIds = data.roleIds;
-            let insert = [];
+            let insert: { userId: string; roleId: number }[] = [];
             for (const roleId of roleIds) {
-                insert.push([id, roleId]);
+                insert.push({
+                    userId: id,
+                    roleId: roleId
+                });
             }
 
             try {
-                await DatabaseService.query(`DELETE FROM roleassignment WHERE userId = ?;`, [id]);
-                await DatabaseService.query(`INSERT INTO roleassignment (userId, roleId) VALUES ?`, [insert]);
+                await UserService.clearRoles(id);
+                await UserService.addRoles(insert);
             } catch (error) {
                 return this.fail(res, error);
             }
         }
         try {
             delete data.roleIds;
-            await DatabaseService.query(`UPDATE users SET ? WHERE discordId = ?`, [data, id]);
+            await UserService.updateUser(id, data);
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);
@@ -104,12 +73,16 @@ export class userController extends controller {
         if (!req.params.id) return this.clientError(res, "No user ID provided");
         if (!req.body) return this.clientError(res, "Invalid request");
         try {
-            await DatabaseService.query("DELETE FROM badge_assignment WHERE userId = ?", [req.params.id]);
+            await BadgeService.clearBadgesFromUser(req.params.id);
             if (req.body.length > 0) {
-                let insetData = req.body.map(x => [x, req.params.id]);
-                await DatabaseService.query(`INSERT INTO badge_assignment (badgeId, userId) VALUES ?`, [insetData]);
+                let insetData = req.body.map(x => {
+                    return {
+                        badgeId: x,
+                        userId: req.params.id
+                    };
+                });
+                await BadgeService.addBadgesToUser(insetData);
             }
-            // console.log(insetData);
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);
@@ -128,9 +101,12 @@ export class userController extends controller {
         try {
             data.imgName = data.imgName.split(".")[0];
             data.imgName = data.imgName.replace(/[^a-z0-9]/gi, "_").toLowerCase();
-            await DatabaseService.query("INSERT INTO badges (image, description) VALUES (?, ?)", [data.imgName, data.description]);
+            await BadgeService.createBadge({
+                image: data.imgName,
+                description: data.description
+            });
 
-            const buf = await Buffer.from(base64Img, "base64");
+            const buf = Buffer.from(base64Img, "base64");
             const webpData = await sharp(buf)
                 .resize({ width: 80, height: 30 })
                 .png()
@@ -153,14 +129,17 @@ export class userController extends controller {
         try {
             data.imgName = data.imgName.split(".")[0];
             data.imgName = data.imgName.replace(/[^a-z0-9]/gi, "_").toLowerCase();
-            await DatabaseService.query("UPDATE badges SET image = ?, description = ? WHERE id = ?", [data.imgName, data.description, req.params.id]);
+            await BadgeService.updateBadge(+req.params.id, {
+                image: data.imgName,
+                description: data.description
+            });
 
             if (data.image != "") {
                 let base64String = data.image;
                 let base64Img = base64String.split(";base64,").pop();
 
                 let savePath = this.env == "development" ? "../app/src/assets/badges/" : __dirname + "/../public/assets/badges/";
-                const buf = await Buffer.from(base64Img, "base64");
+                const buf = Buffer.from(base64Img, "base64");
                 const webpData = await sharp(buf)
                     .resize({ width: 80, height: 30 })
                     .png()
@@ -180,7 +159,7 @@ export class userController extends controller {
         if (!((await auth.isAdmin) || (await auth.isStaff))) return this.unauthorized(res);
 
         try {
-            await DatabaseService.query("DELETE FROM badges WHERE id = ?", [req.params.id]);
+            await BadgeService.deleteBadge(+req.params.id);
             return this.ok(res);
         } catch (error) {
             return this.fail(res, error);
@@ -191,52 +170,14 @@ export class userController extends controller {
         let auth = new authController(req);
         if (!((await auth.isAdmin) || (await auth.isStaff))) return this.unauthorized(res);
         try {
-            let badges = await DatabaseService.query("SELECT * FROM badges");
+            let badges = await BadgeService.getBadges();
             return res.send(badges);
         } catch (error) {
             return this.fail(res, error);
         }
     }
 
-    private async userById(id): Promise<userAPI> {
-        let userData2 = await DatabaseService.query(
-            `SELECT 
-            u.discordId, 
-            u.ssId, 
-            u.name, 
-            u.twitchName, 
-            u.avatar, 
-            u.globalRank, 
-            u.localRank, 
-            u.country, 
-            u.tourneyRank, 
-            u.TR, 
-            u.pronoun
-        FROM users u
-        WHERE u.discordId = ?`,
-            [id]
-        );
-        let badges = await DatabaseService.query(
-            `SELECT b.* FROM badges b
-        LEFT JOIN badge_assignment ba ON ba.badgeId = b.id
-        WHERE ba.userId = ?`,
-            [id]
-        );
-        let tournaments = (await DatabaseService.query(
-            `SELECT t.name FROM participants p 
-        INNER JOIN tournaments t ON p.tournamentId = t.id
-        INNER JOIN tournament_settings ts ON p.tournamentId = ts.tournamentId AND ts.public = 1
-        WHERE p.userId = ?`,
-            [id]
-        )) as any[];
-        let user = userData2[0];
-        if (!user) return null;
-        user.tournaments = tournaments.map(x => x.name);
-        user.badges = badges;
-        return user;
-    }
-
-    static async getSSData(id: string): Promise<PlayerInfo | null> {
+    static async getSSData(id: string): Promise<Scoresaber.Player | null> {
         function delay(ms: number) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
@@ -257,7 +198,7 @@ export class userController extends controller {
 
     // discord auth
     async login(req: express.Request, res: express.Response) {
-        res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${this.CLIENT_ID}&scope=identify&response_type=code&redirect_uri=${this.redirect}&state=${req.query.url}`);
+        res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientID}&scope=identify&response_type=code&redirect_uri=${config.discord.redirect}&state=${req.query.url}`);
     }
 
     async logOut(req: express.Request, res: express.Response) {
@@ -270,18 +211,12 @@ export class userController extends controller {
             const code = <string>req.query.code;
 
             const env = process.env.NODE_ENV || "production";
-            let redirect = "";
-            if (env == "production") {
-                redirect = "https://beatkhana.com/api/discordAuth";
-            } else {
-                redirect = "http://localhost:4200/api/discordAuth";
-            }
 
             const data = {
-                client_id: this.CLIENT_ID,
-                client_secret: this.CLIENT_SECRET,
+                client_id: config.discord.clientID,
+                client_secret: config.discord.clientSecret,
                 grant_type: "authorization_code",
-                redirect_uri: redirect,
+                redirect_uri: config.discord.redirect,
                 scope: "identify",
                 code: code
             };
@@ -334,15 +269,10 @@ export class userController extends controller {
         }
     }
 
-    private async checkUser(discordId, refreshToken: string | null, avatar: string, name: string, callback: Function) {
+    private async checkUser(discordId: string, refreshToken: string | null, avatar: string, name: string, callback: Function) {
         if (discordId) {
-            const result = (await DatabaseService.query(`SELECT GROUP_CONCAT(DISTINCT ra.roleId SEPARATOR ', ') as roleIds, users.*, GROUP_CONCAT(DISTINCT r.roleName SEPARATOR ', ') as roleNames
-            FROM users
-            LEFT JOIN roleassignment ra ON ra.userId = users.discordId
-            LEFT JOIN roles r ON r.roleId = ra.roleId
-            WHERE users.discordId = ${discordId}
-            GROUP BY users.discordId`)) as any[];
-            if (result.length > 0) {
+            const result = await UserService.getUser({ discordId: discordId });
+            if (result) {
                 result[0].discordId = discordId.toString();
                 if (result[0].roleNames != null) {
                     result[0].roleIds = result[0].roleIds.split(", ");
@@ -353,7 +283,7 @@ export class userController extends controller {
                 }
                 if (refreshToken != null) {
                     try {
-                        await DatabaseService.query("UPDATE users SET refresh_token = ? WHERE discordId = ?", [refreshToken, discordId]);
+                        await UserService.updateUser(discordId, { refresh_token: refreshToken });
                     } catch (error) {
                         throw error;
                     }
@@ -378,7 +308,7 @@ export class userController extends controller {
     async newUser(req: express.Request, res: express.Response) {
         if (req.session?.newUsr?.length > 0) {
             let usrData = { links: req.body, discordId: req.session.newUsr[0]["discordId"], refresh_token: req.session.newUsr[0]["refresh_token"], avatar: req.session.newUsr[0]["avatar"], name: req.session.newUsr[0]["name"] };
-            let ssData: PlayerInfo = null;
+            let ssData: Scoresaber.Player = null;
             if (usrData.links.scoreSaber) ssData = await userController.getSSData(usrData.links.scoreSaber.split("u/")[1]);
             if (!usrData.avatar) {
                 usrData.avatar = "-";
@@ -396,7 +326,7 @@ export class userController extends controller {
                 refresh_token: usrData.refresh_token
             };
             try {
-                await DatabaseService.query(`INSERT INTO users SET ?`, [user]);
+                await UserService.createUser(user);
                 let loggedUser: any = user;
                 loggedUser.roleIds = [];
                 loggedUser.roleNames = [];
@@ -410,37 +340,38 @@ export class userController extends controller {
         }
     }
 
-    async questId(req: express.Request, res: express.Response) {
-        let auth = new authController(req);
-        if (!auth.userId) return this.clientError(res, "User not logged in");
+    // TODO: refactor this
+    // async questId(req: express.Request, res: express.Response) {
+    //     let auth = new authController(req);
+    //     if (!auth.userId) return this.clientError(res, "User not logged in");
 
-        let ids = (await DatabaseService.query(`SELECT * FROM quest_ids WHERE userId = ?`, [auth.userId])) as any[];
-        let curId = 0;
-        if (ids.length < 1) {
-            let id = this.generate(20);
-            while (!(await DatabaseService.query(`INSERT INTO quest_ids SET userId = ?, qId = ?`, [auth.userId, id]))) {
-                id = this.generate(20);
-            }
-            curId = id;
-        } else {
-            curId = ids[0].qId;
-        }
+    //     let ids = (await DatabaseService.query(`SELECT * FROM quest_ids WHERE userId = ?`, [auth.userId])) as any[];
+    //     let curId = 0;
+    //     if (ids.length < 1) {
+    //         let id = this.generate(20);
+    //         while (!(await DatabaseService.query(`INSERT INTO quest_ids SET userId = ?, qId = ?`, [auth.userId, id]))) {
+    //             id = this.generate(20);
+    //         }
+    //         curId = id;
+    //     } else {
+    //         curId = ids[0].qId;
+    //     }
 
-        res.setHeader("Content-disposition", `attachment; filename= secret.txt`);
-        res.setHeader("Content-type", "text/plain; charset=UTF-8");
-        return res.send(`quest_${curId}`);
-    }
+    //     res.setHeader("Content-disposition", `attachment; filename= secret.txt`);
+    //     res.setHeader("Content-type", "text/plain; charset=UTF-8");
+    //     return res.send(`quest_${curId}`);
+    // }
 
-    private generate(n) {
-        var add = 1,
-            max = 12 - add;
-        if (n > max) {
-            return this.generate(max) + this.generate(n - max);
-        }
-        max = Math.pow(10, n + add);
-        var min = max / 10; // Math.pow(10, n) basically
-        var number = Math.floor(Math.random() * (max - min + 1)) + min;
+    // private generate(n) {
+    //     var add = 1,
+    //         max = 12 - add;
+    //     if (n > max) {
+    //         return this.generate(max) + this.generate(n - max);
+    //     }
+    //     max = Math.pow(10, n + add);
+    //     var min = max / 10; // Math.pow(10, n) basically
+    //     var number = Math.floor(Math.random() * (max - min + 1)) + min;
 
-        return ("" + number).substring(add);
-    }
+    //     return ("" + number).substring(add);
+    // }
 }
