@@ -202,7 +202,7 @@ export class MapPoolController extends controller {
             ssInfo = ssReq;
         } catch (error) {
             console.error("Scoresaber Song Error: ", error);
-            return this.clientError(res, "Can't find song on scoresaber");
+            // return this.clientError(res, "Can't find song on scoresaber");
         }
 
         let diffSearch = diff;
@@ -216,7 +216,7 @@ export class MapPoolController extends controller {
             key: bsData.id,
             numNotes: (diffInfo ? diffInfo.notes : 0),
             songDiff: diff,
-            ssLink: `https://scoresaber.com/leaderboard/${ssInfo.id}`,
+            ssLink: ssInfo ? `https://scoresaber.com/leaderboard/${ssInfo.id}` : null,
             poolId: 0
         }
         let values = [];
